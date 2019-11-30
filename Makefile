@@ -4,7 +4,7 @@ TARGET_BOOTCODE = bootcode.bin
 #
 # when building bootcode.bin, always ensure start.s is at the top, providing
 # the 0x200 byte long header and some init code.
-# 
+#
 SRCS = \
 	start.s \
 	romstage.c \
@@ -68,7 +68,7 @@ CREATE_SUBDIR = \
 
 #
 # rules to build c/asm files.
-# 
+#
 $(TARGET_BUILD_DIR)/%.o: %.c $(HEADERS)
 	$(CREATE_SUBDIR)
 	@echo $(WARN_COLOR)CC  $(NO_COLOR) $@

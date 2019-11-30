@@ -55,7 +55,7 @@ LINKFLAGS = -nostdlib -march=$(ARCH) -Wl,--build-id=none -T linker.lds
 COMMON_FLAGS = -c -nostdlib -nostartfiles -ffreestanding -march=$(ARCH) -I../ -I./ -I./drivers/libfdt/ \
  -mfpu=vfp -mfloat-abi=hard -mtune=arm1176jzf-s
 
-CFLAGS = $(COMMON_FLAGS) -std=c11 
+CFLAGS = $(COMMON_FLAGS) -std=c11
 CXXFLAGS = $(COMMON_FLAGS) -std=c++11 -fno-exceptions -fno-rtti
 ASFLAGS = $(COMMON_FLAGS) -x assembler-with-cpp
 
@@ -73,7 +73,7 @@ CREATE_SUBDIR = \
 
 #
 # rules to build c/asm files.
-# 
+#
 $(TARGET_BUILD_DIR)/%.o: %.c $(HEADERS)
 	$(CREATE_SUBDIR)
 	@echo $(WARN_COLOR)CC  $(NO_COLOR) $@
