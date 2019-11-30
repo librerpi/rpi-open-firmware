@@ -1,5 +1,6 @@
 let
-  pkgs = import (builtins.fetchTarball https://github.com/nixos/nixpkgs/archive/0ee0489d42e.tar.gz) {};
+  # temporary hack, this rev is upstream
+  pkgs = import (builtins.fetchTarball https://github.com/input-output-hk/nixpkgs/archive/0ee0489d42e.tar.gz) {};
   vc4 = pkgs.pkgsCross.vc4;
   arm = pkgs.pkgsCross.arm-embedded;
   arm_chainloader = arm.stdenv.mkDerivation {
