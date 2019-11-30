@@ -30,8 +30,8 @@ Second stage bootloader.
 FATFS g_BootVolumeFs;
 
 #define ROOT_VOLUME_PREFIX "0:"
-#define DTB_LOAD_ADDRESS    0xF000000
-#define KERNEL_LOAD_ADDRESS 0x2000000
+#define DTB_LOAD_ADDRESS    0xF000000 // 240mb from start
+#define KERNEL_LOAD_ADDRESS 0x2000000 // 32mb from start
 
 typedef void (*linux_t)(uint32_t, uint32_t, void*);
 
@@ -76,7 +76,7 @@ struct LoaderImpl {
 		/* read device tree blob */
 		uint8_t* fdt = reinterpret_cast<uint8_t*>(DTB_LOAD_ADDRESS);
 		size_t sz = read_file(filename, fdt, false);
-		logf("FDT loaded at %X\n", (unsigned int) fdt);
+		logf("FDT loaded at %p, size is %zu\n", fdt, sz);
 
 		void* v_fdt = reinterpret_cast<void*>(fdt);
 
@@ -107,7 +107,7 @@ struct LoaderImpl {
 		uint8_t memmap[] = { 0x00, 0x00, 0x01, 0x00, 0x30, 0x00, 0x00, 0x00 };
 		res = fdt_setprop(v_fdt, memory, "reg", (void*) memmap, sizeof(memmap));
 
-		logf("(valid) fdt loaded at 0x%X\n", (unsigned int)fdt);
+		logf("(valid) fdt loaded at 0x%p\n", fdt);
 
 		return fdt;
 	}

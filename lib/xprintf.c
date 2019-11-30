@@ -190,7 +190,7 @@ void put_dump (
 	case DW_LONG:
 		lp = buff;
 		do								/* Hexdecimal dump */
-			printf(" %08X", *lp++);
+			printf(" %08lX", *lp++);
 		while (--len);
 		break;
 	}

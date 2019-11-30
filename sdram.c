@@ -118,7 +118,7 @@ ALWAYS_INLINE inline void clkman_update_end() {
 }
 
 ALWAYS_INLINE void reset_phy_dll() {
-	SIP_DEBUG(logf("resetting aphy and dphy dlls ...\n", __FUNCTION__));
+	SIP_DEBUG(logf("resetting aphy and dphy dlls ...\n"));
 
 	/* politely tell sdc that we'll be messing with address lines */
 	APHY_CSR_PHY_BIST_CNTRL_SPR = 0x30;
@@ -135,9 +135,9 @@ ALWAYS_INLINE void reset_phy_dll() {
 	DPHY_CSR_GLBL_DQ_DLL_RESET = 0x0;
 	APHY_CSR_GLBL_ADDR_DLL_RESET = 0x0;
 
-	SIP_DEBUG(logf("waiting for dphy master dll to lock ...\n", __FUNCTION__));
+	SIP_DEBUG(logf("waiting for dphy master dll to lock ...\n"));
 	for (;;) if ((DPHY_CSR_GLBL_MSTR_DLL_LOCK_STAT & 0xFFFF) == 0xFFFF) break;
-	SIP_DEBUG(logf("dphy master dll locked!\n", __FUNCTION__));
+	SIP_DEBUG(logf("dphy master dll locked!\n"));
 }
 
 typedef struct {
@@ -258,7 +258,7 @@ void reset_with_timing(lpddr2_timings_t* T) {
 	    | (T->rowbits << SD_SB_ROWBITS_LSB)
 	    | (T->colbits << SD_SB_COLBITS_LSB);
 
-	logf("SDRAM Addressing Mode: Bank=%d Row=%d Col=%d SB=0x%X\n", T->banklow, T->rowbits, T->colbits, SD_SB);
+	logf("SDRAM Addressing Mode: Bank=%ld Row=%ld Col=%ld SB=0x%X\n", T->banklow, T->rowbits, T->colbits, SD_SB);
 
 	SD_SC =
 	    (T->tRFCab << SD_SC_T_RFC_LSB)
@@ -384,6 +384,7 @@ static void init_clkman() {
 
 static void calibrate_pvt_early() {
 	/* some hw revisions require different slews */
+  // tests for a cpuid ending in 0x___14_
 	bool st = ((g_CPUID >> 4) & 0xFFF) == 0x14;
 	uint32_t dq_slew = (st ? 2 : 3);
 
@@ -443,8 +444,8 @@ static void init_late() {
 
 #define RT_ASSERT(i_, expected) \
 	if (ram[(i_)] != expected) { \
-		logf("ERROR: At 0x%X, was expecting 0x%X from read, got 0x%X instead!\n", \
-			(uint32_t)&ram[(i_)], \
+		logf("ERROR: At 0x%p, was expecting 0x%X from read, got 0x%lX instead!\n", \
+			&ram[(i_)], \
 			expected, \
 			ram[(i_)]); \
 		panic("SDRAM self test failed!"); \
@@ -453,7 +454,7 @@ static void init_late() {
 static void selftest_at(uint32_t addr) {
 	volatile uint32_t* ram = (volatile uint32_t*)addr;
 
-	logf("Testing region at 0x%X ...\n", addr);
+	logf("Testing region at 0x%lX ...\n", addr);
 
 	for (int i = 0; i < 0x1000; i += 4) {
 		ram[i]     = RT_PAT0;
@@ -549,13 +550,13 @@ void sdram_init() {
 
 	g_RAMSize = lpddr2_size(bc);
 
-	logf("SDRAM Type: %s %s LPDDR2 (BC=0x%X)\n",
+	logf("SDRAM Type: %s %s LPDDR2 (BC=0x%lX)\n",
 	     lpddr2_manufacturer_name(vendor_id),
 	     size_to_string[g_RAMSize],
 	     bc);
 
 	if (g_RAMSize == RAM_SIZE_UNKNOWN)
-		panic("unknown ram size (MR8 response was 0x%X)", bc);
+		panic("unknown ram size (MR8 response was 0x%lX)", bc);
 
 	/*
 	 * STEP 2:

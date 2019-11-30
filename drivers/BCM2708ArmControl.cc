@@ -133,7 +133,7 @@ struct BCM2708ArmControl : IODevice {
 		for (int i = 0; i < size; i++) {
 			uint8_t* mem8 = (uint8_t*)(mem);
 			if (start[i] != mem8[i])
-				panic("copy failed at 0x%X expected 0x%X, got 0x%X", (uint32_t)&mem8[i],
+				panic("copy failed at 0x%lX expected 0x%lX, got 0x%lX", (uint32_t)&mem8[i],
 				      *((uint32_t*)&mem8[i]),
 				      *((uint32_t*)&start[i]));
 		}

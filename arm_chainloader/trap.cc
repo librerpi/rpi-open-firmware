@@ -20,11 +20,11 @@ struct arm_saved_state {
 typedef struct arm_saved_state arm_saved_state_t;
 
 #define REGISTER_FORMAT_STRING(prefix) \
-	prefix "  r0: 0x%08x  r1: 0x%08x  r2: 0x%08x  r3: 0x%08x\n" \
-	prefix "  r4: 0x%08x  r5: 0x%08x  r6: 0x%08x  r7: 0x%08x\n" \
-	prefix "  r8: 0x%08x  r9: 0x%08x r10: 0x%08x r11: 0x%08x\n" \
-	prefix " r12: 0x%08x  sp: 0x%08x  lr: 0x%08x  pc: 0x%08x\n" \
-	prefix "cpsr: 0x%08x\n"
+	prefix "  r0: 0x%08lx  r1: 0x%08lx  r2: 0x%08lx  r3: 0x%08lx\n" \
+	prefix "  r4: 0x%08lx  r5: 0x%08lx  r6: 0x%08lx  r7: 0x%08lx\n" \
+	prefix "  r8: 0x%08lx  r9: 0x%08lx r10: 0x%08lx r11: 0x%08lx\n" \
+	prefix " r12: 0x%08lx  sp: 0x%08lx  lr: 0x%08lx  pc: 0x%08lx\n" \
+	prefix "cpsr: 0x%08lx\n"
 
 #define REGISTER_PRINTF_LIST(regs) regs->r[0], regs->r[1], regs->r[2], regs->r[3],\
 	regs->r[4], regs->r[5], regs->r[6], regs->r[7], \

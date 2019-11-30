@@ -92,7 +92,7 @@ struct BCM2708SDHost : BlockDevice {
 
 		while(SH_CMD & SH_CMD_NEW_FLAG_SET) {
 			if (t == 0) {
-				logf("timed out after %dus!\n", timeout)
+				logf("timed out after %ldus!\n", timeout)
 				return false;
 			}
 			t--;
@@ -240,11 +240,11 @@ struct BCM2708SDHost : BlockDevice {
 			if (r[0] & MMC_OCR_MEM_READY)
 				break;
 
-			logf("waiting for SD (0x%x) ...\n", r[0]);
+			logf("waiting for SD (0x%lx) ...\n", r[0]);
 			udelay(100);
 		}
 
-		logf("SD card has arrived!\n", r);
+		logf("SD card has arrived!\n");
 
 		is_high_capacity = (r[0] & MMC_OCR_HCS) == MMC_OCR_HCS;
 
@@ -275,7 +275,7 @@ struct BCM2708SDHost : BlockDevice {
 			return false;
 		rca = SD_R6_RCA(r);
 
-		logf("RCA = 0x%x\n", rca);
+		logf("RCA = 0x%lx\n", rca);
 
 		send_136_resp(MMC_SEND_CID, MMC_ARG_RCA(rca));
 		if (!wait_and_get_response())
@@ -301,7 +301,7 @@ struct BCM2708SDHost : BlockDevice {
 		while ((SH_HSTS & SH_HSTS_DATA_FLAG_SET) == 0) {
 			if (t == 0) {
 				putchar('\n');
-				logf("ERROR: no FIFO data, timed out after %dus!\n", timeout)
+				logf("ERROR: no FIFO data, timed out after %ldus!\n", timeout)
 				return false;
 			}
 			t--;
@@ -431,7 +431,7 @@ struct BCM2708SDHost : BlockDevice {
 		SD_CID_PNM_CPY(cid, pnm);
 
 		logf("Detected SD card:\n");
-		printf("    Product : %s\n", &pnm);
+		printf("    Product : %s\n", pnm);
 
 		if (SD_CSD_CSDVER(csd) == SD_CSD_CSDVER_2_0) {
 			printf("    CSD     : Ver 2.0\n");
@@ -460,7 +460,7 @@ struct BCM2708SDHost : BlockDevice {
 			return false;
 		}
 
-		printf("    BlockLen: 0x%x\n", block_length);
+		printf("    BlockLen: 0x%lx\n", block_length);
 
 		if (!select_card()) {
 			logf("ERROR: Failed to select card!\n");
@@ -482,7 +482,7 @@ struct BCM2708SDHost : BlockDevice {
 
 		block_size = 512;
 
-		logf("Card initialization complete: %s %dMB SD%s Card\n", &pnm, capacity_bytes >> 20, is_high_capacity ? "HC" : "");
+		logf("Card initialization complete: %s %ldMB SD%s Card\n", pnm, capacity_bytes >> 20, is_high_capacity ? "HC" : "");
 
 		/*
 		 * this makes some dangerous assumptions that the all csd2 cards are sdio cards
@@ -490,7 +490,7 @@ struct BCM2708SDHost : BlockDevice {
 		 * PLLC.CORE0 is at 250MHz which is probably a safe assumption since we set it.
 		 */
 		if (clock_div) {
-			logf("Identification complete, changing clock to %dMHz for data mode ...\n", 250 / clock_div);
+			logf("Identification complete, changing clock to %ldMHz for data mode ...\n", 250 / clock_div);
 			SH_CDIV = clock_div - 2;
 		}
 

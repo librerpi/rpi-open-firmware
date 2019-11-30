@@ -32,11 +32,11 @@ static const char* exception_name(uint32_t n) {
 }
 
 #define REGISTER_FORMAT_STRING(prefix) \
-	prefix "  r0: 0x%08x  r1: 0x%08x  r2: 0x%08x  r3: 0x%08x\n" \
-	prefix "  r4: 0x%08x  r5: 0x%08x  r6: 0x%08x  r7: 0x%08x\n" \
-	prefix "  r8: 0x%08x  r9: 0x%08x r10: 0x%08x r11: 0x%08x\n" \
-	prefix " r12: 0x%08x r13: 0x%08x r14: 0x%08x r15: 0x%08x\n" \
-	prefix "  pc: 0x%08x  lr: 0x%08x  sr: 0x%08x\n"
+	prefix "  r0: 0x%08lx  r1: 0x%08lx  r2: 0x%08lx  r3: 0x%08lx\n" \
+	prefix "  r4: 0x%08lx  r5: 0x%08lx  r6: 0x%08lx  r7: 0x%08lx\n" \
+	prefix "  r8: 0x%08lx  r9: 0x%08lx r10: 0x%08lx r11: 0x%08lx\n" \
+	prefix " r12: 0x%08lx r13: 0x%08lx r14: 0x%08lx r15: 0x%08lx\n" \
+	prefix "  pc: 0x%08lx  lr: 0x%08lx  sr: 0x%08lx\n"
 
 static void print_vpu_state(vc4_saved_state_t* pcb) {
 	printf("VPU registers:\n");
@@ -105,7 +105,7 @@ void sleh_irq(vc4_saved_state_t* pcb, uint32_t tp) {
 	uint32_t status = IC0_S;
 	uint32_t source = status & 0xFF;
 
-	printf("VPU Received interrupt from source %d\n", source);
+	printf("VPU Received interrupt from source %ld\n", source);
 
 	if (source == INTERRUPT_ARM) {
 		arm_monitor_interrupt();

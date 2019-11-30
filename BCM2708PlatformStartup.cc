@@ -12,7 +12,7 @@ static IODevice* startDeviceByTag(uint32_t tag) {
 	IODevice* dev = IODevice::findByTag(tag);
 
 	if (!dev) {
-		panic("unable to find device with tag 0x%X in the registry", tag);
+		panic("unable to find device with tag 0x%lX in the registry", tag);
 	}
 
 	dev->start();

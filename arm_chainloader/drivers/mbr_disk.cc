@@ -93,7 +93,7 @@ struct MbrImpl {
 
 	template <typename T>
 	inline bool read_block(uint8_t volume, uint32_t sector, T* dest_buffer) {
-		read_block(volume, sector, reinterpret_cast<uint32_t*>(dest_buffer));
+		return read_block(volume, sector, reinterpret_cast<uint32_t*>(dest_buffer));
 	}
 
 	inline unsigned int get_block_size() {
@@ -133,7 +133,7 @@ struct MbrImpl {
 
 		for (int i = 0; i < 4; i++) {
 			MbrPartition& p = mbr->mbr_part[i];
-			printf("    %d: %s at:%d size:%d\n", i, mbr_fs_to_string(p.part_typ), p.part_start, p.part_size);
+			printf("    %d: %s at:%ld size:%ld\n", i, mbr_fs_to_string(p.part_typ), p.part_start, p.part_size);
 		}
 	}
 
