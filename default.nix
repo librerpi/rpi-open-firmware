@@ -23,9 +23,11 @@ let
       enableParallelBuilding = true;
       installPhase = ''
         $OBJDUMP -t build/arm_chainloader.bin.elf | sort -rk4 | head -n15
-        mkdir $out
+        mkdir -p $out/nix-support
         cp build/arm_chainloader.bin{,.elf} $out/
         $OBJDUMP -S build/arm_chainloader.bin.elf > $out/chainloader.S
+        cat <<EOF > $out/nix-support/hydra-metrics
+        arm_chainloader.bin $(stat --printf=%s $out/arm_chainloader.bin) bytes
       '';
     };
     firmware = vc4.stdenv.mkDerivation {
@@ -36,9 +38,12 @@ let
         ln -sv ${arm.chainloader} arm_chainloader/build
       '';
       installPhase = ''
-        mkdir $out
+        mkdir -pv $out/nix-support
         cp build/bootcode.bin{,.elf} $out/
         ln -sv ${arm.chainloader} $out/arm
+        cat <<EOF > $out/nix-support/hydra-metrics
+        bootcode.bin $(stat --printf=%s $out/bootcode.bin) bytes
+        EOF
       '';
     };
   };
