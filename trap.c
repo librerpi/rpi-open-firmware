@@ -107,10 +107,16 @@ void sleh_irq(vc4_saved_state_t* pcb, uint32_t tp) {
 
 	printf("VPU Received interrupt from source %ld\n", source);
 
-	if (source == INTERRUPT_ARM) {
-		arm_monitor_interrupt();
-	} else {
-		print_vpu_state(pcb);
-		panic("unknown interrupt source!");
-	}
+  switch (source) {
+  case INTERRUPT_TIMER0:
+    print_vpu_state(pcb);
+    panic("unexpected timer0, did you forget about the pi while writing code?");
+    break;
+  case INTERRUPT_ARM:
+    arm_monitor_interrupt();
+    break;
+  default:
+    print_vpu_state(pcb);
+    panic("unknown interrupt source!");
+  }
 }

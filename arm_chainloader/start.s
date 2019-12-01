@@ -47,37 +47,43 @@ g_FirmwareData:
 	.long 0 /* Reserved */
 	.long 0 /* Reserved */
 
-#define SaveRegisters() \
-	mov sp, #(MEM_STACK_END); \
-	stmea sp, {r0-lr}^; \
-	str lr, [sp, #60]; \
-	mrs r0, spsr; \
-	str r0, [sp, #64]; \
+# based on https://github.com/mrvn/moose/blob/master/kernel/entry.S
+.macro SaveRegisters, offset
+  # note, this will trash the stack of the main thread
+  # it will also trash the stack of all other modes
+  # therefore, any interupt at all is currently fatal
+	mov sp, #(MEM_STACK_END)
+        sub lr, #\offset
+	stmea sp, {r0-lr}^
+	str lr, [sp, #60]
+	mrs r0, spsr
+	str r0, [sp, #64]
 	mov r0, sp
+.endm
 
 _fleh_undef:
-	SaveRegisters()
+	SaveRegisters 4
 	b sleh_undef
 
 _fleh_prefabt:
-	SaveRegisters()
+	SaveRegisters 4
 	b sleh_prefabt
 
 _fleh_dataabt:
-	SaveRegisters()
+	SaveRegisters 8
 	b sleh_dataabt
 
 _fleh_addrexc:
-	SaveRegisters()
+	SaveRegisters 0
 	b sleh_addrexc
 
 _fleh_irq:
 	// TODO, dont bother saving the FIQ swapped regs
-	SaveRegisters()
+	SaveRegisters 4
 	b sleh_irq
 
 _fleh_fiq:
-	SaveRegisters()
+	SaveRegisters 4
 	b sleh_fiq
 
 _secure_monitor:

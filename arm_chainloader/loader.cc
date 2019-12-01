@@ -76,7 +76,7 @@ struct LoaderImpl {
 		/* read device tree blob */
 		uint8_t* fdt = reinterpret_cast<uint8_t*>(DTB_LOAD_ADDRESS);
 		size_t sz = read_file(filename, fdt, false);
-		logf("FDT loaded at %p, size is %zu\n", fdt, sz);
+		logf("FDT loaded at %p, size is %d\n", fdt, sz);
 
 		void* v_fdt = reinterpret_cast<void*>(fdt);
 

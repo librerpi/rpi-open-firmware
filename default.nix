@@ -28,6 +28,7 @@ let
         $OBJDUMP -S build/arm_chainloader.bin.elf > $out/chainloader.S
         cat <<EOF > $out/nix-support/hydra-metrics
         arm_chainloader.bin $(stat --printf=%s $out/arm_chainloader.bin) bytes
+        EOF
       '';
     };
     firmware = vc4.stdenv.mkDerivation {
@@ -47,8 +48,25 @@ let
       '';
     };
   };
+  bootdir = pkgs.runCommand "bootdir" { buildInputs = [ pkgs.dtc ]; } ''
+    mkdir $out
+    cd $out
+    cp ${vc4.firmware}/bootcode.bin .
+    echo console=ttyAMA0,115200 > cmdline.txt
+    dtc ${./rpi.dts} -o rpi.dtb
+  '';
+  helper = pkgs.writeShellScript "helper" ''
+    set -e
+    set -x
+    mount -v /dev/mmcblk0p1 /mnt
+    cp -v ${bootdir}/* /mnt/
+    umount /mnt
+  '';
 in {
-  uboot = aarch64.ubootRaspberryPi3_64bit;
+  inherit bootdir helper;
+  aarch64 = {
+    inherit (aarch64) ubootRaspberryPi3_64bit linux_rpi3;
+  };
   vc4 = {
     inherit (vc4) tlsf firmware common;
   };
