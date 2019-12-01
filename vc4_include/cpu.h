@@ -2,7 +2,7 @@
 
 #include <hardware.h>
 
-static inline void __attribute__((noreturn)) hang_cpu() {
+static inline void __attribute__((noreturn)) _hang_cpu() {
 	/* disable interrupts  */
 	__asm__ __volatile__ ("di");
 

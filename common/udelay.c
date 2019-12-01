@@ -17,7 +17,7 @@ Simple timer based delay routine.
 
 =============================================================================*/
 
-#include <lib/runtime.h>
+#include <runtime.h>
 #include <hardware.h>
 
 void udelay(uint32_t t) {

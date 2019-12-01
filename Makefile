@@ -11,17 +11,14 @@ SRCS = \
 	sdram.c \
 	arm_monitor.cc \
 	trap.c \
-	lib/xprintf.c \
-	lib/panic.c \
-	lib/udelay.c \
 	lib/memcpy.c \
-	lib/cxx_runtime.c \
 	drivers/IODevice.cc \
 	drivers/BCM2708PowerManagement.cc \
 	drivers/BCM2708UsbPhy.cc \
 	drivers/BCM2708ArmControl.cc \
 	drivers/BCM2708ClockDomains.cc \
 	drivers/BCM2708Gpio.cc \
+	hang_cpu.o \
 	BCM2708PlatformStartup.cc
 
 ARCH = vc4
@@ -88,7 +85,7 @@ $(TARGET_BUILD_DIR)/%.o: %.s $(HEADERS)
 
 $(TARGET_BOOTCODE): create_build_directory $(OBJ)
 	@echo $(WARN_COLOR)LD  $(NO_COLOR) $@.elf
-	@$(CC) $(LINKFLAGS) $(OBJ) -o $(PRODUCT_DIRECTORY)/$@.elf
+	@$(CC) $(LINKFLAGS) $(OBJ) -o $(PRODUCT_DIRECTORY)/$@.elf -lcommon
 	@echo $(WARN_COLOR)OBJ$(NO_COLOR) $@
 	@$(OBJCOPY) -O binary $(PRODUCT_DIRECTORY)/$@.elf $(PRODUCT_DIRECTORY)/$@
 

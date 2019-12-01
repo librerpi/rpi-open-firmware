@@ -1,4 +1,4 @@
-#include <lib/runtime.h>
+#include <runtime.h>
 #include <hardware.h>
 
 #define UART_DR     (UART_BASE+0x00)

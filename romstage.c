@@ -17,7 +17,7 @@ VideoCoreIV first stage bootloader.
 
 =============================================================================*/
 
-#include <lib/runtime.h>
+#include <runtime.h>
 #include <hardware.h>
 #include "romstage.h"
 #include "sdram.h"

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <lib/runtime.h>
+#include <runtime.h>
 #include <stdint.h>
 #include <stddef.h>
 #include <memory_map.h>
@@ -9,15 +9,14 @@
 extern "C" {
 #endif
 
-static inline void __attribute__((noreturn)) hang_cpu() {
-	__asm__ __volatile__ (
-	    "wfi\n"
-	);
+static inline void __attribute__((noreturn)) _hang_cpu() {
+  __asm__ __volatile__ ("wfi\n");
 
-	/* in case the above fails */
-	for (;;) {
-		__asm__ __volatile__ ("nop\nnop\nnop\nnop\nnop\nnop");
-	}
+  /* in case the above fails */
+  for (;;) {
+    __asm__ __volatile__ ("nop\nnop\nnop\nnop\nnop\nnop");
+    __asm__ __volatile__ ("wfi\n");
+  }
 }
 
 #define STATIC_INIT_PRIORITY(x) __attribute__((init_priority(x)))

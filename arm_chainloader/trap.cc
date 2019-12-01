@@ -5,7 +5,7 @@
  * ARM trap handling code.
  */
 
-#include <lib/runtime.h>
+#include <runtime.h>
 
 struct arm_saved_state {
 	uint32_t	r[13];		/* General purpose register r0-r12 */

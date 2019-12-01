@@ -54,7 +54,7 @@ g_FirmwareData:
 	mrs r0, spsr; \
 	str r0, [sp, #64]; \
 	mov r0, sp
-	
+
 _fleh_undef:
 	SaveRegisters()
 	b sleh_undef
@@ -72,6 +72,7 @@ _fleh_addrexc:
 	b sleh_addrexc
 
 _fleh_irq:
+	// TODO, dont bother saving the FIQ swapped regs
 	SaveRegisters()
 	b sleh_irq
 
@@ -87,7 +88,7 @@ _secure_monitor:
 
 	//mov r0, #((1 << 7) | (1 << 8) | (1 << 6)) /* mask IRQ, AA and FIQ */
 	//orr r0, r0, #0x1a /* switch to hypervisor mode */
-	//msr spsr_cxfs, r0 
+	//msr spsr_cxfs, r0
 
 	movs pc, lr
 
@@ -125,7 +126,7 @@ L_setup_monitor:
 
 	mov r12, #1
 	//smc 0
-	
+
 L_finish_init:
 	/* enable instruction cache */
 	//mrc p15, 0, r0, c1, c0, 0

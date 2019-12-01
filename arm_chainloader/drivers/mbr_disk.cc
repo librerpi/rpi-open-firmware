@@ -118,24 +118,24 @@ struct MbrImpl {
 		return mmc->read_block(p.part_start + sector, buf);
 	}
 
-	void read_mbr() {
-		logf("Reading master boot record ...\n");
+  void read_mbr() {
+    logf("Reading master boot record ...\n");
 
-		if (!mmc->read_block(0, mbr)) {
-			panic("unable to read master boot record from the SD card");
-		}
+    if (!mmc->read_block(0, mbr)) {
+      panic("unable to read master boot record from the SD card");
+    }
 
-		if (!validate_signature()) {
-			panic("invalid master boot record signature (got 0x%x)", mbr->mbr_sig);
-		}
+    if (!validate_signature()) {
+      panic("invalid master boot record signature (got 0x%x)", mbr->mbr_sig);
+    }
 
-		logf("MBR contents:\n");
+    logf("MBR contents:\n");
 
-		for (int i = 0; i < 4; i++) {
-			MbrPartition& p = mbr->mbr_part[i];
-			printf("    %d: %s at:%ld size:%ld\n", i, mbr_fs_to_string(p.part_typ), p.part_start, p.part_size);
-		}
-	}
+    for (int i = 0; i < 4; i++) {
+      MbrPartition& p = mbr->mbr_part[i];
+      printf("    %d: %s at:%ld size:%ld\n", i, mbr_fs_to_string(p.part_typ), p.part_start, p.part_size);
+    }
+  }
 
 	MbrImpl() {
 		mbr = new Mbr;

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <lib/runtime.h>
+#include <runtime.h>
 #include <hardware.h>
 
 enum IODeviceState {

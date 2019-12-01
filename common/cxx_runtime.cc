@@ -19,7 +19,7 @@ Crappy C++ runtime.
 
 #include <stdint.h>
 #include <hardware.h>
-#include <lib/runtime.h>
+#include <runtime.h>
 
 extern uintptr_t* __init_array_start;
 extern uintptr_t* __init_array_end;

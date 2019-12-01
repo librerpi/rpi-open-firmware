@@ -20,13 +20,9 @@ SRCS = \
 	drivers/sdhost_impl.cc \
 	drivers/mbr_disk.cc \
 	drivers/mailbox.cc \
-	../lib/xprintf.c \
-	../lib/panic.c \
-	../lib/udelay.c \
-	../lib/cxx_runtime.c \
-	../lib/tlsf/tlsf.c \
 	loader.cc \
 	trap.cc \
+	chainloader.c \
 	main.c
 
 ARCH = armv6zk
@@ -93,7 +89,7 @@ $(TARGET_BUILD_DIR)/%.o: %.s $(HEADERS)
 
 $(TARGET_ARM_CHAINLOADER): create_build_directory $(OBJ)
 	@echo $(WARN_COLOR)LD  $(NO_COLOR) $@.elf
-	@$(CC) $(LINKFLAGS) $(OBJ) -o $(PRODUCT_DIRECTORY)/$@.elf -lgcc
+	@$(CC) $(LINKFLAGS) $(OBJ) -o $(PRODUCT_DIRECTORY)/$@.elf -lgcc -lcommon -ltlsf
 	@echo $(WARN_COLOR)OBJ$(NO_COLOR) $@
 	@$(OBJCOPY) -O binary $(PRODUCT_DIRECTORY)/$@.elf $(PRODUCT_DIRECTORY)/$@
 

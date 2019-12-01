@@ -17,12 +17,12 @@ Panic routine.
 
 =============================================================================*/
 
-#include <lib/runtime.h>
+#include <runtime.h>
 
 #if defined(__VIDEOCORE4__)
 	#include <cpu.h>
 #else
-	#include <chainloader.h>
+	#include <hang_cpu.h>
 #endif
 
 #undef panic

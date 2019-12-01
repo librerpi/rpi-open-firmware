@@ -4,15 +4,15 @@
 #include <stdarg.h>
 #include <stddef.h>
 
-#include <lib/panic.h>
-#include <lib/xprintf.h>
+#include <panic.h>
+#include <xprintf.h>
 
 #ifdef __arm__
 #define HAS_DYNAMIC_ALLOCATIONS
 #endif
 
 #ifdef HAS_DYNAMIC_ALLOCATIONS
-#include <lib/tlsf/tlsf.h>
+#include <tlsf/tlsf.h>
 #endif
 
 #ifdef __VIDEOCORE4__

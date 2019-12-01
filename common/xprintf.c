@@ -13,6 +13,7 @@
 
 #include "xprintf.h"
 
+// TODO, move into a header
 extern void uart_putc(unsigned int ch);
 
 /*----------------------------------------------*/
@@ -113,6 +114,8 @@ int vprintf (
 		case 'D' :					/* Signed decimal */
 		case 'U' :					/* Unsigned decimal */
 			r = 10; break;
+                case 'P':
+                        f |= 4;
 		case 'X' :					/* Hexdecimal */
 			r = 16; break;
 		default:					/* Unknown type (passthrough) */

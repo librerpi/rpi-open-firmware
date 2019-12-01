@@ -18,6 +18,8 @@ that are missing from the release. This is also used by ARM.
 
 =============================================================================*/
 
+#include <stdint.h>
+
 #pragma once
 
 #define VC4_PERIPH_BASE 0x7E000000
