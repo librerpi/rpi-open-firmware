@@ -22,6 +22,7 @@ VideoCoreIV second level exception handlers.
 #include <exception.h>
 #include <hardware.h>
 #include <cpu.h>
+#include "arm_monitor.h"
 
 static const char* g_ExceptionNames[] = { VC4_EXC_NAMES };
 
@@ -98,8 +99,6 @@ void sleh_fatal(vc4_saved_state_t* pcb, uint32_t n) {
 
 	hang_cpu();
 }
-
-extern void arm_monitor_interrupt();
 
 void sleh_irq(vc4_saved_state_t* pcb, uint32_t tp) {
 	uint32_t status = IC0_S;

@@ -20,6 +20,8 @@ VideoCoreIV SDRAM initialization code.
 
 #include <lib/runtime.h>
 #include <hardware.h>
+#include "romstage.h"
+#include "sdram.h"
 
 /*
  Registers
@@ -36,8 +38,6 @@ VideoCoreIV SDRAM initialization code.
  PT2:
 	DAI Duration
  */
-
-extern uint32_t g_CPUID;
 
 #define MR_REQUEST_SUCCESS(x) ((SD_MR_TIMEOUT_SET & x) != SD_MR_TIMEOUT_SET)
 #define MR_GET_RDATA(x) ((x & SD_MR_RDATA_SET) >> SD_MR_RDATA_LSB)

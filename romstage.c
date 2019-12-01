@@ -19,6 +19,10 @@ VideoCoreIV first stage bootloader.
 
 #include <lib/runtime.h>
 #include <hardware.h>
+#include "romstage.h"
+#include "sdram.h"
+#include "arm_monitor.h"
+#include "BCM2708PlatformStartup.h"
 
 uint32_t g_CPUID;
 
@@ -121,11 +125,6 @@ void set_interrupt(int intno, bool enable, int core) {
     uint32_t v = mmio_read32(base + offset) & ~slot;
     mmio_write32(base + offset, enable ? v | slot : v);
 }
-
-extern void sdram_init();
-extern void arm_init();
-extern void monitor_start();
-extern void PEStartPlatform();
 
 int _main(unsigned int cpuid, unsigned int load_address) {
 	switch_vpu_to_pllc();

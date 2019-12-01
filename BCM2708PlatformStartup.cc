@@ -7,6 +7,7 @@
 
 #include <drivers/IODevice.hpp>
 #include <drivers/BCM2708PowerManagement.hpp>
+#include "BCM2708PlatformStartup.h"
 
 static IODevice* startDeviceByTag(uint32_t tag) {
 	IODevice* dev = IODevice::findByTag(tag);

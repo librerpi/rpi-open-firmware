@@ -107,7 +107,7 @@ L_setup_hw_irq:
 	 * are chosen to be near the top of the available cache memory
 	 */
 
-	mov r28, #0x1D000 
+	mov r28, #0x1D000
 	mov sp, #0x1C000
 
 	/* jump to C code */
@@ -120,7 +120,7 @@ L_setup_hw_irq:
  * Exception Handling
  ************************************************************/
 
-.macro SaveRegsLower 
+.macro SaveRegsLower
 	stm lr, (--sp)
 	stm r0-r5, (--sp)
 .endm
