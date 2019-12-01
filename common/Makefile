@@ -1,6 +1,6 @@
 all: libcommon.a
 
-ARMCFLAGS=-mfpu=vfp -mfloat-abi=hard -mtune=arm1176jzf-s -march=armv6zk
+ARMCFLAGS=-mtune=arm1176jzf-s -march=armv6zk
 BASECFLAGS=-Ilib -I. -Iinclude -nostdlib -nostartfiles -ffreestanding
 ifeq (${CC},vc4-elf-gcc)
 CFLAGS=${BASECFLAGS}
