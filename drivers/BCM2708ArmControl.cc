@@ -20,17 +20,7 @@ extern uint8_t L_arm_code_end;
 #define ARM_MEMORY_BASE 0xC0000000
 #define ARM_BKPT_OPCODE 0xE1200070
 
-/*
- * RPi3: http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.ddi0488d/CIHBDCJD.html
- */
-
-/*
- * This controls AA64nAA32 signal, when set, ARM starts in AArch64 mode. Only applicable
- * to systems using Cortex-A53.
- */
-#define ARM_C0_AARCH64 0x00000200
-
-static uint32_t g_BrespTab[] = {
+static uint8_t g_BrespTab[] = {
 	0x10, 0x14, 0x10, 0x14, 0x10, 0x14, 0x10, 0x14, 0x10, 0x1C, 0x18, 0x1C, 0x18, 0x0,
 	0x10, 0x14, 0x10, 0x1C, 0x10, 0x14, 0x10, 0x14, 0x10, 0x14, 0x10, 0x14, 0x10, 0x0,
 	0x10, 0x14, 0x10, 0x1C, 0x18, 0x1C, 0x10, 0x14, 0x18, 0x1C, 0x10, 0x14, 0x10, 0x0,
@@ -43,7 +33,7 @@ struct BCM2708ArmControl : IODevice {
 
 	PowerManagementDomain* pmDomain;
 
-	static inline void bridgeWriteBresp(uint32_t bits) {
+	static inline void bridgeWriteBresp(uint8_t bits) {
 		ARM_CONTROL0 = (ARM_CONTROL0 & ~(ARM_C0_BRESP1|ARM_C0_BRESP2)) | bits;
 		udelay(30);
 	}

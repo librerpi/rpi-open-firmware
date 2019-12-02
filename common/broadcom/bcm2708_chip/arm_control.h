@@ -19,6 +19,15 @@
 #define ARM_C0_UNUSED05  0x00000020 // free
 #define ARM_C0_FULLPERI  0x00000040
 #define ARM_C0_UNUSED78  0x00000180 // free
+/*
+ * RPi3: http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.ddi0488d/CIHBDCJD.html
+ */
+
+/*
+ * This controls AA64nAA32 signal, when set, ARM starts in AArch64 mode. Only applicable
+ * to systems using Cortex-A53.
+ */
+#define ARM_C0_AARCH64   0x00000200
 #define ARM_C0_JTAGMASK  0x00000E00
 #define ARM_C0_JTAGOFF   0x00000000
 #define ARM_C0_JTAGBASH  0x00000800 // Debug on GPIO off
