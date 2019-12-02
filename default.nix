@@ -72,6 +72,6 @@ in {
     inherit (vc4) tlsf firmware common;
   };
   arm = {
-    inherit (arm) tlsf chainloader common linux_rpi2;
+    inherit (arm) tlsf chainloader common linux_rpi2 linux_rpi3;
   };
 }
