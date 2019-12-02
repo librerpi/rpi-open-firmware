@@ -76,6 +76,6 @@ in {
     inherit (arm) tlsf chainloader common;
   };
   arm7 = {
-    inherit (arm7) linux_rpi2 linux_rpi3;
+    inherit (arm7) linux_rpi2;
   };
 }
