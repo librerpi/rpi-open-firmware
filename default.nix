@@ -54,6 +54,7 @@ let
     cp ${vc4.firmware}/bootcode.bin .
     echo console=ttyAMA0,115200 > cmdline.txt
     dtc ${./rpi.dts} -o rpi.dtb
+    cp ${aarch64.linux_rpi3}/Image zImage
   '';
   helper = pkgs.writeShellScript "helper" ''
     set -e
@@ -71,6 +72,6 @@ in {
     inherit (vc4) tlsf firmware common;
   };
   arm = {
-    inherit (arm) tlsf chainloader common;
+    inherit (arm) tlsf chainloader common linux_rpi2;
   };
 }
