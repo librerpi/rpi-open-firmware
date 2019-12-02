@@ -3,7 +3,8 @@ let
   pkgs = import (builtins.fetchTarball https://github.com/input-output-hk/nixpkgs/archive/0ee0489d42e.tar.gz) {};
   lib = pkgs.lib;
   vc4 = pkgs.pkgsCross.vc4.extend overlay;
-  arm = pkgs.pkgsCross.armv7l-hf-multiplatform.extend overlay;
+  arm = pkgs.pkgsCross.arm-embedded.extend overlay;
+  arm7 = pkgs.pkgsCross.armv7l-hf-multiplatform.extend overlay;
   aarch64 = pkgs.pkgsCross.aarch64-multiplatform;
   overlay = self: super: {
     tlsf = self.stdenv.mkDerivation {
@@ -72,6 +73,9 @@ in {
     inherit (vc4) tlsf firmware common;
   };
   arm = {
-    inherit (arm) tlsf chainloader common linux_rpi2 linux_rpi3;
+    inherit (arm) tlsf chainloader common;
+  };
+  arm7 = {
+    inherit (arm7) linux_rpi2 linux_rpi3;
   };
 }
