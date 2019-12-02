@@ -3,7 +3,7 @@ let
   pkgs = import (builtins.fetchTarball https://github.com/input-output-hk/nixpkgs/archive/0ee0489d42e.tar.gz) {};
   lib = pkgs.lib;
   vc4 = pkgs.pkgsCross.vc4.extend overlay;
-  arm = pkgs.pkgsCross.arm-embedded.extend overlay;
+  arm = pkgs.pkgsCross.armv7l-hf-multiplatform.extend overlay;
   aarch64 = pkgs.pkgsCross.aarch64-multiplatform;
   overlay = self: super: {
     tlsf = self.stdenv.mkDerivation {
