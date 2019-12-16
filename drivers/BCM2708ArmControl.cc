@@ -20,6 +20,13 @@ extern uint8_t L_arm_code_end;
 #define ARM_MEMORY_BASE 0xC0000000
 #define ARM_BKPT_OPCODE 0xE1200070
 
+void bzero(void *addr, size_t len) {
+  uint8_t *x = (uint8_t*)addr;
+  for (size_t i = 0; i < len; i++) {
+    x[i] = 0;
+  };
+}
+
 static uint8_t g_BrespTab[] = {
 	0x10, 0x14, 0x10, 0x14, 0x10, 0x14, 0x10, 0x14, 0x10, 0x1C, 0x18, 0x1C, 0x18, 0x0,
 	0x10, 0x14, 0x10, 0x1C, 0x10, 0x14, 0x10, 0x14, 0x10, 0x14, 0x10, 0x14, 0x10, 0x0,
@@ -131,31 +138,53 @@ struct BCM2708ArmControl : IODevice {
 		patchFirmwareData();
 	}
 
-	void mapBusToArm(uint32_t busAddr, uint32_t armAddr) {
-		volatile uint32_t* tte = reinterpret_cast<volatile uint32_t*>(&ARM_TRANSLATE);
+  // maps a 16mb chunk of ram
+  // the bus address has a resolution of 2mb
+  // the arm addr has a resolution of 16mb
+  // the entire mapping is 16mb long
+  // comments say there are 32 slots in the list (512mb mapped) an another 32 spare (1gig mapped)
+  void mapBusToArm(uint32_t busAddr, uint32_t armAddr) {
+    volatile uint32_t* tte = reinterpret_cast<volatile uint32_t*>(&ARM_TRANSLATE);
 
-		uint32_t index = armAddr >> 24;
-		uint32_t pte = busAddr >> 21;
+    uint32_t index = armAddr >> 24; // div by 16mb
+    uint32_t pte = busAddr >> 21; // div by 2mb
+    IODriverLog("mapBusToArm index:%x, pte:%x\n", index, pte);
 
-		tte[index] = pte;
-	}
+    tte[index] = pte;
+  }
 
+  void printregs() {
+    uint32_t c0 = ARM_CONTROL0, c1 = ARM_CONTROL1;
+    IODriverLog("C0: %x C1: %x", c0, c1);
+  }
+void bzero2(void *addr, size_t len) {
+  uint8_t *x = (uint8_t*)addr;
+  for (size_t i = 0; i < len; i++) {
+    if ((i % 0x1000000) == 0) IODriverLog("%x", i);
+    x[i] = 0;
+  };
+}
 	virtual void start() override {
 		IODriverLog("starting ...");
 
 		pmDomain = PowerManagementDomain::getDeviceForDomain(kCprPowerDomainARM);
 		assert(pmDomain);
 
+                //IODriverLog("about to zero out, stack near %x", pmDomain);
+                //bzero2((void*)ARM_MEMORY_BASE, 1024*1024*512);
+                //IODriverLog("zeroed");
 		loadInitialCode();
 
 		IODriverLog("original memstart: 0x%X", *((volatile uint32_t*)ARM_MEMORY_BASE));
 
+                // map 62 chunks of 16mb of ram, total of 992mb
 		for (uint32_t i = 0; i < 62; i++) {
 			uint32_t offset = i * 0x1000000;
 			mapBusToArm(ARM_MEMORY_BASE + offset, 0x0 + offset);
+                        IODriverLog("mapped VC 0x%X to ARM 0x%X", ARM_MEMORY_BASE + offset, 0x0 + offset);
 		}
 
-		IODriverLog("mapped VC 0x%X to ARM 0x%X", ARM_MEMORY_BASE, 0);
+		//IODriverLog("mapped VC 0x%X to ARM 0x%X", ARM_MEMORY_BASE, 0);
 
 		mapBusToArm(VC4_PERIPH_BASE, ARM_PERIPH_BASE);
 
@@ -168,23 +197,31 @@ struct BCM2708ArmControl : IODevice {
 		 * enable peripheral access, map arm secure bits to axi secure bits 1:1 and
 		 * set the mem size for who knows what reason.
 		 */
-		ARM_CONTROL0 |= 0x008 | ARM_C0_APROTPASS | ARM_C0_SIZ1G | ARM_C0_FULLPERI;
+                printregs();
+		ARM_CONTROL0 |= 0x008 | ARM_C0_APROTPASS | ARM_C0_SIZ1G | ARM_C0_FULLPERI; // | ARM_C0_AARCH64;
+                printregs();
 		ARM_CONTROL1 |= ARM_C1_PERSON;
+                printregs();
 
 		ARM_IRQ_ENBL3 |= ARM_IE_MAIL;
 
 		IODriverLog("using C0: 0x%X", ARM_CONTROL0);
+                printregs();
 
 		setupClock();
+                printregs();
 		pmDomain->start();
+                printregs();
 
 		/*
 		 * ARM is now powered on but stalling on a bus transaction, start the
 		 * async bridge and let ARM start fetching instructions.
 		 */
 		bridgeStart(true);
+                printregs();
 
 		IODevice::start();
+                printregs();
 	}
 
 	virtual void init() override {

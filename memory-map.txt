@@ -1,0 +1,53 @@
+"real physical"
+rpi1-3, not sure what happens to ram shadowed by IO
+rpi4, with 4gig of ram, only 1gig is visible within "bus address space", 3gig cant be reached by VC4 (unknown how arm gets to it)
+https://www.raspberrypi.org/forums/viewtopic.php?p=1543934#p1543934
+
+          0 -> $RAMSIZE   (0 to $RAMSIZE)  RAM
+0x1801_1000                                             VPU0_THREAD_CTRL_BASE_ADDRESS ??
+0x1A00_0000 -> 0x1A0F_FFFF                              vc_run APB Bridge?
+0x1000_0000                                             BOOTROM_BASE_ADDRESS??
+0x2000_0000                                             BOOTROM_BASE_ADDRESS??
+0x3e00_0000 -> 0x3fff_ffff (992mb to 1024mb, 32mb long) IO peripherals (recommended to access via 4-alias?)
+0x3e00_0000                                             MS_BASE from multicore_sync.h
+0x3e00_3000                                             ST_BASE from timer.h
+0x3e20_0000 -> 0x3E21_FFFF                              peri_audio APB Bridge?
+0x3e00_7000                                             DMA0_BASE
+0x3e00_8000                                             NU_BASE from nexus_uba.h (debug control?)
+0x3e00_9000                                             SYSAC_BASE from system_arbiter_ctrl.h (priority of every axi peer?)
+0x3e00_a000                                             ASB_BASE from apb_async_bridge_ctrl.h
+0x3e00_b000                                             ARM_BASE
+
+0x3e20_0000                                             GP_BASE (gpio)
+0x3e40_0000                                             SCALER_BASE
+0x3ec0_0000                                             V3D_BASE from v3d.h
+0x3ee0_0000                                             SD_BASE from sdc_ctrl.h (dram control)
+0x3ee0_1000                                             L2_BASE from l2_cache_ctrl.h
+0x3ee0_2000                                             L1_BASE from vpu_l1_cache_ctrl.h
+0x3ee0_2100                                             D0CACHE_BASE from hardware_vc4.h
+0x3ee0_8000                                             APERF1_BASE from axi_performance1.h
+0x3e80_0000 -> 0x3E81_FFFF                              peri_image APB Bridge?
+0x3f00_0000                                             H264_BASE
+
+bus address space:
+4 aliases of the 1st 1gig of "real physical"
+          0 -> 0x3fff_ffff (0    to 1gig)   0-alias, L1 and L2 cached
+0x4000_0000 -> 0x7fff_ffff (1gig to 2gig)   4-alias, L2 cached (L1 coherent)
+0x8000_0000 -> 0xbfff_ffff (2gig to 3gig)   8-alias, L2 cached (ignores L1)
+0xc000_0000 -> 0xffff_ffff (3gig to 4gig)   C-alias, direct uncached
+
+
+arm physical:
+mapped in 16mb chunks by mapBusToArm() in drivers/BCM2708ArmControl.cc
+current layout is:
+         0 -> 0x3dffffff (0 to 992mb, 62 chunks of 16mb)       primary arm ram, mapped to the C alias in "bus address space"
+0x3F000000 -> 0x3Fffffff (1008mb to 1024mb, 1 chunk 16mb long) IO peripherals,  mapped to the IO peripherals in the 4 alias in "bus address space"
+
+
+official firmware puts io at 0x20000000 for rpi1/2, and 0x3F000000 for 3
+
+official rpi4 firmware puts
+bcm2835 io at 0xFE000000 (32mb from 4g)
+bcm2836 io at 0xFF800000 (8mb from 4g)
+GICv2 at 0xFF841000
+cpu interface window (each arm core sees diff?) at 0xFF842000

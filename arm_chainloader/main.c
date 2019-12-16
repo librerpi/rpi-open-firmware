@@ -54,13 +54,41 @@ void main(bool security_supported) {
 	     g_FirmwareData.sdram_size,
 	     g_FirmwareData.vpu_cpuid);
 
+        uint32_t arm_cpuid;
+        // read MIDR reg
+        __asm__("mrc p15, 0, %0, c0, c0, 0" : "=r"(arm_cpuid));
+        // from https://github.com/dwelch67/raspberrypi/blob/master/boards/cpuid/cpuid.c
+        switch (arm_cpuid) {
+        case 0x410FB767:
+          logf("rpi 1/0\n");
+          break;
+        case 0x410FC075:
+          logf("rpi 2\n");
+          break;
+        case 0x410FD034:
+          logf("cortex A53, rpi 3\n");
+          break;
+        // 410FD083 is cortex A72, rpi4
+        default:
+          logf("unknown rpi model, cpuid is 0x%lx\n", arm_cpuid);
+        }
+
 	if (security_supported) {
-		logf("Security extensions are supported!\n");
+		logf("Security extensions are supported! but NS bit set\n");
 	}
 
 	logf("Execution mode: %s\n", get_execution_mode_name());
+        uint32_t cpsr = arm_get_cpsr();
+        logf("CPSR: %lx\n", cpsr);
 
 	heap_init();
+
+#if 0
+        double foo = 1.1;
+        double bar = 2.2;
+        double baz = foo * bar;
+        printf("%x\n", baz);
+#endif
 
 	/* c++ runtime */
 	__cxx_init();

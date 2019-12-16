@@ -1,0 +1,10 @@
+#define ARM32_MODE_MASK 0x1f
+#define ARM32_USR 0x10
+#define ARM32_FIQ 0x11
+#define ARM32_IRQ 0x12
+#define ARM32_SVC 0x13
+#define ARM32_MON 0x16
+#define ARM32_ABT 0x17
+#define ARM32_HYP 0x1a
+#define ARM32_UND 0x1b
+#define ARM32_SYS 0x1f

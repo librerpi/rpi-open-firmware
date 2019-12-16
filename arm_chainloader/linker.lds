@@ -35,6 +35,15 @@ SECTIONS
 		*(.bss)
 	}
 
-	. = ALIGN(32 / 8);
+	. = ALIGN(16);
+        _irq_stack_bottom = .;
+        . = . + 1024;
+        _irq_stack_top = .;
+
+        _svc_stack_bottom = .;
+        . = . + 1024;
+        _svc_stack_top = .;
+
+	. = ALIGN(16);
 	_end = . ;
 }

@@ -6,7 +6,7 @@
  */
 
 #include <drivers/IODevice.hpp>
-#include <drivers/BCM2708PowerManagement.hpp> 
+#include <drivers/BCM2708PowerManagement.hpp>
 #define FLAG_BUSY (1 << 31)
 
 struct BCM2708UsbPhy : IODevice {
@@ -28,7 +28,7 @@ struct BCM2708UsbPhy : IODevice {
 		wait();
 
 		/* dummy write due to errata; see BCM2835 peripheral manual */
-		USB_GMDIOGEN = 0; 
+		USB_GMDIOGEN = 0;
 		wait();
 	}
 

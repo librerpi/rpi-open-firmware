@@ -19,7 +19,7 @@ PowerManagementDomain* PowerManagementDomain::getDeviceForDomain(cpr_power_domai
 }
 
 /***********************************************************************
- * 
+ *
  * Superclass for all power domains.
  *
  ***********************************************************************/
@@ -133,11 +133,11 @@ struct BCM2708PowerDomain : PowerManagementDomain {
 
 	void registerPowerDomain(cpr_power_domain_t domain) {
 		g_BCM2708PowerDomains[domain] = this;
-	} 
+	}
 };
 
 /***********************************************************************
- * 
+ *
  * Image power domain.
  * Contains: PERII (USB), H264, ISP
  *
@@ -207,7 +207,7 @@ struct BCM2708PowerDomainImage : BCM2708PowerDomain {
 			"v16mov -, 0\n"
 		);
 #endif
-		
+
 		IODriverLog("ungating and resetting ...");
 
 		CM_PERIICTL = CM_PASSWORD;
@@ -246,7 +246,7 @@ struct BCM2708PowerDomainImage : BCM2708PowerDomain {
 IODriverCreateSingletonInstance(BCM2708PowerDomainImage);
 
 /***********************************************************************
- * 
+ *
  * USB power domain.
  *
  ***********************************************************************/
@@ -286,7 +286,7 @@ struct BCM2708PowerDomainUSB : BCM2708PowerDomain {
 IODriverCreateSingletonInstance(BCM2708PowerDomainUSB);
 
 /***********************************************************************
- * 
+ *
  * ARM power domain.
  *
  ***********************************************************************/

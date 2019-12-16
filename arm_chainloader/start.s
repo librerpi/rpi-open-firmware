@@ -23,6 +23,7 @@ the boot process.
 =============================================================================*/
 
 #include "memory_map.h"
+#include "arm-defs.h"
 
 .arch_extension sec
 
@@ -39,6 +40,7 @@ _start:
 	b _fleh_irq /* irq */
 	b _fleh_fiq /* fiq */
 
+.org 32
 .globl g_FirmwareData
 g_FirmwareData:
 	.long 0 /* SDRAM capacity */
@@ -47,12 +49,25 @@ g_FirmwareData:
 	.long 0 /* Reserved */
 	.long 0 /* Reserved */
 
+value: .word 0x63ff
+osc: .word 19200000
+
 # based on https://github.com/mrvn/moose/blob/master/kernel/entry.S
 .macro SaveRegisters, offset
   # note, this will trash the stack of the main thread
   # it will also trash the stack of all other modes
   # therefore, any interupt at all is currently fatal
 	mov sp, #(MEM_STACK_END)
+        sub lr, #\offset
+	stmea sp, {r0-lr}^
+	str lr, [sp, #60]
+	mrs r0, spsr
+	str r0, [sp, #64]
+	mov r0, sp
+.endm
+
+# based on https://github.com/mrvn/moose/blob/master/kernel/entry.S
+.macro NewSaveRegisters, offset
         sub lr, #\offset
 	stmea sp, {r0-lr}^
 	str lr, [sp, #60]
@@ -83,14 +98,14 @@ _fleh_irq:
 	b sleh_irq
 
 _fleh_fiq:
-	SaveRegisters 4
+	NewSaveRegisters 4
 	b sleh_fiq
 
 _secure_monitor:
-	mrc p15, 0, r0, c1, c1, 0
+	mrc p15, 0, r0, c1, c1, 0 // SCR -> r0
 	//bic	r0, r0, #0x4a /* clear IRQ, EA, nET */
 	orr r0, r0, #1 /* set NS */
-	mcr p15, 0, r0, c1, c1, 0
+	mcr p15, 0, r0, c1, c1, 0 // r0 -> SCR, now with NS set
 
 	//mov r0, #((1 << 7) | (1 << 8) | (1 << 6)) /* mask IRQ, AA and FIQ */
 	//orr r0, r0, #0x1a /* switch to hypervisor mode */
@@ -98,15 +113,38 @@ _secure_monitor:
 
 	movs pc, lr
 
+.macro SetModeSp, mode, newsp
+        mov r1, r0
+        bic r1, r1, #(ARM32_MODE_MASK) // clear all mode bits
+        orr r1, r1, #(mode) // set a mode
+        msr cpsr, r1 // enter the mode
+        ldr sp, =\newsp
+.endm
+
 _common_start:
+        mrs r0, cpsr
+
+        mov r1, r0
+        bic r1, r1, #(ARM32_MODE_MASK) // clear all mode bits
+        orr r1, r1, #(ARM32_IRQ) // set IRQ mode
+        msr cpsr, r1 // enter IRQ mode
+        ldr sp, =_irq_stack_top
+
+        mov r1, r0
+        bic r1, r1, #(ARM32_MODE_MASK)
+        orr r1, r1, #(ARM32_SVC)
+        msr cpsr, r1
+        ldr sp, =_svc_stack_top
+
+        msr cpsr, r0 // revert to previous mode
 	/*
 	 * read MIDR, see if this is an ARMv6 system, if it is, just
 	 * assume single core (BCM2708) and not bother doing SMP stuff.
 	 */
-	mrc p15, 0, r0, c0, c0, 0
+	mrc p15, 0, r0, c0, c0, 0 // MIDR -> r0
 	lsr r0, #16
 	and r0, #0xF
-	cmp r0, #0x7
+	cmp r0, #0x7 // check if MIDR ends in 0x7__
 	mov r12, #0
 	beq L_finish_init
 
@@ -114,6 +152,14 @@ L_armv7_or_higher:
 	/*
 	 * okay, we're an ARMv7 or an ARMv8.
 	 */
+        // setup timer freq
+        // based loosely on https://github.com/raspberrypi/tools/blob/509f504e8f130ead31b85603016d94d5c854c10c/armstubs/armstub7.S#L130-L135
+        ldr r1, value
+        mcr p15, 0, r1, c1, c1, 2 // NSACR = all copros to non-sec
+
+        ldr r1, osc
+        mcr p15, 0, r1, c14, c0, 0 // CNTFRQ = 19.2mhz
+
 	mrc p15, 0, r0, c0, c0, 5	// read MPIDR
 	and r3, r0, #0xc0000000		// multiprocessing extensions and
 	teq r3, #0x80000000			// not part of a uniprocessor system?
@@ -126,9 +172,19 @@ L_setup_monitor:
 	//mcr	p15, 0, r1, c12, c0, 1 /* MVBAR */
 	//mcr p15, 0, r1, c7, c5, 4 /* ISB (ARMv6 compatible way) */
 
-	mrc p15, 0, r0, c1, c1, 0
+#ifdef ENABLE_VFP
+        // enable VFP
+        ldr r0, =(0xF << 20)
+        mcr p15, 0, r0, c1, c0, 2 // CPACR
+
+        mov r0, #0x40000000
+        vmsr fpexc, r0
+#endif
+
+        // set non-secure flag
+	mrc p15, 0, r0, c1, c1, 0 // SCR -> r0
 	orr r0, r0, #1 /* set NS */
-	mcr p15, 0, r0, c1, c1, 0
+	mcr p15, 0, r0, c1, c1, 0 // r0 -> SCR, but with NS set
 
 	mov r12, #1
 	//smc 0
@@ -144,6 +200,8 @@ L_finish_init:
 	b main
 
 L_deadloop:
+        // TODO, break out of loop when signaled by linux
 	cpsie if
 	wfi
 	b L_deadloop
+L_wordtable:

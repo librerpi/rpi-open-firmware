@@ -69,7 +69,7 @@ p31       Unassigned
 #else
    #include "bcm2708_chip/cam0.h"
    #include "bcm2708_chip/cam1.h"
-   #include "bcm2708_chip/ccp2tx.h"   
+   #include "bcm2708_chip/ccp2tx.h"
 #endif
    #include "bcm2708_chip/clkman_image.h"
 //   #include "bcm2708_chip/clkman_audio.h"
@@ -99,7 +99,7 @@ p31       Unassigned
    #include "bcm2708_chip/intctrl1.h"
    #include "bcm2708_chip/isp.h"
    #include "bcm2708_chip/l2_cache_ctrl.h"
-   #include "bcm2708_chip/jpeg_top.h"   
+   #include "bcm2708_chip/jpeg_top.h"
    #include "bcm2708_chip/mphi.h"
    #include "bcm2708_chip/multicore_sync.h"
    #include "bcm2708_chip/nexus_uba.h"
@@ -131,7 +131,7 @@ p31       Unassigned
 #endif
    #include "bcm2708_chip/timer.h"
    #include "bcm2708_chip/tempsens.h"
-   #include "bcm2708_chip/txp.h"   
+   #include "bcm2708_chip/txp.h"
    #include "bcm2708_chip/uart.h"
    #include "bcm2708_chip/v3d.h"
    #include "bcm2708_chip/vec.h"
@@ -791,14 +791,14 @@ p31       Unassigned
    #define WSE_VPS_DATA_1                             VEC_WSE_VPS_DATA_1
    #define WSE_VPS_CONTROL                            VEC_WSE_VPS_CONTROL
 
-   #define CGMSAE_RESET                               VEC_CGMSAE_RESET      
+   #define CGMSAE_RESET                               VEC_CGMSAE_RESET
    #define CGMSAE_TOP_CONTROL                         VEC_CGMSAE_TOP_CONTROL
    #define CGMSAE_BOT_CONTROL                         VEC_CGMSAE_BOT_CONTROL
-   #define CGMSAE_TOP_FORMAT                          VEC_CGMSAE_TOP_FORMAT 
-   #define CGMSAE_BOT_FORMAT                          VEC_CGMSAE_BOT_FORMAT 
-   #define CGMSAE_TOP_DATA                            VEC_CGMSAE_TOP_DATA   
-   #define CGMSAE_BOT_DATA                            VEC_CGMSAE_BOT_DATA   
-   #define CGMSAE_REVID                               VEC_CGMSAE_REVID      
+   #define CGMSAE_TOP_FORMAT                          VEC_CGMSAE_TOP_FORMAT
+   #define CGMSAE_BOT_FORMAT                          VEC_CGMSAE_BOT_FORMAT
+   #define CGMSAE_TOP_DATA                            VEC_CGMSAE_TOP_DATA
+   #define CGMSAE_BOT_DATA                            VEC_CGMSAE_BOT_DATA
+   #define CGMSAE_REVID                               VEC_CGMSAE_REVID
 
    /*---------------------------------------------------------------------------*/
    /* System Timer */
@@ -1290,7 +1290,7 @@ p31       Unassigned
 
    #define OTP_CONTROL_ROW                       (OTP_VPU_CACHE_KEY_ROW+OTP_VPU_CACHE_KEY_SIZE_IN_ROWS)
    #define OTP_CONTROL_SIZE_IN_ROWS              1
-  
+
    #define OTP_BOOT_ROM_ROW                      (OTP_CONTROL_ROW+OTP_CONTROL_SIZE_IN_ROWS)
    #define OTP_BOOT_ROM_SIZE_IN_ROWS             1
 

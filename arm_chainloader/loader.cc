@@ -94,6 +94,7 @@ struct LoaderImpl {
 			panic("no chosen node in fdt");
 
 		res = fdt_setprop(v_fdt, node, "bootargs", cmdline, strlen((char*) cmdline) + 1);
+                // chosen.txt describes linux,initrd-start and linux,initrd-end within the chosen node
 
 		/* pass in a memory map, skipping first meg for bootcode */
 		int memory = fdt_path_offset(v_fdt, "/memory");
@@ -104,7 +105,7 @@ struct LoaderImpl {
 		 * TODO: does this disrupt I/O? */
 
 		char dtype[] = "memory";
-		uint8_t memmap[] = { 0x00, 0x00, 0x01, 0x00, 0x30, 0x00, 0x00, 0x00 };
+		uint8_t memmap[] = { 0x00, 0x00, 0x01, 0x00, 0x10, 0x00, 0x00, 0x00 };
 		res = fdt_setprop(v_fdt, memory, "reg", (void*) memmap, sizeof(memmap));
 
 		logf("(valid) fdt loaded at 0x%p\n", fdt);

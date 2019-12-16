@@ -1,5 +1,6 @@
 all: libtlsf.a
 
+FPUFLAGS=-mfpu=vfp -mfloat-abi=hard
 ARMCFLAGS=-mtune=arm1176jzf-s -march=armv6zk
 ifeq (${CC},vc4-elf-gcc)
 CFLAGS=

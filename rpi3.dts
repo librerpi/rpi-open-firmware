@@ -1,0 +1,84 @@
+/dts-v1/;
+
+// #define IRQ_TYPE_LEVEL_HIGH      4
+
+/memreserve/ 0x00000000 0x00001000;
+
+/ {
+  compatible = "raspberrypi,3-model-b", "brcm,bcm2837";
+  model = "Raspberry Pi 3 Model B";
+  #address-cells = <0x01>;
+  #size-cells = <0x01>;
+
+  chosen {
+  };
+  memory {
+    device_type = "memory";
+  };
+  soc {
+    compatible = "simple-bus";
+    #address-cells = <0x01>;
+    #size-cells = <0x01>;
+    ranges = <0x7e000000 0x3f000000 0x1000000 0x40000000 0x40000000 0x1000>;
+    dma-ranges = <0xc0000000 0x00 0x3f000000>;
+
+    serial@7e201000 {
+      compatible = "brcm,bcm2835-pl011\0arm,pl011\0arm,primecell";
+      reg = <0x7e201000 0x200>;
+      //interrupts = <0x02 0x19>;
+      //clocks = <0x03 0x13 0x03 0x14>;
+      clock-names = "uartclk\0apb_pclk";
+      arm,primecell-periphid = <0x241011>;
+      cts-event-workaround;
+      pinctrl-names = "default";
+      pinctrl-0 = <0x08 0x09>;
+      status = "okay";
+      phandle = <0x22>;
+    };
+    serial@7e215040 {
+      compatible = "brcm,bcm2835-aux-uart";
+      reg = <0x7e215040 0x40>;
+      //interrupts = <0x01 0x1d>;
+      //clocks = <0x12 0x00>;
+      status = "okay";
+      pinctrl-names = "default";
+      pinctrl-0 = <0x13>;
+      phandle = <0x23>;
+    };
+    interrupt-controller@7e00b200 {
+      compatible = "brcm,bcm2836-armctrl-ic";
+      reg = <0x7e00b200 0x200>;
+      interrupt-controller;
+      #interrupt-cells = <0x02>;
+      interrupt-parent = <&local_intc>;
+      interrupts = <8 4>;
+    };
+    local_intc: local_intc@40000000 {
+      compatible = "brcm,bcm2836-l1-intc";
+      reg = <0x40000000 0x100>;
+      interrupt-controller;
+      #interrupt-cells = <2>;
+      interrupt-parent = <&local_intc>;
+    };
+  };
+  arm-pmu {
+    compatible = "arm,cortex-a53-pmu";
+    interrupt-parent = <&local_intc>;
+    interrupts = <9 4>;
+  };
+  timer {
+    compatible = "arm,armv7-timer";
+    interrupt-parent = <&local_intc>;
+    interrupts = <0x00 0x04 0x01 0x04 0x03 0x04 0x02 0x04>;
+    always-on;
+  };
+  cpus {
+    #address-cells = <1>;
+    #size-cells = <0>;
+    cpu@0 {
+      device_type = "cpu";
+      compatible = "arm,cortex-a53";
+      reg = <0>;
+    };
+  };
+};

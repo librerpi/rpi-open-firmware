@@ -6,9 +6,9 @@
 // Necessary macros to make C code understand registers
 #if defined(_ATHENA_)
    #define HW_REGISTER_RW(addr) ((addr))
-#else   
+#else
    #define HW_REGISTER_RW(addr) (*(volatile unsigned long *)(addr))
-#endif   
+#endif
    #define HW_REGISTER_RO(addr) (*(const volatile unsigned long *)(addr))
    #define HW_POINTER_TO_ADDRESS(pointer) ((uint32_t)(void *)&(pointer))
 
