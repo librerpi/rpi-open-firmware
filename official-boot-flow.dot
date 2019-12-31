@@ -23,7 +23,7 @@ digraph {
   usb_bootcode -> start_elf
   usb_netboot -> start_elf
 
-  spi_blob -> start4_elf
+  spi_blob -> start4_elf [ label="over SD or tftp" ]
 
   start_elf -> final
   start4_elf -> final
