@@ -1,0 +1,37 @@
+digraph {
+  rpi1 -> maskrom1
+  rpi2 -> maskrom1
+  rpi3 -> maskrom1
+  rpi4 -> maskrom2
+
+  maskrom1 -> sd_bootcode [ label="1" ]
+  maskrom1 -> nand_flash [ label="2" ]
+  maskrom1 -> spi_flash [ label="3" ]
+  maskrom1 -> usb_boot [ label="4" ]
+
+  maskrom2 -> sd_recovery [ label="1" ]
+  maskrom2 -> spi_blob [ label="2" ]
+  maskrom2 -> usb_device_boot [ label="3" ]
+
+  usb_boot -> usb_host_boot [ label="OTG=0" ]
+  usb_boot -> usb_device_boot [ label="OTG=1" ]
+
+  usb_host_boot -> usb_bootcode
+  usb_host_boot -> usb_netboot
+
+  sd_bootcode -> start_elf
+  usb_bootcode -> start_elf
+  usb_netboot -> start_elf
+
+  spi_blob -> start4_elf
+
+  start_elf -> final
+  start4_elf -> final
+
+  sd_bootcode [ label="bootcode.bin\non primary SD" ]
+  usb_bootcode [ label="bootcode.bin\non usb mass-storage" ]
+  usb_netboot [ label="bootcode.bin\nover tftp\nover LAN951x" ]
+  start_elf [ label="start.elf" ]
+  start4_elf [ label="start4.elf" ]
+  final [ label="load linux and enable arm\nas configured by config.txt" ]
+}
