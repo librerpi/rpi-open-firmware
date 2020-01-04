@@ -25,7 +25,7 @@ First stage monitor.
  * called from sleh_irq (trap.c)
  */
 void arm_monitor_interrupt() {
-	printf("VPU MBOX rcv: 0x%X, cnf 0x%X\n",
+	printf("VPU MBOX rcv: 0x%lX, cnf 0x%lX\n",
 	       ARM_1_MAIL1_RD,
 	       ARM_1_MAIL1_CNF);
 }

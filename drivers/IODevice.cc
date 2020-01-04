@@ -26,8 +26,9 @@ void IODevice::registerDriver() {
 void IODevice::driverLog(const char* fnName, const char* fmt, ...)
 {
 	va_list va;
+        uint32_t clock_lo = ST_CLO;
 
-	printf("%s::%s(): ", driverName, fnName);
+	printf("0x%08x %s::%s(): ", clock_lo, driverName, fnName);
 	va_start(va, fmt);
 	vprintf(fmt, va);
 	va_end(va);

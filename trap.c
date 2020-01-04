@@ -89,6 +89,13 @@ static void print_vpu_state(vc4_saved_state_t* pcb) {
 	    IC1_C,
 	    IC1_S
 	);
+        /*puts("stack dump:\n");
+        uint8_t *ram = 0;
+        uint32_t *ram32 = 0;
+        uint32_t starting_point = 0x1C000 - 0x200;
+        for (uint32_t i = starting_point & ~0xf; i < (starting_point + 0x200); i = i + 4) {
+          printf("0x%x %08x\n", i, ram32[i/4]);
+        }*/
 }
 
 void sleh_fatal(vc4_saved_state_t* pcb, uint32_t n) {

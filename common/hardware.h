@@ -30,11 +30,11 @@ that are missing from the release. This is also used by ARM.
 #define VC4_CPUID_BCM2709_PLUS 0x40
 
 #ifdef __arm__
-#define HW_REGISTER_RW(addr) (*(volatile unsigned int *)(VC4_TO_ARM_PERIPH(addr)))
-#define HW_REGISTER_RO(addr) (*(const volatile unsigned int *)(VC4_TO_ARM_PERIPH(addr)))
+#define HW_REGISTER_RW(addr) (*(volatile uint32_t *)(VC4_TO_ARM_PERIPH(addr)))
+#define HW_REGISTER_RO(addr) (*(const volatile uint32_t *)(VC4_TO_ARM_PERIPH(addr)))
 #else
-#define HW_REGISTER_RW(addr) (*(volatile unsigned int *)(addr))
-#define HW_REGISTER_RO(addr) (*(const volatile unsigned int *)(addr))
+#define HW_REGISTER_RW(addr) (*(volatile uint32_t *)(addr))
+#define HW_REGISTER_RO(addr) (*(const volatile uint32_t *)(addr))
 #endif
 
 #define mmio_read32(addr) HW_REGISTER_RW(addr)

@@ -28,7 +28,7 @@ Exception names are from the public release from:
 .text
 
 empty_space:
-	.space 0x200
+  .space 0x200
 
 /* MMIO-mapped registers for the interrupt table */
 

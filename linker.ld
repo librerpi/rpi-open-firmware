@@ -1,14 +1,14 @@
 SECTIONS
 {
-	. = 0x0;
+  . = 0x0;
 
-	_text = .;
+  _text = .;
 
-	.text : {
-		*(.text)
-		*(.text.*)
-		*(.gnu.warning)
-	}
+  .text : {
+    *(.text)
+    *(.text.*)
+    *(.gnu.warning)
+  }
 
 	_etext = .;
 

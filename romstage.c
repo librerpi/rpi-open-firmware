@@ -139,7 +139,7 @@ int _main(unsigned int cpuid, unsigned int load_address) {
 	IC0_VADDR = 0x1B000;
 	IC1_VADDR = 0x1B000;
 
-	__asm__ volatile("ei");
+	//__asm__ volatile("ei");
 
 	printf(
 	    "Booting Raspberry Pi....\n"
@@ -154,7 +154,7 @@ int _main(unsigned int cpuid, unsigned int load_address) {
 
 	/* bring up SDRAM */
 	sdram_init();
-	printf("SDRAM initialization completed successfully!\n");
+	puts("SDRAM initialization completed successfully!\n");
 
 	PEStartPlatform();
 

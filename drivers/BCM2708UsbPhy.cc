@@ -7,6 +7,9 @@
 
 #include <drivers/IODevice.hpp>
 #include <drivers/BCM2708PowerManagement.hpp>
+#include <drivers/BCM2708Gpio.hpp>
+#include <hang_cpu.h>
+
 #define FLAG_BUSY (1 << 31)
 
 struct BCM2708UsbPhy : IODevice {
@@ -56,10 +59,9 @@ struct BCM2708UsbPhy : IODevice {
 		 * e.g. on the RPi 2B it's pin 31
 		 */
 
-		unsigned int ra = GP_FSEL3;
-		ra &= ~(7 << 3);
-		ra |= 1 << 3;
-		GP_FSEL3 = ra;
+
+                BCM2708Gpio *gpio = static_cast<BCM2708Gpio*>(IODevice::findByTag('GPIO'));
+                gpio->setFunction(31, kBCM2708PinmuxOut);
 
 		udelay(300);
 		GP_CLR0 = (1 << 31);

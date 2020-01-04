@@ -1,6 +1,3 @@
-
-TARGET_BOOTCODE = bootcode.bin
-
 #
 # when building bootcode.bin, always ensure start.s is at the top, providing
 # the 0x200 byte long header and some init code.
@@ -34,7 +31,7 @@ WARN_COLOR=""
 
 .PHONY: default all clean create_build_directory device
 
-default: $(TARGET_BOOTCODE)
+default: bootcode.bin
 
 OBJ := $(addprefix $(TARGET_BUILD_DIR)/, $(addsuffix .o, $(basename $(SRCS))))
 
@@ -44,7 +41,7 @@ CC = $(CROSS_COMPILE)gcc
 CXX = $(CROSS_COMPILE)g++
 AS = $(CC)
 OBJCOPY = $(CROSS_COMPILE)objcopy
-LINKFLAGS = -nostdlib -nostartfiles -Wl,--build-id=none -T linker.lds
+LINKFLAGS = -nostdlib -nostartfiles --build-id=none -T linker.ld
 
 CFLAGS = -c -nostdlib -Wno-multichar -std=c11 -fsingle-precision-constant -Wdouble-promotion -D__VIDEOCORE4__ -I./vc4_include/ -I./
 ASFLAGS = -c -nostdlib -x assembler-with-cpp -D__VIDEOCORE4__ -I./vc4_include/ -I./
@@ -83,11 +80,13 @@ $(TARGET_BUILD_DIR)/%.o: %.s $(HEADERS)
 
 .PRECIOUS: $(OBJ)
 
-$(TARGET_BOOTCODE): create_build_directory $(OBJ)
-	@echo $(WARN_COLOR)LD  $(NO_COLOR) $@.elf
-	@$(CC) $(LINKFLAGS) $(OBJ) -o $(PRODUCT_DIRECTORY)/$@.elf -lcommon
+$(PRODUCT_DIRECTORY)/bootcode.elf: create_build_directory $(OBJ)
+	@echo $(WARN_COLOR)LD  $(NO_COLOR) $@
+	@$(LD) $(LINKFLAGS) $(OBJ) -o $@ -lcommon
+
+bootcode.bin: $(PRODUCT_DIRECTORY)/bootcode.elf
 	@echo $(WARN_COLOR)OBJ$(NO_COLOR) $@
-	@$(OBJCOPY) -O binary $(PRODUCT_DIRECTORY)/$@.elf $(PRODUCT_DIRECTORY)/$@
+	@$(OBJCOPY) -O binary $< $(PRODUCT_DIRECTORY)/$@
 
 clean:
 	@echo $(ERROR_COLOR)CLEAN$(NO_COLOR)

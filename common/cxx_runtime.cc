@@ -24,6 +24,8 @@ Crappy C++ runtime.
 extern uintptr_t* __init_array_start;
 extern uintptr_t* __init_array_end;
 
+#ifdef __arm__
+// TODO, use split sections to just not include them at link time
 void* operator new[] (size_t sz) {
 	return malloc(sz);
 }
@@ -31,6 +33,7 @@ void* operator new[] (size_t sz) {
 void* operator new (size_t sz) {
 	return malloc(sz);
 }
+#endif
 
 void operator delete (void* ptr) {
 	free(ptr);

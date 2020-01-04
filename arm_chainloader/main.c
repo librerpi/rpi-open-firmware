@@ -46,7 +46,7 @@ static const char* get_execution_mode_name() {
 void main(bool security_supported) {
 	/* wait for peripheral access */
 	while(ARM_ID != ARM_IDVAL);
-	udelay(500);
+	udelay(30000); // the next 2 prints get cut off if this delay is lower
 
 	logf("Started on ARM, continuing boot from here ...\n");
 

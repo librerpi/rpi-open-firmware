@@ -49,7 +49,7 @@ AS = $(CC)
 OBJCOPY = $(CROSS_COMPILE)objcopy
 LINKFLAGS = -nostdlib -march=$(ARCH) -Wl,--build-id=none -T linker.lds -ltlsf -lgcc -lcommon
 FPUFLAGS=-mfpu=vfp -mfloat-abi=hard
-COMMON_FLAGS = -c -nostdlib -nostartfiles -ffreestanding -march=$(ARCH) -I../ -I./ -I./drivers/libfdt/ -mtune=arm1176jzf-s
+COMMON_FLAGS = -c -nostdlib -nostartfiles -ffreestanding -march=$(ARCH) -I../ -I./ -I./drivers/libfdt/ -mtune=arm1176jzf-s ${FPUFLAGS}
 
 CFLAGS = $(COMMON_FLAGS) -std=c11
 CXXFLAGS = $(COMMON_FLAGS) -std=c++11 -fno-exceptions -fno-rtti

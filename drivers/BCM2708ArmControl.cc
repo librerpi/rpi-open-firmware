@@ -108,6 +108,13 @@ struct BCM2708ArmControl : IODevice {
 		IODriverLog("ARM clock succesfully initialized!");
 	}
 
+  void setupOtherClocks() {
+    // `compatible = "brcm,bcm2835-cprman";` in DT expects PLLA and PLLD to be functioning
+    // enable them here
+    A2W_XOSC_CTRL |= A2W_PASSWORD | A2W_XOSC_CTRL_PLLAEN_SET;
+    A2W_XOSC_CTRL |= A2W_PASSWORD | A2W_XOSC_CTRL_PLLDEN_SET;
+  }
+
 	void patchFirmwareData() {
 		volatile firmware_arm_data_t* firmware_data = reinterpret_cast<firmware_arm_data_t*>(ARM_MEMORY_BASE + 32);
 
@@ -148,7 +155,7 @@ struct BCM2708ArmControl : IODevice {
 
     uint32_t index = armAddr >> 24; // div by 16mb
     uint32_t pte = busAddr >> 21; // div by 2mb
-    IODriverLog("mapBusToArm index:%x, pte:%x\n", index, pte);
+    IODriverLog("mapBusToArm index:%x, pte:%x", index, pte);
 
     tte[index] = pte;
   }
@@ -209,6 +216,7 @@ void bzero2(void *addr, size_t len) {
                 printregs();
 
 		setupClock();
+                //setupOtherClocks();
                 printregs();
 		pmDomain->start();
                 printregs();

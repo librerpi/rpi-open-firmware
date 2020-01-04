@@ -1,6 +1,12 @@
+{ kernelOverride ? null
+}:
+
 let
   # temporary hack, this rev is upstream
-  pkgs = import (builtins.fetchTarball https://github.com/input-output-hk/nixpkgs/archive/0ee0489d42e.tar.gz) {};
+  pkgs = import
+  (builtins.fetchTarball https://github.com/input-output-hk/nixpkgs/archive/0ee0489d42e.tar.gz)
+  #/home/clever/apps/rpi/nixpkgs
+  {};
   lib = pkgs.lib;
   vc4 = pkgs.pkgsCross.vc4.extend overlay;
   arm = pkgs.pkgsCross.arm-embedded.extend overlay;
@@ -42,12 +48,16 @@ let
       src = lib.cleanSource ./.;
       buildInputs = [ self.common ];
       preBuild = ''
-        ln -sv ${arm.chainloader} arm_chainloader/build
+        ln -s ${arm.chainloader} arm_chainloader/build
       '';
+      enableParallelBuilding = true;
+      dontPatchELF = true;
+      dontStrip = true;
       installPhase = ''
-        mkdir -pv $out/nix-support
-        cp build/bootcode.bin{,.elf} $out/
-        ln -sv ${arm.chainloader} $out/arm
+        mkdir -p $out/nix-support
+        cp build/bootcode.{bin,elf} $out/
+        ln -s ${arm.chainloader} $out/arm
+        $OBJDUMP -d $out/bootcode.elf > $out/bootcode.S
         cat <<EOF > $out/nix-support/hydra-metrics
         bootcode.bin $(stat --printf=%s $out/bootcode.bin) bytes
         EOF
@@ -56,31 +66,36 @@ let
     script = pkgs.writeTextFile {
       name = "init";
       text = ''
-        #!${self.pkgsStatic.busybox}/bin/ash
+        #!${self.busybox}/bin/ash
         export PATH=/bin
-        echo hello world
-        pwd
-        ls
-        ls -l /dev/
-        sleep 30
-        exec /bin/sh
+        mknod /dev/kmsg c 1 11
+        exec > /dev/kmsg 2>&1
+        mount -t proc proc proc
+        mount -t sysfs sys sys
+        mount -t devtmpfs dev dev
+        mount -t debugfs debugfs /sys/kernel/debug
+        exec > /dev/ttyAMA0 2>&1 < /dev/ttyAMA0
+        /bin/sh > /dev/ttyAMA0 < /dev/ttyAMA0
+        echo sh failed
       '';
       executable = true;
     };
-    myinit = self.pkgsStatic.stdenv.mkDerivation {
+    myinit = self.stdenv.mkDerivation {
       name = "myinit";
+      nativeBuildInputs = [ x86_64.nukeReferences ];
       buildCommand = ''
         $CC ${./my-init.c} -o $out
+        nuke-refs -e ${self.stdenv.cc.libc.out} $out
       '';
     };
     initrd = self.makeInitrd {
       contents = [
         {
-          object = "${self.pkgsStatic.busybox}/bin";
+          object = "${self.busybox}/bin";
           symlink = "/bin";
         }
         {
-          object = self.myinit;
+          object = self.script;
           symlink = "/init";
         }
       ];
@@ -95,11 +110,14 @@ let
     mkdir $out
     cd $out
     cp ${vc4.firmware}/bootcode.bin .
-    echo print-fatal-signals=1 console=ttyAMA0,115200 earlyprintk loglevel=15 root=/dev/mmcblk0p2 > cmdline.txt
+    echo print-fatal-signals=1 console=ttyAMA0,115200 earlyprintk loglevel=7 root=/dev/mmcblk0p2 printk.devkmsg=on > cmdline.txt
     dtc ${./rpi3.dts} -o rpi.dtb
-    echo cp {arm7.linux_rpi2}/zImage zImage
-    cp ${../kernel/build/arch/arm/boot/zImage} zImage
     #cp ${./bcm2837-rpi-3-b.dtb} rpi.dtb
+    ${if kernelOverride == null then ''
+      cp ${arm7.linux_rpi2}/zImage zImage
+    '' else ''
+      cp ${kernelOverride} zImage
+    ''}
     echo bootdir is $out
   '';
   dtbFiles = pkgs.runCommand "dtb-files" { buildInputs = [ pkgs.dtc pkgs.strace pkgs.stdenv.cc.cc ]; src = ./dts; } ''
@@ -138,4 +156,14 @@ in pkgs.lib.fix (self: {
   x86_64 = {
     inherit (x86_64) test-script;
   };
+  # make $makeFlags menuconfig
+  # time make $makeFlags zImage -j8
+  kernelShell = arm7.linux_rpi2.overrideDerivation (drv: {
+    nativeBuildInputs = drv.nativeBuildInputs ++ (with x86_64; [ ncurses pkgconfig ]);
+    shellHook = ''
+      addToSearchPath PKG_CONFIG_PATH ${x86_64.ncurses.dev}/lib/pkgconfig
+      echo to configure: 'make $makeFlags menuconfig'
+      echo to build: 'time make $makeFlags zImage -j8'
+    '';
+  });
 })

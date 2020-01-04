@@ -116,7 +116,7 @@ _secure_monitor:
 .macro SetModeSp, mode, newsp
         mov r1, r0
         bic r1, r1, #(ARM32_MODE_MASK) // clear all mode bits
-        orr r1, r1, #(mode) // set a mode
+        orr r1, r1, #(\mode) // set a mode
         msr cpsr, r1 // enter the mode
         ldr sp, =\newsp
 .endm
@@ -124,17 +124,8 @@ _secure_monitor:
 _common_start:
         mrs r0, cpsr
 
-        mov r1, r0
-        bic r1, r1, #(ARM32_MODE_MASK) // clear all mode bits
-        orr r1, r1, #(ARM32_IRQ) // set IRQ mode
-        msr cpsr, r1 // enter IRQ mode
-        ldr sp, =_irq_stack_top
-
-        mov r1, r0
-        bic r1, r1, #(ARM32_MODE_MASK)
-        orr r1, r1, #(ARM32_SVC)
-        msr cpsr, r1
-        ldr sp, =_svc_stack_top
+        SetModeSp ARM32_IRQ, _irq_stack_top
+        SetModeSp ARM32_SVC, _svc_stack_top
 
         msr cpsr, r0 // revert to previous mode
 	/*
@@ -172,14 +163,18 @@ L_setup_monitor:
 	//mcr	p15, 0, r1, c12, c0, 1 /* MVBAR */
 	//mcr p15, 0, r1, c7, c5, 4 /* ISB (ARMv6 compatible way) */
 
-#ifdef ENABLE_VFP
+//#ifdef ENABLE_VFP
         // enable VFP
+        mrc p15, 0, r0, c1, c1, 2 // read NSACR -> r0
+        orr r0, r0, #3<<10 // enable FPU
+        mcr p15, 0, r0, c1, c1, 2 // write back to NSACR
+
         ldr r0, =(0xF << 20)
         mcr p15, 0, r0, c1, c0, 2 // CPACR
 
         mov r0, #0x40000000
         vmsr fpexc, r0
-#endif
+//#endif
 
         // set non-secure flag
 	mrc p15, 0, r0, c1, c1, 0 // SCR -> r0
