@@ -60,6 +60,7 @@ let
         $OBJDUMP -d $out/bootcode.elf > $out/bootcode.S
         cat <<EOF > $out/nix-support/hydra-metrics
         bootcode.bin $(stat --printf=%s $out/bootcode.bin) bytes
+        bootcode.elf $(stat --printf=%s $out/bootcode.elf) bytes
         EOF
       '';
     };
