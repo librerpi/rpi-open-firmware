@@ -11,11 +11,14 @@ SECTIONS
   }
   _etext = .;
 
-	.rodata : { *(.rodata) *(.rodata.*) }
-	. = ALIGN(4096);
-	_erodata = .;
+  .rodata : {
+    *(.rodata)
+    *(.rodata.*)
+  }
+  . = ALIGN(16);
+  _erodata = .;
 
-	. = ALIGN(32 / 8);
+  . = ALIGN(32 / 8);
 
 	PROVIDE (__init_array_start = .);
 	.init_array : {

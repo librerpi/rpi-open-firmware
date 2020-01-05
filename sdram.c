@@ -208,7 +208,7 @@ void reset_with_timing(lpddr2_timings_t* T) {
 	SD_CS = (SD_CS & ~(SD_CS_DEL_KEEP_SET|SD_CS_DPD_SET|SD_CS_RESTRT_SET)) | SD_CS_STBY_SET;
 
 	/* wait for SDRAM controller to go down */
-	SIP_DEBUG(logf("waiting for SDRAM controller to go down (%X) ...\n", SD_CS));
+	SIP_DEBUG(logf("waiting for SDRAM controller to go down (%lX) ...\n", SD_CS));
 	for (;;) if ((SD_CS & SD_CS_SDUP_SET) == 0) break;
 	SIP_DEBUG(logf("SDRAM controller down!\n"));
 
@@ -258,7 +258,7 @@ void reset_with_timing(lpddr2_timings_t* T) {
 	    | (T->rowbits << SD_SB_ROWBITS_LSB)
 	    | (T->colbits << SD_SB_COLBITS_LSB);
 
-	logf("SDRAM Addressing Mode: Bank=%ld Row=%ld Col=%ld SB=0x%X\n", T->banklow, T->rowbits, T->colbits, SD_SB);
+	logf("SDRAM Addressing Mode: Bank=%ld Row=%ld Col=%ld SB=0x%lX\n", T->banklow, T->rowbits, T->colbits, SD_SB);
 
 	SD_SC =
 	    (T->tRFCab << SD_SC_T_RFC_LSB)
@@ -318,7 +318,7 @@ unsigned int read_mr(unsigned int addr) {
 	return mrr;
 }
 
-unsigned int write_mr(unsigned int addr, unsigned int data, bool wait) {
+static unsigned int write_mr(unsigned int addr, unsigned int data, bool wait) {
 	while ((SD_MR & SD_MR_DONE_SET) != SD_MR_DONE_SET) {}
 
 	SD_MR = (addr & 0xFF) | ((data & 0xFF) << 8) | SD_MR_RW_SET;
@@ -360,7 +360,7 @@ static void switch_to_cprman_clock(unsigned int source, unsigned int div) {
 	CM_SDCCTL = CM_PASSWORD | (CM_SDCCTL & CM_SDCCTL_SRC_CLR) | source;
 	CM_SDCCTL |= CM_PASSWORD | CM_SDCCTL_ENAB_SET;
 
-	logf("switching sdram to cprman clock (src=%d, div=%d), waiting for busy (%X) ...\n", source, div, CM_SDCCTL);
+	logf("switching sdram to cprman clock (src=%d, div=%d), waiting for busy (%lX) ...\n", source, div, CM_SDCCTL);
 
 	for (;;) if (CM_SDCCTL & CM_SDCCTL_BUSY_SET) break;
 
@@ -396,7 +396,7 @@ static void calibrate_pvt_early() {
 	APHY_CSR_ADDR_PAD_DRV_SLEW_CTRL = 0x333;
 	DPHY_CSR_DQ_PAD_DRV_SLEW_CTRL = (dq_slew << 8) | (dq_slew << 4) | 3;
 
-	logf("DPHY_CSR_DQ_PAD_DRV_SLEW_CTRL = 0x%X\n", DPHY_CSR_DQ_PAD_DRV_SLEW_CTRL);
+	logf("DPHY_CSR_DQ_PAD_DRV_SLEW_CTRL = 0x%lX\n", DPHY_CSR_DQ_PAD_DRV_SLEW_CTRL);
 
 	/* tell sdc we want to calibrate */
 	APHY_CSR_PHY_BIST_CNTRL_SPR = BIST_pvt;
@@ -495,7 +495,7 @@ static void selftest() {
 void sdram_init() {
 	uint32_t vendor_id, bc;
 
-	logf("(0) SD_CS = 0x%X\n", SD_CS);
+	logf("(0) SD_CS = 0x%lX\n", SD_CS);
 
 	PM_SMPS = PM_PASSWORD | 0x1;
 	A2W_SMPS_LDO1 = A2W_PASSWORD | 0x40000;
@@ -527,9 +527,9 @@ void sdram_init() {
 	SD_CS = 0x200042;
 
 	/* wait for SDRAM controller */
-	logf("waiting for SDUP (%X) ...\n", SD_CS);
+	logf("waiting for SDUP (%lX) ...\n", SD_CS);
 	for (;;) if (SD_CS & SD_CS_SDUP_SET) break;
-	logf("SDRAM controller has arrived! (%X)\n", SD_CS);
+	logf("SDRAM controller has arrived! (%lX)\n", SD_CS);
 
 	/* RL = 6 / WL = 3 */
 	write_mr(LPDDR2_MR_DEVICE_FEATURE_2, 4, false);

@@ -64,7 +64,7 @@ void uart_init(void) {
 	mmio_write32(UART_CR, 0x301);
 }
 
-void switch_vpu_to_pllc() {
+static void switch_vpu_to_pllc() {
 	A2W_XOSC_CTRL |= A2W_PASSWORD | A2W_XOSC_CTRL_PLLCEN_SET;
 
 	A2W_PLLC_FRAC = A2W_PASSWORD | 87380;
@@ -105,7 +105,7 @@ void switch_vpu_to_pllc() {
 	          CM_PLLC_HOLDCORE1_SET | CM_PLLC_HOLDCORE0_SET;
 
 	CM_PLLC = CM_PASSWORD | CM_PLLC_DIGRST_SET |
-	          CM_PLLC_HOLDPER_SET | CM_PLLC_HOLDCORE2_SET |
+	          CM_PLLC_HOLDCORE2_SET |
 	          CM_PLLC_HOLDCORE1_SET;
 
 	CM_VPUCTL = CM_PASSWORD | CM_VPUCTL_FRAC_SET | CM_SRC_OSC | CM_VPUCTL_GATE_SET;

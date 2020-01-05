@@ -51,6 +51,12 @@ bus address space:
 0x8000_0000 -> 0xbfff_ffff (2gig to 3gig)   8-alias, L2 cached (ignores L1)
 0xc000_0000 -> 0xffff_ffff (3gig to 4gig)   C-alias, direct uncached
 
+while the open bootcode.bin is executing:
+0               the entire bootcode.bin file
+0x1b000 (108kb) the interrupt vector table, IC0_VADDR and IC1_VADDR say where it is, so .word could generate it?
+0x1d000 (116kb) the irq stack pointer?
+0x1c000 (112kb) the main stack pointer
+
 
 arm physical:
 mapped in 16mb chunks by mapBusToArm() in drivers/BCM2708ArmControl.cc

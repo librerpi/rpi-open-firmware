@@ -44,7 +44,7 @@ CC = $(CROSS_COMPILE)gcc
 CXX = $(CROSS_COMPILE)g++
 AS = $(CC)
 OBJCOPY = $(CROSS_COMPILE)objcopy
-LINKFLAGS = -nostdlib -nostartfiles --build-id=none -T linker.ld --no-omagic --print-map
+LINKFLAGS = -nostdlib -nostartfiles --build-id=none -T linker.ld --no-omagic # --print-map #-Wl,--gc-sections --entry=_start -Wl,--cref
 
 CFLAGS = -c -nostdlib -Wno-multichar -std=c11 -fsingle-precision-constant -Wdouble-promotion -D__VIDEOCORE4__ -I./vc4_include/ -I./
 ASFLAGS = -c -nostdlib -x assembler-with-cpp -D__VIDEOCORE4__ -I./vc4_include/ -I./
@@ -90,11 +90,12 @@ $(PRODUCT_DIRECTORY)/bootcode.elf: create_build_directory $(OBJ)
 	@echo $(WARN_COLOR)LD  $(NO_COLOR) $@
 	@$(LD) $(LINKFLAGS) $(OBJ) -o $@ -lcommon
 
-bootcode.bin: $(PRODUCT_DIRECTORY)/bootcode.elf
+bootcode.stub:
+	truncate bootcode.stub -s 512
+
+bootcode.bin: $(PRODUCT_DIRECTORY)/bootcode.elf bootcode.stub
 	@echo $(WARN_COLOR)OBJ$(NO_COLOR) $@
 	@$(OBJCOPY) -O binary $< bootcode.temp
-	rm bootcode.stub || true
-	truncate bootcode.stub -s 512
 	cat bootcode.stub bootcode.temp > $(PRODUCT_DIRECTORY)/$@
 
 clean:

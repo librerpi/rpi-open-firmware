@@ -33,7 +33,6 @@ void* operator new[] (size_t sz) {
 void* operator new (size_t sz) {
 	return malloc(sz);
 }
-#endif
 
 void operator delete (void* ptr) {
 	free(ptr);
@@ -42,6 +41,7 @@ void operator delete (void* ptr) {
 void operator delete[] (void* ptr) {
 	free(ptr);
 }
+#endif
 
 extern "C" void __cxa_pure_virtual() {
 	panic("__cxa_pure_virtual!");

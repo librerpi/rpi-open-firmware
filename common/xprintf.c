@@ -13,40 +13,6 @@
 
 #include "xprintf.h"
 
-// TODO, move into a header
-extern void uart_putc(unsigned int ch);
-
-/*----------------------------------------------*/
-/* Put a character                              */
-/*----------------------------------------------*/
-
-int putchar (int c)
-{
-	if (_CR_CRLF && c == '\n') putchar('\r');		/* CR -> CRLF */
-
-	uart_putc(c);
-}
-
-/*----------------------------------------------*/
-/* Put a null-terminated string                 */
-/*----------------------------------------------*/
-
-static int __puts (				/* Put a string to the default device */
-	const char* str				/* Pointer to the string */
-)
-{
-	while (*str)
-		putchar(*str++);
-}
-
-int puts (					/* Put a string to the default device */
-	const char* str				/* Pointer to the string */
-)
-{
-	__puts(str);
-	putchar('\n');
-}
-
 /*----------------------------------------------*/
 /* Formatted string output                      */
 /*----------------------------------------------*/
@@ -140,63 +106,4 @@ int vprintf (
 		do putchar(s[--i]); while(i);
 		while (j++ < w) putchar(' ');
 	}
-}
-
-
-int printf (			/* Put a formatted string to the default device */
-	const char*	fmt,	/* Pointer to the format string */
-	...					/* Optional arguments */
-)
-{
-	va_list arp;
-
-	va_start(arp, fmt);
-	vprintf(fmt, arp);
-	va_end(arp);
-}
-
-
-/*----------------------------------------------*/
-/* Dump a line of binary dump                   */
-/*----------------------------------------------*/
-
-void put_dump (
-	const void* buff,		/* Pointer to the array to be dumped */
-	unsigned long addr,		/* Heading address value */
-	int len,				/* Number of items to be dumped */
-	int width				/* Size of the items (DF_CHAR, DF_SHORT, DF_LONG) */
-)
-{
-	int i;
-	const unsigned char *bp;
-	const unsigned short *sp;
-	const unsigned long *lp;
-
-
-	printf("%08lX ", addr);		/* address */
-
-	switch (width) {
-	case DW_CHAR:
-		bp = buff;
-		for (i = 0; i < len; i++)		/* Hexdecimal dump */
-			printf(" %02X", bp[i]);
-		putchar(' ');
-		for (i = 0; i < len; i++)		/* ASCII dump */
-			putchar((bp[i] >= ' ' && bp[i] <= '~') ? bp[i] : '.');
-		break;
-	case DW_SHORT:
-		sp = buff;
-		do								/* Hexdecimal dump */
-			printf(" %04X", *sp++);
-		while (--len);
-		break;
-	case DW_LONG:
-		lp = buff;
-		do								/* Hexdecimal dump */
-			printf(" %08lX", *lp++);
-		while (--len);
-		break;
-	}
-
-	putchar('\n');
 }
