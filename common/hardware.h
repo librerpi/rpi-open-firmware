@@ -48,10 +48,10 @@ that are missing from the release. This is also used by ARM.
 #include "broadcom/bcm2708_chip/aux_io.h"
 #include "broadcom/bcm2708_chip/testbus.h"
 
-#define RAM_SIZE_1GB 1024
-#define RAM_SIZE_512MB 512
-#define RAM_SIZE_256MB 256
-#define RAM_SIZE_128MB 128
+#define RAM_SIZE_1GB 0
+#define RAM_SIZE_512MB 1
+#define RAM_SIZE_256MB 2
+#define RAM_SIZE_128MB 3
 #define RAM_SIZE_UNKNOWN 4
 
 /*

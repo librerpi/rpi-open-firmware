@@ -174,14 +174,3 @@ return_from_exception:
 	ldm r0-r5, (sp++)
 	ld lr, (sp++)
 	rti
-
-/* include chainloader */
-
-.align 2
-.globl L_arm_code_start
-L_arm_code_start:
-
-	.incbin "arm_chainloader/build/arm_chainloader.bin"
-
-.globl L_arm_code_end
-L_arm_code_end:

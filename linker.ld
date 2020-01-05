@@ -2,8 +2,8 @@ SECTIONS
 {
   . = 0x0;
   . += SIZEOF_HEADERS;
-  _text = .;
   . = 0x200;
+  _text = .;
   .text : {
     *(.text)
     *(.text.*)

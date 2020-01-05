@@ -14,8 +14,8 @@
 extern uint32_t g_CPUID;
 extern uint32_t g_RAMSize;
 
-extern uint8_t L_arm_code_start;
-extern uint8_t L_arm_code_end;
+extern uint8_t _binary_arm_chainloader_build_arm_chainloader_bin_start;
+extern uint8_t _binary_arm_chainloader_build_arm_chainloader_bin_end;
 
 #define ARM_MEMORY_BASE 0xC0000000
 #define ARM_BKPT_OPCODE 0xE1200070
@@ -125,8 +125,8 @@ struct BCM2708ArmControl : IODevice {
 	void loadInitialCode() {
 		uint32_t* mem = (uint32_t*)(ARM_MEMORY_BASE);
 
-		uint8_t* start = &L_arm_code_start;
-		uint8_t* end = &L_arm_code_end;
+		uint8_t* start = &_binary_arm_chainloader_build_arm_chainloader_bin_start;
+		uint8_t* end = &_binary_arm_chainloader_build_arm_chainloader_bin_end;
 		uint32_t size = (uint32_t)(end - start);
 
 		bcopy(start, mem, size);

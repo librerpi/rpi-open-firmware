@@ -35,7 +35,8 @@ WARN_COLOR=""
 
 default: bootcode.bin
 
-OBJ := $(addprefix $(TARGET_BUILD_DIR)/, $(addsuffix .o, $(basename $(SRCS))))
+EXTRA_OBJ := arm_chainloader.o
+OBJ := $(addprefix $(TARGET_BUILD_DIR)/, $(addsuffix .o, $(basename $(SRCS)))) $(EXTRA_OBJ)
 
 # the cross compiler should already be in your path
 CROSS_COMPILE ?= vc4-elf-
@@ -43,7 +44,7 @@ CC = $(CROSS_COMPILE)gcc
 CXX = $(CROSS_COMPILE)g++
 AS = $(CC)
 OBJCOPY = $(CROSS_COMPILE)objcopy
-LINKFLAGS = -nostdlib -nostartfiles --build-id=none -T linker.ld --no-omagic
+LINKFLAGS = -nostdlib -nostartfiles --build-id=none -T linker.ld --no-omagic --print-map
 
 CFLAGS = -c -nostdlib -Wno-multichar -std=c11 -fsingle-precision-constant -Wdouble-promotion -D__VIDEOCORE4__ -I./vc4_include/ -I./
 ASFLAGS = -c -nostdlib -x assembler-with-cpp -D__VIDEOCORE4__ -I./vc4_include/ -I./
@@ -79,6 +80,9 @@ $(TARGET_BUILD_DIR)/%.o: %.s $(HEADERS)
 	$(CREATE_SUBDIR)
 	@echo $(WARN_COLOR)AS  $(NO_COLOR) $@
 	@$(AS) $(ASFLAGS) $< -o $@
+
+arm_chainloader.o: arm_chainloader/build/arm_chainloader.bin
+	$(OBJCOPY) -I binary -O elf32-vc4 -B vc4 $< $@
 
 .PRECIOUS: $(OBJ)
 

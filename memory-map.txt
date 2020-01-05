@@ -10,7 +10,9 @@ https://www.raspberrypi.org/forums/viewtopic.php?p=1543934#p1543934
 0x2000_0000                                             BOOTROM_BASE_ADDRESS??
 0x3e00_0000 -> 0x3fff_ffff (992mb to 1024mb, 32mb long) IO peripherals (recommended to access via 4-alias?)
 0x3e00_0000                                             MS_BASE from multicore_sync.h
+0x3e00_2000                                             IC0_BASE
 0x3e00_3000                                             ST_BASE from timer.h
+0x3e00_4000                                             TXP_BASE
 0x3e20_0000 -> 0x3E21_FFFF                              peri_audio APB Bridge?
 0x3e00_7000                                             DMA0_BASE
 0x3e00_8000                                             NU_BASE from nexus_uba.h (debug control?)
@@ -18,7 +20,20 @@ https://www.raspberrypi.org/forums/viewtopic.php?p=1543934#p1543934
 0x3e00_a000                                             ASB_BASE from apb_async_bridge_ctrl.h
 0x3e00_b000                                             ARM_BASE
 
+0x3e10_1000                                             CM_BASE, cpr_clkman.h mapped to bcm2835-cprman in DT
+0x3e10_2000                                             A2W_BASE, allows enabling/disabling PLL blocks A/B/C/D/H
+
 0x3e20_0000                                             GP_BASE (gpio)
+0x3e20_5000   i2c0                                      I2C0_BASE
+0x3e20_5200   i2c1
+0x3e20_5400   i2c2
+0x3e20_5600   i2c3
+0x3e20_5800   i2c4
+0x3e20_5a00   i2c5
+0x3e20_5c00   i2c6
+0xe320_5e00   i2c7
+0x3e20_f000                                             OTP_BASE
+0x3e21_5000                                             AUX_IO_BASE
 0x3e40_0000                                             SCALER_BASE
 0x3ec0_0000                                             V3D_BASE from v3d.h
 0x3ee0_0000                                             SD_BASE from sdc_ctrl.h (dram control)
