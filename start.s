@@ -27,9 +27,6 @@ Exception names are from the public release from:
 
 .text
 
-empty_space:
-  .space 0x200
-
 /* MMIO-mapped registers for the interrupt table */
 
 .set IC0_BASE, 0x7e002000

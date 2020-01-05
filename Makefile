@@ -15,7 +15,9 @@ SRCS = \
 	drivers/BCM2708ArmControl.cc \
 	drivers/BCM2708ClockDomains.cc \
 	drivers/BCM2708Gpio.cc \
+	drivers/gpclk.cc \
 	hang_cpu.o \
+	utils.cc \
 	BCM2708PlatformStartup.cc
 
 ARCH = vc4
@@ -41,7 +43,7 @@ CC = $(CROSS_COMPILE)gcc
 CXX = $(CROSS_COMPILE)g++
 AS = $(CC)
 OBJCOPY = $(CROSS_COMPILE)objcopy
-LINKFLAGS = -nostdlib -nostartfiles --build-id=none -T linker.ld
+LINKFLAGS = -nostdlib -nostartfiles --build-id=none -T linker.ld --no-omagic
 
 CFLAGS = -c -nostdlib -Wno-multichar -std=c11 -fsingle-precision-constant -Wdouble-promotion -D__VIDEOCORE4__ -I./vc4_include/ -I./
 ASFLAGS = -c -nostdlib -x assembler-with-cpp -D__VIDEOCORE4__ -I./vc4_include/ -I./
@@ -86,7 +88,10 @@ $(PRODUCT_DIRECTORY)/bootcode.elf: create_build_directory $(OBJ)
 
 bootcode.bin: $(PRODUCT_DIRECTORY)/bootcode.elf
 	@echo $(WARN_COLOR)OBJ$(NO_COLOR) $@
-	@$(OBJCOPY) -O binary $< $(PRODUCT_DIRECTORY)/$@
+	@$(OBJCOPY) -O binary $< bootcode.temp
+	rm bootcode.stub || true
+	truncate bootcode.stub -s 512
+	cat bootcode.stub bootcode.temp > $(PRODUCT_DIRECTORY)/$@
 
 clean:
 	@echo $(ERROR_COLOR)CLEAN$(NO_COLOR)

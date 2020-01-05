@@ -23,6 +23,7 @@ VideoCoreIV first stage bootloader.
 #include "sdram.h"
 #include "arm_monitor.h"
 #include "BCM2708PlatformStartup.h"
+#include "utils.hh"
 
 uint32_t g_CPUID;
 
@@ -155,6 +156,9 @@ int _main(unsigned int cpuid, unsigned int load_address) {
 	/* bring up SDRAM */
 	sdram_init();
 	puts("SDRAM initialization completed successfully!\n");
+
+        dump_all_gpio();
+        setup_eth_clock(4);
 
 	PEStartPlatform();
 

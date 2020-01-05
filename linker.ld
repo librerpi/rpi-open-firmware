@@ -1,16 +1,15 @@
 SECTIONS
 {
   . = 0x0;
-
+  . += SIZEOF_HEADERS;
   _text = .;
-
+  . = 0x200;
   .text : {
     *(.text)
     *(.text.*)
     *(.gnu.warning)
   }
-
-	_etext = .;
+  _etext = .;
 
 	.rodata : { *(.rodata) *(.rodata.*) }
 	. = ALIGN(4096);
