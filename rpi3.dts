@@ -20,6 +20,11 @@
     uart0 = "/soc/serial@7e201000";
     sdhost = "/soc/mmc@7e202000";
     mmc0 = "/soc/mmc@7e202000";
+    i2c0 = "/soc/i2c@7e205000";
+    uart1 = "/soc/serial@7e215040";
+    i2c1 = "/soc/i2c@7e804000";
+    i2c2 = "/soc/i2c@7e805000";
+    usb = "/soc/usb@7e980000";
   };
   chosen {
   };
@@ -239,7 +244,6 @@
       phys = <&usbphy>;
       phy-names = "usb2-phy";
       interrupt-names = "usb\0soft";
-      status = "disabled";
       //power-domains = <&power 0x06>;
 
       usb1@1 {

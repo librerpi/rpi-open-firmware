@@ -37,73 +37,58 @@ Exception names are from the public release from:
 
 /* main entry point */
 
+.section .text.start
 .globl _start
 .align 2
 _start:
 	version r0
 	mov r5, r0
+        b prepare_stack
 
-	/* vectors */
-	mov r3, #0x1B000
-	mov r1, r3
-
-	/*
-	 * populate the exception vector table using PC relative labels
-	 * so the code isnt position dependent
-	 */
+.altmacro
 .macro RegExceptionHandler label, exception_number
-	lea r2, fleh_\label
-	st r2, (r1)
-	add r1, #4
+  .globl vector_\exception_number
+  vector_\exception_number :
+  .long fleh_\label
 .endm
-
-	RegExceptionHandler zero, #0
-	RegExceptionHandler misaligned, #1
-	RegExceptionHandler dividebyzero, #2
-	RegExceptionHandler undefinedinstruction, #3
-	RegExceptionHandler forbiddeninstruction, #4
-	RegExceptionHandler illegalmemory, #5
-	RegExceptionHandler buserror, #6
-	RegExceptionHandler floatingpoint, #7
-	RegExceptionHandler isp, #8
-	RegExceptionHandler dummy, #9
-	RegExceptionHandler icache, #10
-	RegExceptionHandler veccore, #11
-	RegExceptionHandler badl2alias, #12
-	RegExceptionHandler breakpoint, #13
-	RegExceptionHandler unknown, #14
-	RegExceptionHandler unknown, #15
-	RegExceptionHandler unknown, #16
-	RegExceptionHandler unknown, #17
-	RegExceptionHandler unknown, #18
-	RegExceptionHandler unknown, #19
-	RegExceptionHandler unknown, #20
-	RegExceptionHandler unknown, #21
-	RegExceptionHandler unknown, #22
-	RegExceptionHandler unknown, #23
-	RegExceptionHandler unknown, #24
-	RegExceptionHandler unknown, #25
-	RegExceptionHandler unknown, #26
-	RegExceptionHandler unknown, #27
-	RegExceptionHandler unknown, #28
-	RegExceptionHandler unknown, #29
-	RegExceptionHandler unknown, #30
-	RegExceptionHandler unknown, #31
-
-	add r1, r3, #128
-	lea r2, fleh_irq
-	add r4, r3, #572
-
-L_setup_hw_irq:
-	st r2, (r1)
-	add r1, #4
-	ble r1, r4, L_setup_hw_irq
-
+.section .rodata.vectorTable
+.globl vectorTable
+vectorTable:
+	RegExceptionHandler zero, 0
+	RegExceptionHandler misaligned, 1
+	RegExceptionHandler dividebyzero, 2
+	RegExceptionHandler undefinedinstruction, 3
+	RegExceptionHandler forbiddeninstruction, 4
+	RegExceptionHandler illegalmemory, 5
+	RegExceptionHandler buserror, 6
+	RegExceptionHandler floatingpoint, 7
+	RegExceptionHandler isp, 8
+	RegExceptionHandler dummy, 9
+	RegExceptionHandler icache, 10
+	RegExceptionHandler veccore, 11
+	RegExceptionHandler badl2alias, 12
+	RegExceptionHandler breakpoint, 13
+// vector 14 to 31 are all fleh_unknown
+.set i, 14
+.rept 18
+  RegExceptionHandler unknown, %i
+  .set i, i+1
+.endr
+// vector 32 to 143 are all fleh_irq
+.set i,32
+.rept 112
+  RegExceptionHandler irq, %i
+  .set i, i+1
+.endr
+.text
+prepare_stack:
 	/*
 	 * load the interrupt and normal stack pointers. these
 	 * are chosen to be near the top of the available cache memory
 	 */
 
+        // https://github.com/hermanhermitage/videocoreiv/wiki/VideoCore-IV-Programmers-Manual
+        // r28 will become sp within an interrupt context
 	mov r28, #0x1D000
 	mov sp, #0x1C000
 

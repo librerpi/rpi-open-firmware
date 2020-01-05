@@ -23,13 +23,14 @@ void IODevice::registerDriver() {
 	IODriverLog("driver registered on platform IO plane");
 }
 
-void IODevice::driverLog(const char* fnName, const char* fmt, ...)
-{
-	va_list va;
-        uint32_t clock_lo = ST_CLO;
+void IODevice::driverLog(const char* fnName, const char* fmt, ...) {
+  va_list va;
+  uint32_t clock_lo = ST_CLO;
 
-	printf("0x%08x %s::%s(): ", clock_lo, driverName, fnName);
-	va_start(va, fmt);
+  printf("%3ld.%06ld ", clock_lo / 1000000, clock_lo % 1000000);
+
+  printf("%s::%s(): ", driverName, fnName);
+  va_start(va, fmt);
 	vprintf(fmt, va);
 	va_end(va);
 	printf("\n");

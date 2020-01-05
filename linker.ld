@@ -5,6 +5,7 @@ SECTIONS
   . = 0x200;
   _text = .;
   .text : {
+    *(.text.start)
     *(.text)
     *(.text.*)
     *(.gnu.warning)
@@ -12,6 +13,8 @@ SECTIONS
   _etext = .;
 
   .rodata : {
+    . = ALIGN(512);
+    *(.rodata.vectorTable)
     *(.rodata)
     *(.rodata.*)
   }
@@ -29,9 +32,9 @@ SECTIONS
 	}
 	PROVIDE (__init_array_end = .);
 
-	.data : {			/* Data */
-		*(.data)
-	}
+  .data : { /* Data */
+    *(.data)
+  }
 
 	.bss : {
 		_edata = .;

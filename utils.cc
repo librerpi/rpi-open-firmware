@@ -4,11 +4,15 @@
 
 void dump_all_gpio() {
   BCM2708Gpio *gpio = static_cast<BCM2708Gpio*>(IODevice::findByTag('GPIO'));
+  bool gpio_level[64];
   for (uint8_t bank = 0; bank <2; bank++) {
     uint32_t state = gpio->getBank(bank);
     for (uint8_t pin = 0; pin < 32; pin++) {
-      printf("GPIO%02d == %s\n", (bank * 32) + pin, (state & (1 << pin)) ? "HIGH" : " LOW");
+      gpio_level[(bank * 32) + pin] = state & (1 << pin);
     };
+  }
+  for (int i=0; i<32; i++) {
+    printf("GPIO%02d %s | %s GPIO%02d\n", i, gpio_level[i] ? "HIGH" : " LOW", gpio_level[i+32] ? "HIGH" : "LOW ", i + 32);
   }
 }
 
