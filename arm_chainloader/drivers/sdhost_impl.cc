@@ -204,10 +204,10 @@ struct BCM2708SDHost : BlockDevice {
 
 		if (SH_CMD & SH_CMD_FAIL_FLAG_SET) {
 			if (SH_HSTS & SDHSTS_ERROR_MASK) {
-				logf("ERROR: sdhost status: 0x%x\n", SH_HSTS);
+				logf("ERROR: sdhost status: 0x%lx\n", SH_HSTS);
 				return false;
 			}
-			logf("ERROR: unknown error, SH_CMD=0x%x\n", SH_CMD);
+			logf("ERROR: unknown error, SH_CMD=0x%lx\n", SH_CMD);
 			return false;
 		}
 
@@ -367,7 +367,7 @@ struct BCM2708SDHost : BlockDevice {
 
 			uint32_t hsts_err = SH_HSTS & SDHSTS_ERROR_MASK;
 			if (hsts_err) {
-				logf("ERROR: transfer error on FIFO word %d: 0x%x\n", i, SH_HSTS);
+				logf("ERROR: transfer error on FIFO word %d: 0x%lx\n", i, SH_HSTS);
 				break;
 			}
 
@@ -389,7 +389,7 @@ struct BCM2708SDHost : BlockDevice {
 #endif
 
 		if (hsts_err) {
-			logf("ERROR: Transfer error, status: 0x%x\n", SH_HSTS);
+			logf("ERROR: Transfer error, status: 0x%lx\n", SH_HSTS);
 			return false;
 		}
 
@@ -500,7 +500,7 @@ struct BCM2708SDHost : BlockDevice {
 	void restart_controller() {
 		is_sdhc = false;
 
-		logf("hcfg 0x%X, cdiv 0x%X, edm 0x%X, hsts 0x%X\n",
+		logf("hcfg 0x%lX, cdiv 0x%lX, edm 0x%lX, hsts 0x%lX\n",
 		     SH_HCFG,
 		     SH_CDIV,
 		     SH_EDM,

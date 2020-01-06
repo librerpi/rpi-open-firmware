@@ -119,7 +119,11 @@ void sleh_irq(vc4_saved_state_t* pcb, uint32_t tp) {
   switch (source) {
   case INTERRUPT_TIMER0:
     print_vpu_state(pcb);
-    panic("unexpected timer0, did you forget about the pi while writing code?");
+    uint32_t cs = ST_CS;
+    printf("ST_CS 0x%08lx\n", cs);
+    ST_CS = cs;
+    printf("ST_CS 0x%08lx\n", ST_CS);
+    puts("unexpected timer0, did you forget about the pi while writing code?");
     break;
   case INTERRUPT_ARM:
     arm_monitor_interrupt();

@@ -24,6 +24,7 @@ Second stage bootloader.
 #include <drivers/block_device.hpp>
 #include <libfdt.h>
 #include <memory_map.h>
+#include <hardware.h>
 
 #define logf(fmt, ...) printf("[LDR:%s]: " fmt, __FUNCTION__, ##__VA_ARGS__);
 
@@ -47,6 +48,7 @@ struct LoaderImpl {
 		/* ensure file exists first */
 		if(!file_exists(path))
 			panic("attempted to read %s, but it does not exist", path);
+                uint32_t start = ST_CLO;
 
 		/* read entire file into buffer */
 		FIL fp;
@@ -68,6 +70,12 @@ struct LoaderImpl {
 
 		f_read(&fp, dest, len, &len);
 		f_close(&fp);
+
+                uint32_t stop = ST_CLO;
+                uint32_t elapsed = stop - start;
+
+                uint32_t bytes_per_second = (double)len / ((double)(elapsed) / 1000 / 1000);
+                printf("%d kbyte copied at a rate of %d kbytes/second\n", len/1024, bytes_per_second/1024);
 
 		return len;
 	}

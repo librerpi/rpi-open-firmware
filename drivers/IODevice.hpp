@@ -13,7 +13,7 @@ struct IODevice {
 	const char* driverName;
 	IODeviceState deviceState;
 	uint32_t tag;
-	
+
 	IODevice();
 
 	void driverLog(const char* fnName, const char* fmt, ...);

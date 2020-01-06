@@ -129,23 +129,21 @@ void set_interrupt(int intno, bool enable, int core) {
 }
 
 int _main(unsigned int cpuid, unsigned int load_address) {
-	switch_vpu_to_pllc();
+  switch_vpu_to_pllc();
 
-	uart_init();
+  uart_init();
 
-	for(int i = 0; i < 64; ++i) {
-	    set_interrupt(i, (i != (125 - 64)) && (i != (121 - 64)) && (i != (120 - 64)) && (i != (73 - 64)) && (i != (96 - 64)), 0);
-	    set_interrupt(i, 0, 1);
-	}
+  for(int i = 0; i < 64; ++i) {
+    set_interrupt(i, (i != (125 - 64)) && (i != (121 - 64)) && (i != (120 - 64)) && (i != (73 - 64)) && (i != (96 - 64)), 0);
+    set_interrupt(i, 0, 1);
+  }
 
-	IC0_VADDR = (uint32_t)vectorTable;
-	IC1_VADDR = (uint32_t)vectorTable;
+  IC0_VADDR = (uint32_t)vectorTable;
+  IC1_VADDR = (uint32_t)vectorTable;
 
-        printf("vector table now at 0x%08lx 0x%08lx\n", IC0_VADDR, (uint32_t)vectorTable);
+  printf("vector table now at 0x%08lx 0x%08lx\n", IC0_VADDR, (uint32_t)vectorTable);
 
-        if (IC0_VADDR != ((uint32_t)vectorTable)) panic("vector table not accepted");
-
-	//__asm__ volatile("ei");
+  if (IC0_VADDR != ((uint32_t)vectorTable)) panic("vector table not accepted");
 
 	printf(
 	    "Booting Raspberry Pi....\n"
@@ -166,6 +164,7 @@ int _main(unsigned int cpuid, unsigned int load_address) {
         setup_eth_clock(4);
 
 	PEStartPlatform();
+  __asm__ volatile("ei");
 
 	/* start vpu monitor */
 	monitor_start();

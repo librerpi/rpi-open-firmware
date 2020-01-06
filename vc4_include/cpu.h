@@ -8,6 +8,6 @@ static inline void __attribute__((noreturn)) _hang_cpu() {
 
 	/* loop */
 	for (;;) {
-		__asm__ __volatile__ ("sleep");
+		__asm__ __volatile__ ("nop");
 	}
 }

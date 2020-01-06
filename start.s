@@ -151,6 +151,7 @@ fleh_irq:
 	/* top of savearea */
 	mov r0, sp
 	mov r1, r29
+        di
 	bl sleh_irq
 
 return_from_exception:
