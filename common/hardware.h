@@ -48,11 +48,17 @@ that are missing from the release. This is also used by ARM.
 #include "broadcom/bcm2708_chip/aux_io.h"
 #include "broadcom/bcm2708_chip/testbus.h"
 
-#define RAM_SIZE_1GB 0
-#define RAM_SIZE_512MB 1
-#define RAM_SIZE_256MB 2
-#define RAM_SIZE_128MB 3
-#define RAM_SIZE_UNKNOWN 4
+enum RamSize {
+  kRamSize1GB = 0,
+  kRamSize512MB = 1,
+  kRamSize256MB = 2,
+  kRamSize128MB = 3,
+  kRamSize2GB = 4,
+  kRamSize4GB = 5,
+  kRamSizeUnknown = 4
+};
+
+extern const char *size_to_string[];
 
 /*
  * LPDDR mode registers.
@@ -88,6 +94,8 @@ typedef struct {
 	uint32_t vpu_cpuid;
 	uint32_t reserved[3];
 } firmware_arm_data_t;
+
+void print_timestamp();
 
 #ifdef __arm__
 extern firmware_arm_data_t g_FirmwareData;

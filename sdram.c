@@ -52,7 +52,7 @@ VideoCoreIV SDRAM initialization code.
 
 #define logf(fmt, ...) printf("[SDRAM:%s]: " fmt, __FUNCTION__, ##__VA_ARGS__);
 
-uint32_t g_RAMSize = RAM_SIZE_UNKNOWN;
+enum RamSize g_RAMSize = kRamSizeUnknown;
 
 static const char* lpddr2_manufacturer_name(uint32_t mr) {
 	switch (mr) {
@@ -76,28 +76,20 @@ static const char* lpddr2_manufacturer_name(uint32_t mr) {
 #define MR8_DENSITY_SHIFT	0x2
 #define MR8_DENSITY_MASK	(0xF << 0x2)
 
-static unsigned lpddr2_size(uint32_t mr) {
+static enum RamSize lpddr2_size(uint32_t mr) {
 	switch (mr) {
 	case 0x58:
-		return RAM_SIZE_1GB;
+		return kRamSize1GB;
 	case 0x18:
-		return RAM_SIZE_512MB;
+		return kRamSize512MB;
 	case 0x14:
-		return RAM_SIZE_256MB;
+		return kRamSize256MB;
 	case 0x10:
-		return RAM_SIZE_128MB;
+		return kRamSize128MB;
 	default:
-		return RAM_SIZE_UNKNOWN;
+		return kRamSizeUnknown;
 	}
 }
-
-const char* size_to_string[] = {
-	"1GB",
-	"512MB",
-	"256MB",
-	"128MB",
-	"UNKNOWN"
-};
 
 /*****************************************************************************
  * Guts
@@ -476,13 +468,13 @@ static void selftest() {
 
 	selftest_at(RT_BASE);
 
-	if (g_RAMSize == RAM_SIZE_256MB || g_RAMSize == RAM_SIZE_512MB || g_RAMSize == RAM_SIZE_1GB) {
+	if (g_RAMSize == kRamSize256MB || g_RAMSize == kRamSize512MB || g_RAMSize == kRamSize1GB) {
 		selftest_at(RT_BASE + 0xFF00000);
 	}
-	if (g_RAMSize == RAM_SIZE_512MB || g_RAMSize == RAM_SIZE_1GB) {
+	if (g_RAMSize == kRamSize256MB || g_RAMSize == kRamSize1GB) {
 		selftest_at(RT_BASE + 0x1FF00000);
 	}
-	if (g_RAMSize == RAM_SIZE_1GB) {
+	if (g_RAMSize == kRamSize1GB) {
 		selftest_at(RT_BASE + 0x2FF00000);
 		selftest_at(RT_BASE + 0x3FF00000);
 	}
@@ -555,7 +547,7 @@ void sdram_init() {
 	     size_to_string[g_RAMSize],
 	     bc);
 
-	if (g_RAMSize == RAM_SIZE_UNKNOWN)
+	if (g_RAMSize == kRamSizeUnknown)
 		panic("unknown ram size (MR8 response was 0x%lX)", bc);
 
 	/*
@@ -567,11 +559,11 @@ void sdram_init() {
 	 * mess with SDRAM clock it would need to do that.
 	 */
 
-	if (g_RAMSize == RAM_SIZE_1GB) {
+	if (g_RAMSize == kRamSize1GB) {
 		g_InitSdramParameters.colbits = 3;
 		g_InitSdramParameters.rowbits = 3;
 		g_InitSdramParameters.banklow = 3;
-	} else if (g_RAMSize == RAM_SIZE_512MB) {
+	} else if (g_RAMSize == kRamSize512MB) {
 		g_InitSdramParameters.colbits = 2;
 	}
 

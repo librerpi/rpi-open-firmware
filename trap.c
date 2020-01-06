@@ -69,8 +69,8 @@ static void print_vpu_state(vc4_saved_state_t* pcb) {
 	printf("Exception info (IC0):\n");
 
 	printf(
-	    "   src0: 0x%08x src1: 0x%08x vaddr: 0x%08lx\n"
-	    "      C: 0x%08lx    S: 0x%08x\n",
+	    "   src0: 0x%08lx src1: 0x%08lx vaddr: 0x%08lx\n"
+	    "      C: 0x%08lx    S: 0x%08lx\n",
 	    IC0_SRC0,
 	    IC0_SRC1,
 	    IC0_VADDR,
@@ -81,8 +81,8 @@ static void print_vpu_state(vc4_saved_state_t* pcb) {
 	printf("Exception info (IC1):\n");
 
 	printf(
-	    "   src0: 0x%08x src1: 0x%08x vaddr: 0x%08lx\n"
-	    "      C: 0x%08lx    S: 0x%08x\n",
+	    "   src0: 0x%08lx src1: 0x%08lx vaddr: 0x%08lx\n"
+	    "      C: 0x%08lx    S: 0x%08lx\n",
 	    IC1_SRC0,
 	    IC1_SRC1,
 	    IC1_VADDR,
@@ -109,10 +109,12 @@ void sleh_fatal(vc4_saved_state_t* pcb, uint32_t n) {
 }
 
 void sleh_irq(vc4_saved_state_t* pcb, uint32_t tp) {
-	uint32_t status = IC0_S;
-	uint32_t source = status & 0xFF;
+  uint32_t status = IC0_S;
+  uint32_t source = status & 0xFF;
 
-	printf("VPU Received interrupt from source %ld\n", source);
+  print_timestamp();
+
+  printf("VPU Received interrupt from source %ld\n", source);
 
   switch (source) {
   case INTERRUPT_TIMER0:

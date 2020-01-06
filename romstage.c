@@ -26,7 +26,7 @@ VideoCoreIV first stage bootloader.
 #include "utils.hh"
 
 uint32_t g_CPUID;
-extern uint32_t vectorTable;
+extern uint32_t vectorTable[];
 
 #define UART_IBRD   (UART_BASE+0x24)
 #define UART_FBRD   (UART_BASE+0x28)
@@ -138,12 +138,12 @@ int _main(unsigned int cpuid, unsigned int load_address) {
 	    set_interrupt(i, 0, 1);
 	}
 
-	IC0_VADDR = &vectorTable;
-	IC1_VADDR = &vectorTable;
+	IC0_VADDR = (uint32_t)vectorTable;
+	IC1_VADDR = (uint32_t)vectorTable;
 
-        printf("vector table now at 0x%08lx 0x%08lx\n", IC0_VADDR, &vectorTable);
+        printf("vector table now at 0x%08lx 0x%08lx\n", IC0_VADDR, (uint32_t)vectorTable);
 
-        if (IC0_VADDR != &vectorTable) panic("vector table not accepted");
+        if (IC0_VADDR != ((uint32_t)vectorTable)) panic("vector table not accepted");
 
 	//__asm__ volatile("ei");
 

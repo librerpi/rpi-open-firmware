@@ -5,7 +5,7 @@
 
 extern uintptr_t* _end;
 
-#define logf(fmt, ...) printf("[BRINGUP:%s]: " fmt, __FUNCTION__, ##__VA_ARGS__);
+#define logf(fmt, ...) { print_timestamp(); printf("[BRINGUP:%s]: " fmt, __FUNCTION__, ##__VA_ARGS__); }
 
 static void heap_init() {
 	void* start_of_heap = (void*)MEM_HEAP_START;
