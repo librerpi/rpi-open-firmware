@@ -45,9 +45,10 @@ let
     };
     firmware = vc4.stdenv.mkDerivation {
       name = "firmware";
-      src = lib.cleanSource ./.;
+      src = lib.cleanSource ./firmware;
       buildInputs = [ self.common ];
       preBuild = ''
+        mkdir arm_chainloader
         ln -s ${arm.chainloader} arm_chainloader/build
       '';
       enableParallelBuilding = true;
