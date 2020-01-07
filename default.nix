@@ -57,6 +57,7 @@ let
       installPhase = ''
         mkdir -p $out/nix-support
         cp build/bootcode.{bin,elf} $out/
+        cp start4.elf $out/
         ln -s ${arm.chainloader} $out/arm
         $OBJDUMP -d $out/bootcode.elf > $out/bootcode.S
         cat <<EOF > $out/nix-support/hydra-metrics

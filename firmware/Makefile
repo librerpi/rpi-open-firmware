@@ -33,7 +33,7 @@ WARN_COLOR=""
 
 .PHONY: default all clean create_build_directory device
 
-default: bootcode.bin
+default: bootcode.bin start4.elf
 
 EXTRA_OBJ := arm_chainloader.o
 OBJ := $(addprefix $(TARGET_BUILD_DIR)/, $(addsuffix .o, $(basename $(SRCS)))) $(EXTRA_OBJ)
@@ -83,6 +83,12 @@ $(TARGET_BUILD_DIR)/%.o: %.s $(HEADERS)
 
 arm_chainloader.o: arm_chainloader/build/arm_chainloader.bin
 	$(OBJCOPY) -I binary -O elf32-vc4 -B vc4 $< $@
+
+startelf4.o: startelf4.S
+	vc4-elf-gcc startelf4.S -o startelf4.o -c
+
+start4.elf: startelf4.o startelf.o aux.o
+	$(CC) -o $@ $^ start.ld -nostdlib
 
 .PRECIOUS: $(OBJ)
 
