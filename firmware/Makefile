@@ -87,7 +87,7 @@ arm_chainloader.o: arm_chainloader/build/arm_chainloader.bin
 startelf4.o: startelf4.S
 	vc4-elf-gcc startelf4.S -o startelf4.o -c
 
-start4.elf: startelf4.o startelf.o aux.o
+start4.elf: startelf4.o startelf.o aux.o pll_read.o
 	$(CC) -o $@ $^ start.ld -nostdlib
 
 .PRECIOUS: $(OBJ)
