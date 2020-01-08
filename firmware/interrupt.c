@@ -10,6 +10,8 @@ typedef void (*irqType)();
 irqType __attribute__ ((aligned (512))) vectorTable[144];
 
 void setup_irq_handlers() {
+  // https://github.com/hermanhermitage/videocoreiv/wiki/VideoCore-IV-Programmers-Manual#interrupts
+  // processor internal exceptions
   vectorTable[0] = fleh_zero;
   vectorTable[1] = fleh_misaligned;
   vectorTable[2] = fleh_dividebyzero;
@@ -27,7 +29,12 @@ void setup_irq_handlers() {
   for (int i=14; i<=31; i++) {
     vectorTable[i] = fleh_unknown;
   }
-  for (int i=32; i<=143; i++) {
+  // swi opcode handler
+  for (int i=32; i<=63; i++) {
+    vectorTable[i] = fleh_irq;
+  }
+  // external interrupts
+  for (int i=64; i<=127; i++) {
     vectorTable[i] = fleh_irq;
   }
 
@@ -38,11 +45,11 @@ void setup_irq_handlers() {
     set_interrupt(i, false, 1);
   }
   // disable a few select irqs on core 0
-  set_interrupt(73 - 64, false, 0); // 9
-  set_interrupt(96 - 64, false, 0); // 32
-  set_interrupt(120 - 64, false, 0); // 56
-  set_interrupt(121 - 64, false, 0); // 57
-  set_interrupt(125 - 64, false, 0); // 61
+  set_interrupt(73 - 64, false, 0); //   9 usb
+  set_interrupt(96 - 64, false, 0); //  32 hostport?
+  set_interrupt(120 - 64, false, 0); // 56 sdio
+  set_interrupt(121 - 64, false, 0); // 57 uart
+  set_interrupt(125 - 64, false, 0); // 61 rng
 
   IC0_VADDR = (uint32_t)vectorTable;
   IC1_VADDR = (uint32_t)vectorTable;

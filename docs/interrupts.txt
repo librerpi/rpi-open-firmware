@@ -1,3 +1,5 @@
+https://github.com/hermanhermitage/videocoreiv/wiki/VideoCore-IV-Programmers-Manual#interrupts
+
 there are 64 IRQ's within the VC4
 0       ST_C0
 1       ST_C1

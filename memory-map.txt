@@ -8,48 +8,49 @@ https://paulwratt.github.io/rpi-internal-registers-online/index.html
           0 -> $RAMSIZE   (0 to $RAMSIZE)  RAM
 0x1801_1000                                             VPU0_THREAD_CTRL_BASE_ADDRESS ??
 0x1A00_0000 -> 0x1A0F_FFFF                              vc_run APB Bridge?
-0x1000_0000                                             BOOTROM_BASE_ADDRESS??
-0x2000_0000                                             BOOTROM_BASE_ADDRESS??
-0x3e00_0000 -> 0x3fff_ffff (992mb to 1024mb, 32mb long) IO peripherals (recommended to access via 4-alias?)
-0x3e00_0000                                             MS_BASE from multicore_sync.h
-0x3e00_1000                                             CCP2TX_BASE
-0x3e00_2000                                             IC0_BASE (irq control for vc4 core 0)
-0x3e00_2800                                             IC1_BASE (irq control for vc4 core 1)
-0x3e00_3000                                             ST_BASE from timer.h
-0x3e00_4000                                             TXP_BASE
-0x3e00_5000                                             JP_BASE (jpeg)
-0x3e00_6000                                             MPHI_BASE
-0x3e00_7000                                             DMA0_BASE thru DMA14_BASE, 0x100 each
-0x3e00_8000                                             NU_BASE from nexus_uba.h (debug control?)
-0x3e00_9000                                             SYSAC_BASE from system_arbiter_ctrl.h (priority of every axi peer?)
-0x3e00_a000                                             ASB_BASE from apb_async_bridge_ctrl.h
-0x3e00_b000                                             ARM_BASE
 
-0x3e10_1000                                             CM_BASE, cpr_clkman.h mapped to bcm2835-cprman in DT
-0x3e10_2000                                             A2W_BASE, allows enabling/disabling PLL blocks A/B/C/D/H
+0x6000_0000                                             mask rom
+0x6001_0738                                             core0 stack pointer, at start of mask rom for rpi4
+0x7e00_0000 -> 0x3fff_ffff (992mb to 1024mb, 32mb long) IO peripherals (only exists in the 4-alias)
+0x7e00_0000                                             MS_BASE from multicore_sync.h
+0x7e00_1000                                             CCP2TX_BASE
+0x7e00_2000                                             IC0_BASE (irq control for vc4 core 0)
+0x7e00_2800                                             IC1_BASE (irq control for vc4 core 1)
+0x7e00_3000                                             ST_BASE from timer.h
+0x7e00_4000                                             TXP_BASE
+0x7e00_5000                                             JP_BASE (jpeg)
+0x7e00_6000                                             MPHI_BASE
+0x7e00_7000                                             DMA0_BASE thru DMA14_BASE, 0x100 each
+0x7e00_8000                                             NU_BASE from nexus_uba.h (debug control?)
+0x7e00_9000                                             SYSAC_BASE from system_arbiter_ctrl.h (priority of every axi peer?)
+0x7e00_a000                                             ASB_BASE from apb_async_bridge_ctrl.h
+0x7e00_b000                                             ARM_BASE
 
-0x3e20_0000 -> 0x3E21_FFFF                              peri_audio APB Bridge?
-0x3e20_0000                                             GP_BASE (gpio)
-0x3e20_5000   i2c0                                      I2C0_BASE
-0x3e20_5200   i2c1
-0x3e20_5400   i2c2
-0x3e20_5600   i2c3
-0x3e20_5800   i2c4
-0x3e20_5a00   i2c5
-0x3e20_5c00   i2c6
-0xe320_5e00   i2c7
-0x3e20_f000                                             OTP_BASE
-0x3e21_5000                                             AUX_IO_BASE
-0x3e40_0000                                             SCALER_BASE
-0x3ec0_0000                                             V3D_BASE from v3d.h
-0x3ee0_0000                                             SD_BASE from sdc_ctrl.h (dram control)
-0x3ee0_1000                                             L2_BASE from l2_cache_ctrl.h
-0x3ee0_2000                                             L1_BASE from vpu_l1_cache_ctrl.h
-0x3ee0_2100                                             D0CACHE_BASE from hardware_vc4.h
-0x3ee0_5000                                             DMA15_BASE
-0x3ee0_8000                                             APERF1_BASE from axi_performance1.h
-0x3e80_0000 -> 0x3E81_FFFF                              peri_image APB Bridge?
-0x3f00_0000                                             H264_BASE
+0x7e10_1000                                             CM_BASE, cpr_clkman.h mapped to bcm2835-cprman in DT
+0x7e10_2000                                             A2W_BASE, allows enabling/disabling PLL blocks A/B/C/D/H
+
+0x7e20_0000 -> 0x3E21_FFFF                              peri_audio APB Bridge?
+0x7e20_0000                                             GP_BASE (gpio)
+0x7e20_5000   i2c0                                      I2C0_BASE
+0x7e20_5200   i2c1
+0x7e20_5400   i2c2
+0x7e20_5600   i2c3
+0x7e20_5800   i2c4
+0x7e20_5a00   i2c5
+0x7e20_5c00   i2c6
+0x7320_5e00   i2c7
+0x7e20_f000                                             OTP_BASE
+0x7e21_5000                                             AUX_IO_BASE
+0x7e40_0000                                             SCALER_BASE
+0x7ec0_0000                                             V3D_BASE from v3d.h
+0x7ee0_0000                                             SD_BASE from sdc_ctrl.h (dram control)
+0x7ee0_1000                                             L2_BASE from l2_cache_ctrl.h
+0x7ee0_2000                                             L1_BASE from vpu_l1_cache_ctrl.h
+0x7ee0_2100                                             D0CACHE_BASE from hardware_vc4.h
+0x7ee0_5000                                             DMA15_BASE
+0x7ee0_8000                                             APERF1_BASE from axi_performance1.h
+0x7e80_0000 -> 0x3E81_FFFF                              peri_image APB Bridge?
+0x7f00_0000                                             H264_BASE
 
 bus address space:
 4 aliases of the 1st 1gig of "real physical"

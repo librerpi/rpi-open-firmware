@@ -11,6 +11,16 @@ void BCM2708Gpio::setFunction(uint8_t pin_num, BCM2708PinmuxSetting function) {
   IODriverLog("fsel after %8lx", fsel[regnum]);
 }
 
+void BCM2708Gpio::getAllFunctions(BCM2708PinmuxSetting *functions) {
+  volatile uint32_t* fsel = reinterpret_cast<volatile uint32_t*>(&GP_FSEL0);
+  for (int bank=0; bank<7; bank++) {
+    int pins_in_bank = (bank == 6) ? 4 : 10;
+    for (int pin=0; pin < pins_in_bank; pin++) {
+      functions[(bank * 10) + pin] = static_cast<BCM2708PinmuxSetting>((fsel[bank] >> (pin * 3)) & 0x7);
+    }
+  }
+}
+
 void BCM2708Gpio::clearPin(uint8_t pin_num) {
   volatile uint32_t *clear = reinterpret_cast<volatile uint32_t*>(&GP_CLR0);
   uint8_t regnum = pin_num / 32;

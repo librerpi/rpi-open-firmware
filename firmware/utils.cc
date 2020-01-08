@@ -2,6 +2,17 @@
 #include "utils.hh"
 #include "drivers/BCM2708ClockDomains.hpp"
 
+const char *function_names[] = {
+  "IN",
+  "OUT",
+  "ALT5",
+  "ALT4",
+  "ALT0",
+  "ALT1",
+  "ALT2",
+  "ALT3"
+};
+
 void dump_all_gpio() {
   BCM2708Gpio *gpio = static_cast<BCM2708Gpio*>(IODevice::findByTag('GPIO'));
   bool gpio_level[64];
@@ -11,8 +22,10 @@ void dump_all_gpio() {
       gpio_level[(bank * 32) + pin] = state & (1 << pin);
     };
   }
+  BCM2708PinmuxSetting functions[64];
+  gpio->getAllFunctions(functions);
   for (int i=0; i<32; i++) {
-    printf("GPIO%02d %s | %s GPIO%02d\n", i, gpio_level[i] ? "HIGH" : " LOW", gpio_level[i+32] ? "HIGH" : "LOW ", i + 32);
+    printf("GPIO%02d %4s %s | %s %4s GPIO%02d\n", i, function_names[functions[i]], gpio_level[i] ? "HIGH" : " LOW", gpio_level[i+32] ? "HIGH" : "LOW ", function_names[functions[i+32]], i + 32);
   }
 }
 

@@ -115,6 +115,7 @@ void sleh_fatal(vc4_saved_state_t* pcb, uint32_t n) {
 void sleh_irq(vc4_saved_state_t* pcb, uint32_t tp) {
   uint32_t status = IC0_S;
   uint32_t source = status & 0xFF;
+  uint32_t cs;
 
   print_timestamp();
 
@@ -122,13 +123,12 @@ void sleh_irq(vc4_saved_state_t* pcb, uint32_t tp) {
 
   switch (source) {
   case INTERRUPT_TIMER0:
-    print_vpu_state(pcb);
-    uint32_t cs = ST_CS;
-    printf("ST_CS 0x%08lx\n", cs);
+    cs = ST_CS;
     ST_CS = cs;
-    printf("ST_CS 0x%08lx\n", ST_CS);
+    ST_C0 += 1 * 1000 * 1000;
+    return;
+    print_vpu_state(pcb);
     puts("unexpected timer0, did you forget about the pi while writing code?");
-    ST_C0 += 10 * 1000 * 1000;
     break;
   case INTERRUPT_ARM:
     arm_monitor_interrupt();

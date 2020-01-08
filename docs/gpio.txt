@@ -1,0 +1,60 @@
+0x3e20_0000 base address of gpio bank
+
+offset  name
+0x0     GPFSEL0
+0x4     GPFSEL1
+0x8     GPFSEL2
+0xc     GPFSEL3
+0x10    GPFSEL4
+0x14    GPFSEL5
+
+0x1c    GPSET0
+0x20    GPSET1
+
+0x28    GPCLR0
+0x2c    GPCLR1
+
+0x34    GPLEV0
+0x38    GPLEV1
+
+0x40    GPEDS0
+0x44    GPEDS1
+
+0x4c    GPREN0
+0x50    GPREN1
+
+0x58    GPFEN0
+0x5c    GPFEN1
+
+...
+
+0x94    GPPUD       GPIO pin pull up/down enable
+0x98    GPPUDCLK0   GPIO pin pull up/down enable clock 0
+0x9c    GPPUDCLK1   GPIO pin pull up/down enable clock 1
+
+0xe8    GP_GPIO_PUP_PDN_CNTRL_REG0  rpi4/bcm2711 only, pin pull up/down select
+
+GPFSEL_, gpio function select registers, 6 registers, 32bits wide each, 3 bits per gpio pin, with 2 bits reserved in each register
+each register can describe 10 function selects, for a total of 60 function selections
+
+GPSET_, gpio set registers, writing a 0 to a bit has no effect, writing a 1 to a bit sets that gpio as high, but only if the gpio is an output
+GPCLR_, gpio clear registers, writing a 1 clears a gpio output
+
+GPPUD, master pull-up/pull-down enable, see further notes
+GPPUDCLKn, gpio pullup/down clock enable
+
+to change the pullup config:
+* write the desired mode to GPPUD (off=0, down=1, up=2)
+* delay for 150 clock cycles
+* write a 1 to the bits of GPPUDCLKn that correspond to GPIO pins you want to modify the state of
+* delay for another 150 clock cycles
+* write a zero to GPPUD
+* write 0 to GPPUDCLKn
+
+for the bcm2711/rpi4:
+pullup control signal is 2 bits wide (mask of 0x3)
+the register offset (which register) is gpio/16
+the bit-shift within that register is (gpio % 16) * 2
+
+looks to be AVR style, just a giant block of bits, just like the function select ones
+2 bits per pin, off=0, up=1, down=2, 16 pins per 32bit reg, 4 registers in total?

@@ -1,0 +1,14 @@
+https://github.com/anholt/linux/blob/e50da9745215df2260169ff0685423dbf43ee2d3/drivers/soc/bcm/bcm2835-pm.c#L132-L137
+
+this file has code that can enable various power domains withint he rpi
+
+PM_PROC example (arm cpu cores)
+
+start by clearing the ARMRSTN flag
+wait 15 usec
+set POWUP bit (enables power to that block)
+wait for POWOK status
+set ISPOW (some kind of electrical isolation)
+set MEMREP (memory repair?)
+wait for MRDONE (mem repair done)
+set ISFUNC (functional isolation)
