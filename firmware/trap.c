@@ -98,6 +98,7 @@ static void print_vpu_state(vc4_saved_state_t* pcb) {
         }*/
 }
 
+// return_from_exception will read from pcb when restoring state, so that could be used to mutate the state
 void sleh_fatal(vc4_saved_state_t* pcb, uint32_t n) {
 	printf("Fatal VPU Exception: %s\n", exception_name(n));
 
@@ -108,6 +109,9 @@ void sleh_fatal(vc4_saved_state_t* pcb, uint32_t n) {
 	hang_cpu();
 }
 
+// when called, pcb contains a pointer to the entire register state, as made by SaveRegsAll
+// return_from_exception will read from pcb when restoring state, so that could be used to mutate the state
+// tp contains r29, the thread pointer
 void sleh_irq(vc4_saved_state_t* pcb, uint32_t tp) {
   uint32_t status = IC0_S;
   uint32_t source = status & 0xFF;
@@ -124,6 +128,7 @@ void sleh_irq(vc4_saved_state_t* pcb, uint32_t tp) {
     ST_CS = cs;
     printf("ST_CS 0x%08lx\n", ST_CS);
     puts("unexpected timer0, did you forget about the pi while writing code?");
+    ST_C0 += 10 * 1000 * 1000;
     break;
   case INTERRUPT_ARM:
     arm_monitor_interrupt();

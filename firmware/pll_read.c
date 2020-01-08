@@ -1,21 +1,45 @@
 #include <hardware.h>
+#include <stdio.h>
 #include "pll_read.h"
 
 uint32_t get_vpu_per_freq() {
   return clk_get_freq(&CM_VPUDIV, &CM_VPUCTL);
 }
 
-uint32_t pllc() {
-  uint32_t ana1 = A2W_PLLC_ANA1;
-  uint32_t ctrl = A2W_PLLC_CTRL;
-  uint32_t frac = A2W_PLLC_FRAC & A2W_PLLC_FRAC_MASK;
+int print_debug = 2;
+
+uint32_t compute_pll_freq(uint32_t ctrl, uint32_t frac) {
   uint32_t ndiv = A2W_PLLC_CTRL & A2W_PLLC_CTRL_NDIV_SET;
   uint32_t pdiv = (A2W_PLLC_CTRL & A2W_PLLC_CTRL_PDIV_SET) >> A2W_PLLC_CTRL_PDIV_LSB;
   uint64_t mult1 = (ndiv << 20) | frac;
   mult1 *= pdiv;
   // TODO, the optional /2 phase
   uint32_t freq = (54000000 * mult1) >> 20;
+  if (print_debug == 1) printf("ndiv %ld, pdiv %ld, frac %lu ", ndiv, pdiv, frac);
   return freq;
+}
+
+uint32_t plla() {
+  return compute_pll_freq(A2W_PLLA_CTRL, A2W_PLLA_FRAC & A2W_PLLA_FRAC_MASK);
+}
+
+uint32_t pllb() {
+  return compute_pll_freq(A2W_PLLB_CTRL, A2W_PLLB_FRAC & A2W_PLLB_FRAC_MASK);
+}
+
+uint32_t pllc() {
+  //uint32_t ana1 = A2W_PLLC_ANA1;
+  uint32_t ctrl = A2W_PLLC_CTRL;
+  uint32_t frac = A2W_PLLC_FRAC & A2W_PLLC_FRAC_MASK;
+  return compute_pll_freq(ctrl, frac);
+}
+
+uint32_t plld() {
+  return compute_pll_freq(A2W_PLLD_CTRL, A2W_PLLD_FRAC & A2W_PLLD_FRAC_MASK);
+}
+
+uint32_t pllh() {
+  return compute_pll_freq(A2W_PLLH_CTRL, A2W_PLLH_FRAC & A2W_PLLH_FRAC_MASK);
 }
 
 uint32_t pllc_core0() {

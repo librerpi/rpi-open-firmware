@@ -119,7 +119,7 @@ static void switch_vpu_to_pllc() {
 }
 
 void set_interrupt(int intno, bool enable, int core) {
-    int base = (core == 0) ? IC0_BASE : IC1_BASE;
+    uint32_t base = (core == 0) ? IC0_BASE : IC1_BASE;
 
     int offset = 0x10 + ((intno >> 3) << 2);
     uint32_t slot = 0xF << ((intno & 7) << 2);

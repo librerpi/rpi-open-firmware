@@ -46,7 +46,7 @@ AS = $(CC)
 OBJCOPY = $(CROSS_COMPILE)objcopy
 LINKFLAGS = -nostdlib -nostartfiles --build-id=none -T linker.ld --no-omagic # --print-map #-Wl,--gc-sections --entry=_start -Wl,--cref
 
-CFLAGS = -c -nostdlib -Wno-multichar -std=c11 -fsingle-precision-constant -Wdouble-promotion -D__VIDEOCORE4__ -I./vc4_include/ -I./
+CFLAGS = -c -nostdlib -Wno-multichar -std=c11 -fsingle-precision-constant -Wdouble-promotion -D__VIDEOCORE4__ -I./vc4_include/ -I./ -Wall
 ASFLAGS = -c -nostdlib -x assembler-with-cpp -D__VIDEOCORE4__ -I./vc4_include/ -I./
 CXXFLAGS = -c -nostdlib -Wno-multichar -std=c++11 -fno-exceptions -fno-rtti -D__VIDEOCORE4__ -I./vc4_include/ -I./
 
@@ -87,7 +87,7 @@ arm_chainloader.o: arm_chainloader/build/arm_chainloader.bin
 startelf4.o: startelf4.S
 	vc4-elf-gcc startelf4.S -o startelf4.o -c
 
-start4.elf: startelf4.o startelf.o aux.o pll_read.o
+start4.elf: startelf4.o startelf.o aux.o pll_read.o traps.o trap.o print_timestamp.o hang_cpu.o arm_monitor.o panic.o interrupt.o
 	$(CC) -o $@ $^ start.ld -nostdlib
 
 .PRECIOUS: $(OBJ)
