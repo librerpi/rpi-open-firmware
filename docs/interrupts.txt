@@ -1,0 +1,121 @@
+there are 64 IRQ's within the VC4
+0       ST_C0
+1       ST_C1
+2       ST_C2
+3       ST_C3
+4       codec0
+5       codec1
+6       codec2
+7       jpeg
+8       isp
+9       usb
+10      v3d
+11      transposer
+12      multicore sync 0
+13      multicore sync 1
+14      multicore sync 2
+15      multicore sync 3
+16      dma0
+17      dma1
+18      dma2
+19      dma3
+20      dma3
+21      dma5
+22      dma6
+23      dma7
+24      dma8
+25      dma9
+26      dma10
+27      dma11/dma12/dma13/dma14
+28      dma-all
+29      aux int
+30      arm
+31      dma-vpu
+32      hostport
+33      videoscaler
+34      ccp2tx
+35      sdc
+36      dsi0
+37      axe
+38      cam0
+39      cam1
+40      hdmi0
+41      hdmi1
+42      pixelvalve1
+43      i2c_spi_slv_int
+44      dsi1
+45      pwa0
+46      pwa1
+47      cpr
+48      smi
+49      gpio_int[0]
+50      gpio_int[1]
+51      gpio_int[2]
+52      gpio_int[3]
+53      i2c_int
+54      spi_int
+55      i2s_pcm_int
+56      sdio
+57      uart_int
+58      slimbus
+59      vec
+60      cpf
+61      rng
+62      asdio
+63      avspmon
+
+ARM_IRQ_PEND0/ARM_IRQ_PEND1/ARM_IRQ_PEND2 let the arm detect which of the 64 IRQ's are pending
+
+ARM_IRQ_PEND0
+  bit  0  arm timer irq
+  bit  1  arm mailbox
+  bit  2  arm doorbell 0
+  bit  3  arm doorbell 1
+  bit  4  gpu0 halted
+  bit  5  gpu1 halted
+  bit  6  illegal access type 1
+  bit  7  illegal access type 0 (addr bit 30 or 31 set on the physical addr bus exiting the arm)
+  bit  8  something present in ARM_IRQ_PEND1
+  bit  9  something present in ARM_IRQ_PEND2
+  bit 10  gpu irq 7
+  bit 11  gpu irq 9
+  bit 12  gpu irq 10
+  bit 13  gpu irq 18
+  bit 14  gpu irq 19
+  bit 15  gpu irq 53
+  bit 16  gpu irq 54
+  bit 17  gpu irq 55
+  bit 18  gpu irq 56
+  bit 19  gpu irq 57
+  bit 20  gpu irq 62
+
+ARM_IRQ_PEND1/ARM_IRQ_PEND2 exposes all 64 irq's at once
+ARM_IRQ_FAST controls which IRQ becomes an FIQ
+
+ARM_IRQ_ENBL1/ARM_IRQ_ENBL2/ARM_IRQ_ENBL3 writing a 1 to any bit enables that irq, irq's already enabled remain enabled, even when written 0
+ARM_IRQ_ENBL1 controls gpu irq 0-31
+ARM_IRQ_ENBL2 controls gpu irq 32-63
+ARM_IRQ_ENBL3 controls the 8 arm irq's
+ARM_IRQ_DIBL1/ARM_IRQ_DIBL2/ARM_IRQ_DIBL3 writing a 1 clears the enable flag for that irq
+
+IC0_BASE(0x7e002000)
+IC1_BASE(0x7e002800)
+this register area controls VPU core0/core1 irq's
+
+IC0_MASK0/IC0_MASK1/IC0_MASK2/IC0_MASK3/IC0_MASK4/IC0_MASK5/IC0_MASK6/IC0_MASK7
+IC1_MASK0/IC1_MASK1/IC1_MASK2/IC1_MASK3/IC1_MASK4/IC1_MASK5/IC1_MASK6/IC1_MASK7
+8 irq per register
+4 bits per irq
+
+irq 57 (0x39) for example
+floor(57/8) == 7, so its in IC?_MASK7
+(57 % 8) == 1, so its 0xf0, the 2nd nibble
+
+setting the nibble for an irq to F allows that irq to fire
+
+IC0_VADDR/IC1_VADDR contain the exception/interupt vector tables
+it should point to the address of a `uint32[]` that is aligned to 512 bytes
+the first 32 entries are vpu exceptions, [2] for example is divide by zero
+[32] to [142] are irq's, too many?
+
+IC0_S/IC1_S & 0xFF tells you which irq you are currently servicing

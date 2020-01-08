@@ -1,0 +1,25 @@
+L1_BASE/0x7ee02000 controls the VPU L1 cache
+
+L1_IC?_CONTROL controls many L1 features, including cache flush
+
+
+L1_IC?_FLUSH_S/L1_IC0_FLUSH_E control the start/end of a region of memory being flushed from L1
+
+L1_IC?_RD_HITS counter for the number of L1 read hits?
+L1_IC?_RD_MISSES and misses
+
+L1_IC?_BP_HITS
+L1_IC?_BP_MISSES another hit/miss pair for something?
+
+
+
+unsorted notes:
+L1/L2 cache control logic, discovered within https://github.com/itszor/gcc-vc4/blob/vc4-gcc6/gcc/config/vc4/vc4.h#L122-L143
+
+start by writing a start and end address to L1_D_FLUSH_S and L1_D_FLUSH_E
+then set DC0_FLUSH(0x2) and DC1_FLUSH(0x4) flags within L1_D_CONTROL
+then poll until those flags self-clear
+
+similar logic for instruction caches on L1_IC0_CONTROL/L1_IC0_FLUSH_S/L1_IC0_FLUSH_E and L1_IC1_CONTROL/L1_IC1_FLUSH_S/L1_IC1_FLUSH_E but only with START_FLUSH(0x2) as the flag
+
+L2_FLUSH_STA/L2_FLUSH_END/L2_CONT_OFF also exists, and has a 2bit flush-mode and a 1bit flush flag (0x4)

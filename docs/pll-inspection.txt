@@ -1,0 +1,69 @@
+#1 https://github.com/raspberrypi/linux/blob/7e5ca955ac4d111b5d572e5aa2241cad07b85a3a/drivers/clk/bcm/clk-bcm2835.c#L17-L35
+#2 drivers/BCM2708ClockDomains.cc
+
+BCM2835_MAX_FB_RATE is 1.75ghz
+it is `Highest rate for the VCO before we have to use the pre-divide-by-2`
+
+the rate of a pll is computed with the following formula:
+
+temp1 = input_clock * (ndiv << 20) + fdiv
+temp2 = temp1 / pdiv
+output_clock = temp2 >> 20
+
+nvid appears to be the whole-number multiplier
+fdiv is the fractional multiplier (out of 2^20)
+pdiv is a post-divisor
+
+all math is done on a fixed-point of 20 to avoid floats
+
+bcm2835_pll_choose_ndiv_and_fdiv (from linux) computes ndiv and pdiv based on input_clock and desired output_clock
+
+      min-rate  max-rate
+PLLA  600mhz    2.4ghz
+PLLC  600mhz    3ghz
+PLLD  600mhz    2.4ghz
+PLLH  600mhz    3ghz
+
+bcm2835_pll_set_rate:
+if the desired clock is over 1.75ghz, halve it, and set use_fb_prediv=true
+
+select ndiv and fdiv for the desired clock, based on input clock
+
+save all 4 ana bytes (in reverse order) to a local array
+
+test if prediv is enabled (fb_prediv_mask in linux, it differs for each pll)
+
+apply mask and set values specific to this pll, to the saved ana's
+
+if prediv is changing 1->0 clear the prediv bit in ana1 and plan for early ana_setup
+if prediv is changing 0>1 set prediv bit in ana1 and dont early ana_setup
+else early ana_setup
+
+set the correct bit(reference_enable_mask) in A2W_XOSC_CTRL to allow the master clock into the PLL
+
+if doing early_ana, write all ana bytes
+
+write the fdiv value to the register
+
+read a2w_ctrl_reg, set nvid and pdiv values, then write it back
+
+if not early_ana, write all ana bytes
+
+
+as an example:
+PLLD is fed from the 19.2mhz crystal
+frac=0x15556
+ndiv=52
+pdiv=1
+and the extra /2 is enabled (in ana1)
+
+> (52 + (0x15556 / Math.pow(2,20))) * 1 * 2
+104.16666793823242
+> 19.2 * ((52 + (0x15556 / Math.pow(2,20))) * 1 * 2)
+2000.0000244140624
+
+so PLLD is running at 2,000,000,024hz
+
+PLLD_PER then has an ndiv of 4, so it runs at 500mhz
+
+GPCLK1 has a divisor of 20, and a source of PLLD, so it uses PLLD_PER, and generates a 25mhz signal
