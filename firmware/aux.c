@@ -3,9 +3,7 @@
 
 #include "uart.h"
 #include "pll_read.h"
-
-void uart_write(struct uart_device *uart, const char *str, int length);
-void uart_putchar(struct uart_device *uart, char c);
+#include "aux.h"
 
 #define AUXXENG *((volatile uint32_t*)(0x7E215004))
 #define AUX_MU_IO_REG  *((volatile uint32_t*)(0x7E215040))
@@ -42,10 +40,11 @@ void setup_aux_uart(uint32_t baud) {
   setvbuf(stdout, 0, _IONBF, 0);
 }
 
-void uart_write(struct uart_device *uart, const char *str, int length) {
+int uart_write(struct uart_device *uart, const char *str, int length) {
   for (int i=0; i<length; i++) {
     uart_putchar(uart, str[i]);
   }
+  return length;
 }
 
 void uart_putchar(struct uart_device *uart, char c) {
