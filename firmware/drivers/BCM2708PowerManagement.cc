@@ -16,6 +16,7 @@ PowerManagementDomain* PowerManagementDomain::getDeviceForDomain(cpr_power_domai
 		return nullptr;
 	}
 	PowerManagementDomain* pm = g_BCM2708PowerDomains[domain];
+        return pm;
 }
 
 /***********************************************************************
@@ -70,7 +71,7 @@ struct BCM2708PowerDomain : PowerManagementDomain {
 		return kCprSuccess;
 	}
 
-	cpr_power_result_t beginPowerUpSequence(uint32_t& pmv) {
+	void beginPowerUpSequence(uint32_t& pmv) {
 		IODriverLog("starting power up sequence ...");
 		pmvOr(pmv, PM_GNRIC_POWUP_SET);
 	}
