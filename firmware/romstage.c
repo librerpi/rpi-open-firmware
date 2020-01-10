@@ -56,10 +56,13 @@ void uart_init(void) {
 	udelay(150);
 	GP_PUDCLK0 = 0;
 
+        // sets the uart ref freq to 2,998,272hz?
 	CM_UARTDIV = CM_PASSWORD | 0x6666;
 	CM_UARTCTL = CM_PASSWORD | CM_SRC_OSC | CM_UARTCTL_FRAC_SET | CM_UARTCTL_ENAB_SET;
 
 	mmio_write32(UART_ICR, 0x7FF);
+        // divisor is 1.625, giving a 1,845,090hz over-sample freq
+        // for a baud of 115,318?
 	mmio_write32(UART_IBRD, 1);
 	mmio_write32(UART_FBRD, 40);
 	mmio_write32(UART_LCRH, 0x70);

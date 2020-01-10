@@ -16,6 +16,24 @@
 #define AUX_MU_BAUD *((volatile uint32_t*)(0x7E215068))
 
 struct uart_device aux_uart = { &AUX_MU_IO_REG, &AUX_MU_LSR_REG };
+FILE *aux_fd = 0;
+
+static void uart_putchar(struct uart_device *uart, char c) {
+  if (c == '\n') uart_putchar(uart, '\r');
+  while ((*(uart->lsr_reg) & 0x20) == 0);
+  *(uart->data_reg) = c;
+}
+
+void aux_flush() {
+  while ((AUX_MU_LSR_REG & 0x40) == 0);
+}
+
+static int uart_write(struct uart_device *uart, const char *str, int length) {
+  for (int i=0; i<length; i++) {
+    uart_putchar(uart, str[i]);
+  }
+  return length;
+}
 
 void aux_uart_init(uint32_t baud) {
   uint32_t freq = get_vpu_per_freq();
@@ -36,6 +54,6 @@ void aux_uart_init(uint32_t baud) {
 
 void setup_aux_uart(uint32_t baud) {
   aux_uart_init(baud);
-  stdout = funopen(&aux_uart, 0, uart_write, 0, 0);
+  aux_fd = stdout = funopen(&aux_uart, 0, uart_write, 0, 0);
   setvbuf(stdout, 0, _IONBF, 0);
 }

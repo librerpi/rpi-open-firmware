@@ -87,8 +87,8 @@ arm_chainloader.o: arm_chainloader/build/arm_chainloader.bin
 startelf4.o: startelf4.S
 	vc4-elf-gcc startelf4.S -o startelf4.o -c
 
-start4.elf: startelf4.o startelf.o aux.o pll_read.o traps.o trap.o print_timestamp.o hang_cpu.o arm_monitor.o panic.o interrupt.o utils.o drivers/BCM2708Gpio.o drivers/IODevice.o drivers/BCM2708ClockDomains.o uart.o
-	$(CC) -o $@ $^ start.ld -nostdlib
+start4.elf: startelf4.o startelf.o pll_read.o traps.o trap.o print_timestamp.o hang_cpu.o arm_monitor.o panic.o interrupt.o utils.o drivers/BCM2708Gpio.o drivers/IODevice.o drivers/BCM2708ClockDomains.o pl011.o
+	$(CC) -o $@ $^ start.ld -nostdlib -lcommon
 
 .PRECIOUS: $(OBJ)
 

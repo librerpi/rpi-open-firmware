@@ -66,7 +66,6 @@ let
         cp start4.elf $out/
         ln -s ${arm.chainloader} $out/arm
         $OBJDUMP -d $out/bootcode.elf > $out/bootcode.S
-        $OBJDUMP -d aux.o > $out/aux.S
         #$STRIP $out/start4.elf
         cat <<EOF > $out/nix-support/hydra-metrics
         bootcode.bin $(stat --printf=%s $out/bootcode.bin) bytes

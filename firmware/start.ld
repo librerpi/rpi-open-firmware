@@ -8,10 +8,9 @@ ENTRY(_start)
 GROUP(-lgloss -lc -lteststub -lgcc)
 
 MEMORY {
-  /* starts 236mb into the C alias, direct uncached
-   * 256mb long
+  /* in the C alias, direct uncached
    */
-  ram (rwx) : ORIGIN = 0xc0000000 + 2M, LENGTH = 0x10000000
+  ram (rwx) : ORIGIN = 0xc0000000 + 2M, LENGTH = 20M
 }
 SECTIONS {
   .text : ALIGN(32) {

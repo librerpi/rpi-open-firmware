@@ -23,6 +23,12 @@ void dump_all_gpio() {
   gpio_print_snapshot(gpio_level, functions);
 }
 
+void set_pl011_funcs() {
+  BCM2708Gpio *gpio = static_cast<BCM2708Gpio*>(IODevice::findByTag('GPIO'));
+  gpio->setFunction(14, kBCM2708Pinmux_ALT0);
+  gpio->setFunction(15, kBCM2708Pinmux_ALT0);
+}
+
 void gpio_print_snapshot(const bool gpio_level[64], const BCM2708PinmuxSetting functions[64]) {
   for (int i=0; i<32; i++) {
     printf("GPIO%02d %4s %s | %s %4s GPIO%02d\n", i, function_names[functions[i]], gpio_level[i] ? "HIGH" : " LOW", gpio_level[i+32] ? "HIGH" : "LOW ", function_names[functions[i+32]], i + 32);

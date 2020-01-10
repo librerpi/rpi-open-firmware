@@ -6,9 +6,7 @@ void BCM2708Gpio::setFunction(uint8_t pin_num, BCM2708PinmuxSetting function) {
 
   uint8_t pin_shift = (pin_num % 10) * 3;
 
-  IODriverLog("pin: %d\nfsel before %8lx", pin_num, fsel[regnum]);
   fsel[regnum] = (fsel[regnum] & ~(0x7 << pin_shift)) | (function << pin_shift);
-  IODriverLog("fsel after %8lx", fsel[regnum]);
 }
 
 void BCM2708Gpio::getAllFunctions(BCM2708PinmuxSetting *functions) {

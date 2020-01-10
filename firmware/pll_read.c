@@ -6,7 +6,10 @@ uint32_t get_vpu_per_freq() {
   return clk_get_freq(&CM_VPUDIV, &CM_VPUCTL);
 }
 
-int print_debug = 2;
+uint32_t get_uart_base_freq() {
+  uint32_t input_freq = clk_get_freq(&CM_UARTDIV, &CM_UARTCTL);
+  return (input_freq / CM_UARTDIV) << 12;
+}
 
 uint32_t compute_pll_freq(uint32_t ctrl, uint32_t frac) {
   uint32_t ndiv = A2W_PLLC_CTRL & A2W_PLLC_CTRL_NDIV_SET;
@@ -15,7 +18,7 @@ uint32_t compute_pll_freq(uint32_t ctrl, uint32_t frac) {
   mult1 *= pdiv;
   // TODO, the optional /2 phase
   uint32_t freq = (54000000 * mult1) >> 20;
-  if (print_debug == 1) printf("ndiv %ld, pdiv %ld, frac %lu ", ndiv, pdiv, frac);
+  printf("ndiv %ld, pdiv %ld, frac %lu ", ndiv, pdiv, frac);
   return freq;
 }
 
