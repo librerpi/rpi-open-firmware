@@ -17,7 +17,6 @@ Second stage bootloader.
 
 =============================================================================*/
 
-#include <string.h>
 #include <drivers/fatfs/ff.h>
 #include <chainloader.h>
 #include <drivers/mailbox.hpp>
@@ -25,6 +24,9 @@ Second stage bootloader.
 #include <libfdt.h>
 #include <memory_map.h>
 #include <hardware.h>
+
+#include <string.h>
+#include <stdio.h>
 
 #define logf(fmt, ...) printf("[LDR:%s]: " fmt, __FUNCTION__, ##__VA_ARGS__);
 
@@ -75,7 +77,7 @@ struct LoaderImpl {
                 uint32_t elapsed = stop - start;
 
                 uint32_t bytes_per_second = (double)len / ((double)(elapsed) / 1000 / 1000);
-                printf("%d kbyte copied at a rate of %d kbytes/second\n", len/1024, bytes_per_second/1024);
+                printf("%d kbyte copied at a rate of %ld kbytes/second\n", len/1024, bytes_per_second/1024);
 
 		return len;
 	}

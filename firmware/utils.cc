@@ -1,3 +1,5 @@
+#include <stdio.h>
+
 #include <drivers/BCM2708Gpio.hpp>
 #include "utils.hh"
 #include "drivers/BCM2708ClockDomains.hpp"
@@ -16,17 +18,26 @@ const char *function_names[] = {
 void dump_all_gpio() {
   BCM2708Gpio *gpio = static_cast<BCM2708Gpio*>(IODevice::findByTag('GPIO'));
   bool gpio_level[64];
+  BCM2708PinmuxSetting functions[64];
+  gpio_snapshot(gpio_level, functions);
+  gpio_print_snapshot(gpio_level, functions);
+}
+
+void gpio_print_snapshot(const bool gpio_level[64], const BCM2708PinmuxSetting functions[64]) {
+  for (int i=0; i<32; i++) {
+    printf("GPIO%02d %4s %s | %s %4s GPIO%02d\n", i, function_names[functions[i]], gpio_level[i] ? "HIGH" : " LOW", gpio_level[i+32] ? "HIGH" : "LOW ", function_names[functions[i+32]], i + 32);
+  }
+}
+
+void gpio_snapshot(bool gpio_level[64], BCM2708PinmuxSetting functions[64]) {
+  BCM2708Gpio *gpio = static_cast<BCM2708Gpio*>(IODevice::findByTag('GPIO'));
   for (uint8_t bank = 0; bank <2; bank++) {
     uint32_t state = gpio->getBank(bank);
     for (uint8_t pin = 0; pin < 32; pin++) {
       gpio_level[(bank * 32) + pin] = state & (1 << pin);
     };
   }
-  BCM2708PinmuxSetting functions[64];
   gpio->getAllFunctions(functions);
-  for (int i=0; i<32; i++) {
-    printf("GPIO%02d %4s %s | %s %4s GPIO%02d\n", i, function_names[functions[i]], gpio_level[i] ? "HIGH" : " LOW", gpio_level[i+32] ? "HIGH" : "LOW ", function_names[functions[i+32]], i + 32);
-  }
 }
 
 void setup_eth_clock(uint8_t pin) {

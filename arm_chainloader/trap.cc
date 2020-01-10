@@ -6,6 +6,8 @@
  */
 
 #include <runtime.h>
+#include <stdarg.h>
+#include <stdio.h>
 
 struct arm_saved_state {
 	uint32_t	r[13];		/* General purpose register r0-r12 */

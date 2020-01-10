@@ -17,6 +17,8 @@ First stage monitor.
 
 =============================================================================*/
 
+#include <stdio.h>
+
 #include <runtime.h>
 #include "hardware.h"
 #include "arm_monitor.h"

@@ -11,7 +11,7 @@ endif
 CXXFLAGS=${CFLAGS} -g -fno-exceptions
 LFLAGS=-nostdlib -nostartfiles -ffreestanding
 
-libcommon.a: xprintf.o panic.o udelay.o cxx_runtime.o printf.o putchar.o puts.o hardware.o print_timestamp.o
+libcommon.a: panic.o udelay.o cxx_runtime.o hardware.o print_timestamp.o
 	${AR} rcs $@ $^
 
 install: libcommon.a

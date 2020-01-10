@@ -19,7 +19,7 @@
 extern "C" {
 #endif
 
-int putchar (int c);
+//int putchar (int c);
 int puts (const char* str);
 int printf (const char* fmt, ...) __attribute__ ((format (printf, 1, 2)));
 void put_dump (const void* buff, unsigned long addr, int len, int width);

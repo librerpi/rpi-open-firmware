@@ -23,6 +23,8 @@ SDHOST driver. This used to be known as ALTMMC.
 #include "sd_proto.hpp"
 #include "block_device.hpp"
 
+#include <stdio.h>
+
 #define SDEDM_WRITE_THRESHOLD_SHIFT 9
 #define SDEDM_READ_THRESHOLD_SHIFT 14
 #define SDEDM_THRESHOLD_MASK     0x1f

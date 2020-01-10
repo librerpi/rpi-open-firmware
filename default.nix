@@ -28,10 +28,16 @@ let
       propagatedBuildInputs = [ self.tlsf ];
       enableParallelBuilding = true;
     };
+    notc = self.stdenv.mkDerivation {
+      name = "notc";
+      src = lib.cleanSource ./notc;
+      propagatedBuildInputs = [];
+      enableParallelBuilding = true;
+    };
     chainloader = arm.stdenv.mkDerivation {
       name = "chainloader";
       src = lib.cleanSource ./arm_chainloader;
-      buildInputs = [ self.tlsf self.common ];
+      buildInputs = [ self.tlsf self.common self.notc ];
       enableParallelBuilding = true;
       installPhase = ''
         $OBJDUMP -t build/arm_chainloader.bin.elf | sort -rk4 | head -n15
@@ -46,7 +52,7 @@ let
     firmware = vc4.stdenv.mkDerivation {
       name = "firmware";
       src = lib.cleanSource ./firmware;
-      buildInputs = [ self.common ];
+      buildInputs = [ self.common self.notc ];
       preBuild = ''
         mkdir arm_chainloader
         ln -s ${arm.chainloader} arm_chainloader/build
@@ -60,7 +66,8 @@ let
         cp start4.elf $out/
         ln -s ${arm.chainloader} $out/arm
         $OBJDUMP -d $out/bootcode.elf > $out/bootcode.S
-        $STRIP $out/start4.elf
+        $OBJDUMP -d aux.o > $out/aux.S
+        #$STRIP $out/start4.elf
         cat <<EOF > $out/nix-support/hydra-metrics
         bootcode.bin $(stat --printf=%s $out/bootcode.bin) bytes
         bootcode.elf $(stat --printf=%s $out/bootcode.elf) bytes
@@ -147,10 +154,10 @@ in pkgs.lib.fix (self: {
     inherit (aarch64) ubootRaspberryPi3_64bit linux_rpi3;
   };
   vc4 = {
-    inherit (vc4) tlsf firmware common;
+    inherit (vc4) tlsf firmware common notc;
   };
   arm = {
-    inherit (arm) tlsf chainloader common;
+    inherit (arm) tlsf chainloader common notc;
   };
   arm6 = {
     inherit (arm6) initrd;

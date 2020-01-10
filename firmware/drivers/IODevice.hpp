@@ -9,6 +9,7 @@ enum IODeviceState {
 	kIODeviceStopped
 };
 
+#ifdef __cplusplus
 struct IODevice {
 	const char* driverName;
 	IODeviceState deviceState;
@@ -40,6 +41,7 @@ struct IODevice {
 
 	static IODevice* findByTag(uint32_t tag);
 };
+#endif
 
 #define IODriverLog(fmt, ...) driverLog(__FUNCTION__, fmt, ##__VA_ARGS__)
 #define IODriverCreateSingletonInstance(clazz) static clazz __IODriver_static_ ## clazz {}

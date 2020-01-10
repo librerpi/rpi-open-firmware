@@ -19,6 +19,7 @@ MBR based disk interface modelling primary partitions as separate disks.
 
 #include <stdint.h>
 #include <chainloader.h>
+#include <stdio.h>
 
 #include "block_device.hpp"
 

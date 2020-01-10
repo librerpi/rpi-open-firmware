@@ -16,6 +16,11 @@ void gpclk0_test();
 void hexdump_ram(uint32_t addr, uint32_t count);
 
 void main_entry() {
+  bool gpio_level[64];
+  enum BCM2708PinmuxSetting functions[64];
+
+  gpio_snapshot(gpio_level, functions);
+
   uint32_t t = GP_FSEL1;
   t &= ~(7<<12) & ~(7<<15); // clear FSEL for gpio 14&15
   t |= (2<<12) |  (2<<15); // set mode 2 on 14&15
@@ -26,6 +31,9 @@ void main_entry() {
   print_debug = 1;
 
   puts("hello from c");
+
+  gpio_print_snapshot(gpio_level, functions);
+
   printf("CM_VPUDIV is 0x%08lx\n", CM_VPUDIV);
   printf("PLLA is %lu hz\n", plla());
   printf("PLLB is %lu hz\n", pllb());
@@ -46,6 +54,8 @@ void main_entry() {
 
   //gpclk0_test();
   //spin_the_gpio_wheel();
+  char * test = malloc(32);
+  printf("test is %p\n", test);
 
   for(;;) {
     __asm__ __volatile__ ("sleep" :::);

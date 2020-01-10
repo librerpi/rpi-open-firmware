@@ -19,6 +19,7 @@ Mailbox driver.
 
 #include "mailbox.hpp"
 #include <hardware.h>
+#include <stdio.h>
 
 #define logf(fmt, ...) printf("[MBOX:%s]: " fmt, __FUNCTION__, ##__VA_ARGS__);
 

@@ -47,7 +47,7 @@ CC = $(CROSS_COMPILE)gcc
 CXX = $(CROSS_COMPILE)gcc
 AS = $(CC)
 OBJCOPY = $(CROSS_COMPILE)objcopy
-LINKFLAGS = -nostdlib -march=$(ARCH) -Wl,--build-id=none -T linker.lds -ltlsf -lgcc -lcommon
+LINKFLAGS = -nostdlib -march=$(ARCH) -Wl,--build-id=none -T linker.lds -ltlsf -lgcc -lcommon -lnotc
 FPUFLAGS=-mfpu=vfp -mfloat-abi=hard
 COMMON_FLAGS = -c -nostdlib -nostartfiles -ffreestanding -march=$(ARCH) -I../ -I./ -I./drivers/libfdt/ -mtune=arm1176jzf-s ${FPUFLAGS}
 

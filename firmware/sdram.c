@@ -20,6 +20,10 @@ VideoCoreIV SDRAM initialization code.
 
 #include <runtime.h>
 #include <hardware.h>
+#include <stdbool.h>
+
+#include <xprintf.h>
+
 #include "romstage.h"
 #include "sdram.h"
 

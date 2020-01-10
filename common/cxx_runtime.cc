@@ -18,6 +18,7 @@ Crappy C++ runtime.
 =============================================================================*/
 
 #include <stdint.h>
+#include <stdio.h>
 #include <hardware.h>
 #include <runtime.h>
 

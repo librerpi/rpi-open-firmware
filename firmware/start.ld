@@ -11,7 +11,7 @@ MEMORY {
   /* starts 236mb into the C alias, direct uncached
    * 256mb long
    */
-  ram (rwx) : ORIGIN = 0xcec00000, LENGTH = 0x10000000
+  ram (rwx) : ORIGIN = 0xc0000000 + 2M, LENGTH = 0x10000000
 }
 SECTIONS {
   .text : ALIGN(32) {

@@ -1,3 +1,5 @@
+#pragma once
+
 /*
  * VideoCore4_Drivers
  * Copyright (c) 2017 Authors of rpi-open-firmware
@@ -18,6 +20,7 @@ enum BCM2708PinmuxSetting {
 	kBCM2708Pinmux_ALT3 = 7
 };
 
+#ifdef __cplusplus
 struct BCM2708Gpio : IODevice {
 	IODriverConstructor(BCM2708Gpio);
 
@@ -29,3 +32,4 @@ struct BCM2708Gpio : IODevice {
         uint32_t getBank(uint8_t bank);
 	virtual void init();
 };
+#endif

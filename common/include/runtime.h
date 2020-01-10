@@ -5,7 +5,6 @@
 #include <stddef.h>
 
 #include <panic.h>
-#include <xprintf.h>
 
 #ifdef __arm__
 #define HAS_DYNAMIC_ALLOCATIONS

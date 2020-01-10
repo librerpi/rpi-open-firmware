@@ -24,6 +24,7 @@ VideoCoreIV first stage bootloader.
 #include "arm_monitor.h"
 #include "BCM2708PlatformStartup.h"
 #include "utils.hh"
+#include "xprintf.h"
 
 uint32_t g_CPUID;
 extern uint32_t vectorTable[];

@@ -17,6 +17,8 @@ Panic routine.
 
 =============================================================================*/
 
+#include <stdio.h>
+
 #include <runtime.h>
 
 #if defined(__VIDEOCORE4__)

@@ -23,6 +23,7 @@ VideoCoreIV second level exception handlers.
 #include <hardware.h>
 #include <cpu.h>
 #include <hang_cpu.h>
+#include <stdio.h>
 #include "arm_monitor.h"
 
 static const char* g_ExceptionNames[] = { VC4_EXC_NAMES };

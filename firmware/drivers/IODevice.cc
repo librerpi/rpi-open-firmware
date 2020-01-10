@@ -1,4 +1,5 @@
 #include <drivers/IODevice.hpp>
+#include <stdio.h>
 
 static IODevice* g_DeviceRegistry[32] = { 0 };
 static unsigned int g_NewDriverIndex = 0;

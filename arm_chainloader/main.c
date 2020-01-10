@@ -1,7 +1,9 @@
-#include <stdint.h>
 #include <chainloader.h>
 #include <hardware.h>
+
 #include <stdbool.h>
+#include <stdint.h>
+#include <stdio.h>
 
 extern uintptr_t* _end;
 
