@@ -55,9 +55,11 @@ void setup_irq_handlers() {
   IC1_VADDR = (uint32_t)vectorTable;
 
   print_timestamp();
-  printf("vector table now at 0x%08lx 0x%08lx\n", IC0_VADDR, (uint32_t)vectorTable);
 
-  if (IC0_VADDR != ((uint32_t)vectorTable)) panic("vector table not accepted");
+  if (IC0_VADDR != ((uint32_t)vectorTable)) {
+    printf("vector table now at 0x%08lx 0x%08lx\n", IC0_VADDR, (uint32_t)vectorTable);
+    panic("vector table not accepted");
+  }
 }
 
 void set_interrupt(int intno, bool enable, int core) {

@@ -7,8 +7,7 @@ uint32_t get_vpu_per_freq() {
 }
 
 uint32_t get_uart_base_freq() {
-  uint32_t input_freq = clk_get_freq(&CM_UARTDIV, &CM_UARTCTL);
-  return (input_freq / CM_UARTDIV) << 12;
+  return clk_get_freq(&CM_UARTDIV, &CM_UARTCTL);
 }
 
 uint32_t compute_pll_freq(uint32_t ctrl, uint32_t frac) {
@@ -18,7 +17,6 @@ uint32_t compute_pll_freq(uint32_t ctrl, uint32_t frac) {
   mult1 *= pdiv;
   // TODO, the optional /2 phase
   uint32_t freq = (54000000 * mult1) >> 20;
-  printf("ndiv %ld, pdiv %ld, frac %lu ", ndiv, pdiv, frac);
   return freq;
 }
 
@@ -55,6 +53,11 @@ uint32_t pllc_core0() {
 uint32_t clk_get_freq(volatile uint32_t *divreg, volatile uint32_t *ctlreg) {
   uint32_t div = *divreg;
   if (div == 0) return 0;
+  uint64_t input_freq = clk_get_input_freq(ctlreg);
+  return ((input_freq << 12) / *divreg);
+}
+
+uint32_t clk_get_input_freq(volatile uint32_t *ctlreg) {
   uint32_t ctl = *ctlreg;
   switch (ctl & 0xf) {
   case 0: // GND clock source

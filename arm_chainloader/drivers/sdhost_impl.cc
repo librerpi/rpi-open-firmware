@@ -136,6 +136,7 @@ struct BCM2708SDHost : BlockDevice {
 	}
 
 	void configure_pinmux() {
+                // FIXME, messes with alt modes of gpio 40 to 59
 		GP_FSEL4 = 0x24000000;
 		GP_FSEL5 = 0x924;
 

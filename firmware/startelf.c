@@ -16,25 +16,35 @@ void spin_the_gpio_wheel();
 void gpclk0_test();
 void hexdump_ram(uint32_t addr, uint32_t count);
 
+int tprintf(const char *format, ...) __attribute__ ((format (printf, 1, 2)));
+
+int tprintf(const char *format, ...) {
+  va_list va;
+
+  print_timestamp();
+
+  va_start(va, format);
+  int ret = vprintf(format, va);
+  va_end(va);
+  return ret;
+}
+
 void main_entry() {
   bool gpio_level[64];
   enum BCM2708PinmuxSetting functions[64];
 
   gpio_snapshot(gpio_level, functions);
+  poke_the_dog();
 
   pl011_uart_init(115200);
   set_pl011_funcs();
 
-  puts("hello from c");
+  tprintf("hello from c\n");
 
   //gpio_print_snapshot(gpio_level, functions);
 
-  printf("CM_VPUDIV is 0x%08lx\n", CM_VPUDIV);
-  printf("PLLA is %lu hz\n", plla());
-  printf("PLLB is %lu hz\n", pllb());
-  printf("PLLC is %lu hz\n", pllc());
-  printf("PLLD is %lu hz\n", plld());
-  printf("PLLH is %lu hz\n", pllh());
+  tprintf("vpu freq is %lu\n", get_vpu_per_freq());
+  tprintf("uart freq is %lu\n", get_uart_base_freq());
 
   setup_irq_handlers();
 
@@ -45,12 +55,10 @@ void main_entry() {
   //hexdump_ram(0x7e200000, 512);
   //ST_C0 = 10 * 1000 * 1000;
 
-  poke_the_dog();
-
   //gpclk0_test();
   //spin_the_gpio_wheel();
   char * test = malloc(32);
-  printf("test is %p\n", test);
+  tprintf("test is %p\n", test);
 
   for(;;) {
     __asm__ __volatile__ ("sleep" :::);
@@ -83,9 +91,7 @@ void spin_the_gpio_wheel() {
 }
 
 void poke_the_dog() {
-  printf("PM_RSTC is 0x%08lx\n", PM_RSTC);
-  if (PM_RSTC & 0x20) puts("watchdog is enabled");
-  PM_WDOG = PM_PASSWORD | ((16 << 16) & PM_WDOG_MASK); // seconds to watchdog
+  PM_WDOG = PM_PASSWORD | ((15 << 16) & PM_WDOG_MASK); // seconds to watchdog
   uint32_t t = PM_RSTC;
   t &= PM_RSTC_WRCFG_CLR;
   t |= 0x20;
