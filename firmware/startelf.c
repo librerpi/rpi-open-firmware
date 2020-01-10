@@ -10,6 +10,10 @@
 
 #include <stdlib.h>
 
+uint32_t g_CPUID;
+
+enum RamSize g_RAMSize = kRamSize1GB; // FIXME
+
 void test_caches();
 void poke_the_dog();
 void spin_the_gpio_wheel();
@@ -36,6 +40,8 @@ void main_entry() {
   gpio_snapshot(gpio_level, functions);
   poke_the_dog();
 
+  __asm__("version %0" : "=r"(g_CPUID));
+
   pl011_uart_init(115200);
   set_pl011_funcs();
 
@@ -51,14 +57,15 @@ void main_entry() {
   puts("vector table installed");
 
   __asm__ volatile("ei");
+  __cxx_init();
+  hexdump_ram(0x7e100000, 512);
+  //PEStartPlatform();
   //            11112222
   //hexdump_ram(0x7e200000, 512);
   //ST_C0 = 10 * 1000 * 1000;
 
   //gpclk0_test();
   //spin_the_gpio_wheel();
-  char * test = malloc(32);
-  tprintf("test is %p\n", test);
 
   for(;;) {
     __asm__ __volatile__ ("sleep" :::);
@@ -103,49 +110,6 @@ void fill_range_numbered(uint32_t addr, uint32_t count) {
   volatile uint32_t *ram = 0;
   for (uint32_t i = addr; i < (addr + count); i += 4) {
     ram[i/4] =i;
-  }
-}
-
-void safe_putchar(unsigned char c) {
-  if ((c >= ' ') && (c <= '~')) {
-    putchar(c);
-  } else {
-    putchar('.');
-  }
-}
-
-// addr must be 16 aligned
-// count must be a multiple of 16 bytes
-void hexdump_ram(uint32_t addr, uint32_t count) {
-  volatile uint32_t *ram32 = 0;
-  volatile uint8_t *ram8 = 0;
-  for (uint32_t i = addr; i < (addr + count); i += 16) {
-    uint32_t fragment;
-    printf("0x%08lx ", i);
-    for (int j=0; j<4; j++) {
-      fragment = ram32[(addr/4)+j];
-      uint8_t a,b,c,d;
-      a = fragment & 0xff;
-      b = (fragment >> 8) & 0xff;
-      c = (fragment >> 16) & 0xff;
-      d = (fragment >> 24) & 0xff;
-      printf("%02x %02x %02x %02x ", a,b,c,d);
-      if (j == 1) printf(" ");
-    }
-    printf(" |");
-    for (int j=0; j<4; j++) {
-      fragment = ram32[(addr/4)+j];
-      uint8_t a,b,c,d;
-      a = fragment & 0xff;
-      b = (fragment >> 8) & 0xff;
-      c = (fragment >> 16) & 0xff;
-      d = (fragment >> 24) & 0xff;
-      safe_putchar(a);
-      safe_putchar(b);
-      safe_putchar(c);
-      safe_putchar(d);
-    }
-    printf("|\n");
   }
 }
 

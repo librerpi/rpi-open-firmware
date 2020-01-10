@@ -20,18 +20,10 @@ SECTIONS {
     *(.gnu.warning)
     KEEP (*(.init))
     KEEP (*(.fini))
-    /* Constructors and destructors */
-    KEEP (*crtbegin*.o(.ctors))
-    KEEP (*(EXCLUDE_FILE (*crtend*.o ) .ctors))
-    KEEP (*(SORT(.ctors.*)))
-    KEEP (*(.ctors))
-    KEEP (*crtbegin*.o(.dtors))
-    KEEP (*(EXCLUDE_FILE (*crtend*.o ) .dtors))
-    KEEP (*(SORT(.dtors.*)))
-    KEEP (*(.dtors))
     KEEP (*(.jcr))
     _etext = .;
   } >ram =0
+
   .rodata : {
     . = ALIGN(4);
     _frodata = .;
@@ -39,6 +31,16 @@ SECTIONS {
     *(.rodata1)
     _erodata = .;
   } >ram
+
+  .init_array : {
+    PROVIDE (__init_array_start = .);
+    *(.init_array)
+    *(.init_array.*)
+    *(.ctors)
+    *(.ctors.*)
+    __init_array_end = .;
+  } >ram
+
   .data : {
     . = ALIGN(4);
     _fdata = .;
@@ -48,6 +50,7 @@ SECTIONS {
     *(.sdata .sdata.* .gnu.linkonce.s.*)
     _edata = .;
   } >ram
+
   .bss : {
     . = ALIGN(4);
     _fbss = .;
@@ -62,6 +65,7 @@ SECTIONS {
     _end = .;
     PROVIDE (end = .);
   } >ram
+
   /* First location in stack is highest address in RAM */
   PROVIDE(_fstack = ORIGIN(ram) + LENGTH(ram) - 4);
 }

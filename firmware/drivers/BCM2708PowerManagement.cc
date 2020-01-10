@@ -7,6 +7,8 @@
 
 #include <drivers/BCM2708PowerManagement.hpp>
 
+#include <stdio.h>
+
 #define PM_UNK_CFG_CLR 0xFFFCFFFF
 
 PowerManagementDomain* g_BCM2708PowerDomains[kCprPowerDomain_MAX];
@@ -149,7 +151,7 @@ struct BCM2708PowerDomainImage : BCM2708PowerDomain {
 
 	virtual void init() override {
 		setName("BCM2708PowerDomainImage");
-		setPmReg(0x7E100108);
+		setPmReg(&PM_IMAGE);
 		registerPowerDomain(kCprPowerDomainImage);
 		rstnMask = ~(PM_IMAGE_ISPRSTN_SET | PM_IMAGE_H264RSTN_SET | PM_IMAGE_PERIRSTN_SET);
 	}
@@ -159,6 +161,7 @@ struct BCM2708PowerDomainImage : BCM2708PowerDomain {
 		cpr_power_result_t res;
 
 		IODriverLog("powering on, current PM_IMAGE state: 0x%X", PM_IMAGE);
+                printf("pm reg (0x%08lx) is 0x%08lx\n", pmReg, *pmReg);
 
 		pmv = *pmReg | 0x10000 | PM_PASSWORD;
 		*pmReg = pmv;

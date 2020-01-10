@@ -1,4 +1,4 @@
-#include <stdio.h>
+#include "xprintf.h"
 
 #include <drivers/BCM2708Gpio.hpp>
 #include "utils.hh"
@@ -62,4 +62,47 @@ void setup_eth_clock(uint8_t pin) {
   CM_GP1CTL = CM_PASSWORD | (2 << 9) | 5 | (1 << 4);
 
   gpio->setFunction(42, kBCM2708Pinmux_ALT0);
+}
+
+void safe_putchar(unsigned char c) {
+  if ((c >= ' ') && (c <= '~')) {
+    printf("%c", c);
+  } else {
+    printf(".");
+  }
+}
+
+// addr must be 16 aligned
+// count must be a multiple of 16 bytes
+void hexdump_ram(uint32_t addr, uint32_t count) {
+  volatile uint32_t *ram32 = 0;
+  volatile uint8_t *ram8 = 0;
+  for (uint32_t i = addr; i < (addr + count); i += 16) {
+    uint32_t fragment;
+    printf("0x%08lx ", i);
+    for (int j=0; j<4; j++) {
+      fragment = ram32[(addr/4)+j];
+      uint8_t a,b,c,d;
+      a = fragment & 0xff;
+      b = (fragment >> 8) & 0xff;
+      c = (fragment >> 16) & 0xff;
+      d = (fragment >> 24) & 0xff;
+      printf("%02x %02x %02x %02x ", a,b,c,d);
+      if (j == 1) printf(" ");
+    }
+    printf(" |");
+    for (int j=0; j<4; j++) {
+      fragment = ram32[(addr/4)+j];
+      uint8_t a,b,c,d;
+      a = fragment & 0xff;
+      b = (fragment >> 8) & 0xff;
+      c = (fragment >> 16) & 0xff;
+      d = (fragment >> 24) & 0xff;
+      safe_putchar(a);
+      safe_putchar(b);
+      safe_putchar(c);
+      safe_putchar(d);
+    }
+    printf("|\n");
+  }
 }

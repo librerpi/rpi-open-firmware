@@ -166,6 +166,8 @@ int _main(unsigned int cpuid, unsigned int load_address) {
 
         dump_all_gpio();
         setup_eth_clock(4);
+        hexdump_ram(0x7e100000, 512);
+        hang_cpu();
 
 	PEStartPlatform();
   __asm__ volatile("ei");
