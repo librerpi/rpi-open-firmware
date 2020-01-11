@@ -7,7 +7,8 @@
 
 typedef void (*irqType)();
 
-irqType __attribute__ ((aligned (512))) vectorTable[144];
+irqType __attribute__ ((aligned (512))) vectorTable[144]; // might only need to be 128 entries
+char __attribute__ ((aligned (2))) irq_stack[512];
 
 void setup_irq_handlers() {
   // https://github.com/hermanhermitage/videocoreiv/wiki/VideoCore-IV-Programmers-Manual#interrupts
@@ -51,10 +52,13 @@ void setup_irq_handlers() {
   set_interrupt(121 - 64, false, 0); // 57 uart
   set_interrupt(125 - 64, false, 0); // 61 rng
 
+  // https://github.com/hermanhermitage/videocoreiv/wiki/VideoCore-IV-Programmers-Manual
+  // r28 will become sp within an interrupt context
+  __asm__ volatile("mov r28, %0": : "r"(irq_stack + sizeof(irq_stack) - 4));
+
   IC0_VADDR = (uint32_t)vectorTable;
   IC1_VADDR = (uint32_t)vectorTable;
 
-  print_timestamp();
 
   if (IC0_VADDR != ((uint32_t)vectorTable)) {
     printf("vector table now at 0x%08lx 0x%08lx\n", IC0_VADDR, (uint32_t)vectorTable);

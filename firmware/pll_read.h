@@ -12,6 +12,7 @@ uint32_t pllb();
 uint32_t pllc();
 uint32_t plld();
 uint32_t pllh();
+extern uint32_t xtal_freq;
 #ifdef __cplusplus
 }
 #endif

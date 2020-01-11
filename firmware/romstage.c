@@ -24,50 +24,14 @@ VideoCoreIV first stage bootloader.
 #include "arm_monitor.h"
 #include "BCM2708PlatformStartup.h"
 #include "utils.hh"
-#include "xprintf.h"
+//#include "xprintf.h"
+#include <stdio.h>
+#include "pl011.h"
+#include "hang_cpu.h"
+#include "pll_read.h"
+#include "interrupt.h"
 
 uint32_t g_CPUID;
-extern uint32_t vectorTable[];
-
-#define UART_IBRD   (UART_BASE+0x24)
-#define UART_FBRD   (UART_BASE+0x28)
-#define UART_LCRH   (UART_BASE+0x2C)
-#define UART_CR     (UART_BASE+0x30)
-#define UART_ICR    (UART_BASE+0x44)
-
-void uart_putc(unsigned int ch) {
-	while(UART_MSR & 0x20);
-	UART_RBRTHRDLL = ch;
-}
-
-void uart_init(void) {
-	unsigned int ra = GP_FSEL1;
-	ra &= ~(7 << 12);
-	ra |= 4 << 12;
-	ra &= ~(7 << 15);
-	ra |= 4 << 15;
-	GP_FSEL1 = ra;
-
-	mmio_write32(UART_CR, 0);
-
-	GP_PUD = 0;
-	udelay(150);
-	GP_PUDCLK0 = (1 << 14) | (1 << 15);
-	udelay(150);
-	GP_PUDCLK0 = 0;
-
-        // sets the uart ref freq to 2,998,272hz?
-	CM_UARTDIV = CM_PASSWORD | 0x6666;
-	CM_UARTCTL = CM_PASSWORD | CM_SRC_OSC | CM_UARTCTL_FRAC_SET | CM_UARTCTL_ENAB_SET;
-
-	mmio_write32(UART_ICR, 0x7FF);
-        // divisor is 1.625, giving a 1,845,090hz over-sample freq
-        // for a baud of 115,318?
-	mmio_write32(UART_IBRD, 1);
-	mmio_write32(UART_FBRD, 40);
-	mmio_write32(UART_LCRH, 0x70);
-	mmio_write32(UART_CR, 0x301);
-}
 
 static void switch_vpu_to_pllc() {
 	A2W_XOSC_CTRL |= A2W_PASSWORD | A2W_XOSC_CTRL_PLLCEN_SET;
@@ -122,32 +86,16 @@ static void switch_vpu_to_pllc() {
 	CM_TIMERCTL = CM_PASSWORD | CM_SRC_OSC | 0x10;
 }
 
-void set_interrupt(int intno, bool enable, int core) {
-    uint32_t base = (core == 0) ? IC0_BASE : IC1_BASE;
-
-    int offset = 0x10 + ((intno >> 3) << 2);
-    uint32_t slot = 0xF << ((intno & 7) << 2);
-
-    uint32_t v = mmio_read32(base + offset) & ~slot;
-    mmio_write32(base + offset, enable ? v | slot : v);
-}
-
 int _main(unsigned int cpuid, unsigned int load_address) {
+  xtal_freq = 19200000;
   switch_vpu_to_pllc();
 
-  uart_init();
+  set_pl011_funcs();
+  pl011_uart_init(115200);
 
-  for(int i = 0; i < 64; ++i) {
-    set_interrupt(i, (i != (125 - 64)) && (i != (121 - 64)) && (i != (120 - 64)) && (i != (73 - 64)) && (i != (96 - 64)), 0);
-    set_interrupt(i, 0, 1);
-  }
+  printf("CM_UARTCTL is 0x%08lx\nCM_UARTDIV is 0x%08lx\n", CM_UARTCTL, CM_UARTDIV);
 
-  IC0_VADDR = (uint32_t)vectorTable;
-  IC1_VADDR = (uint32_t)vectorTable;
-
-  printf("vector table now at 0x%08lx 0x%08lx\n", IC0_VADDR, (uint32_t)vectorTable);
-
-  if (IC0_VADDR != ((uint32_t)vectorTable)) panic("vector table not accepted");
+  setup_irq_handlers();
 
 	printf(
 	    "Booting Raspberry Pi....\n"
@@ -164,10 +112,7 @@ int _main(unsigned int cpuid, unsigned int load_address) {
 	sdram_init();
 	puts("SDRAM initialization completed successfully!\n");
 
-        dump_all_gpio();
         setup_eth_clock(4);
-        hexdump_ram(0x7e100000, 512);
-        hang_cpu();
 
 	PEStartPlatform();
   __asm__ volatile("ei");

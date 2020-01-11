@@ -1,47 +1,52 @@
+MEMORY {
+  ram (rwx) : ORIGIN = 0x00000000, LENGTH = 128K
+}
 SECTIONS
 {
-  . = 0x0;
-  . += SIZEOF_HEADERS;
-  . = 0x200;
-  _text = .;
   .text : {
+    . = 0x0;
+    . += SIZEOF_HEADERS;
+    . = 0x200;
+    _text = .;
     *(.text.start)
     *(.text)
     *(.text.*)
     *(.gnu.warning)
+    _etext = .;
   }
-  _etext = .;
 
   .rodata : {
     . = ALIGN(512);
     *(.rodata.vectorTable)
     *(.rodata)
     *(.rodata.*)
+    . = ALIGN(16);
+    _erodata = .;
   }
-  . = ALIGN(16);
-  _erodata = .;
 
-  . = ALIGN(32 / 8);
 
-	PROVIDE (__init_array_start = .);
-	.init_array : {
-		*(.init_array)
-		*(.init_array.*)
-		*(.ctors)
-		*(.ctors.*)
-	}
-	PROVIDE (__init_array_end = .);
+  .init_array : {
+    . = ALIGN(16);
+    PROVIDE (__init_array_start = .);
+    *(.init_array)
+    *(.init_array.*)
+    *(.ctors)
+    *(.ctors.*)
+    __init_array_end = .;
+  }
 
   .data : { /* Data */
     *(.data)
+    _edata = .;
   }
 
-	.bss : {
-		_edata = .;
-		__bss_start = .;
-		*(.bss)
-	}
-
-	. = ALIGN(32 / 8);
-	_end = . ;
+  .bss : {
+    __bss_start = .;
+    *(.bss)
+    *(COMMON)
+    . = ALIGN(32 / 8);
+    _end = . ;
+  }
+  /* First location in stack is highest address in RAM */
+  _fstack = ORIGIN(ram) + LENGTH(ram) - 4;
 }

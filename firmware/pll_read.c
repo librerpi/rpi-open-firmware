@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include "pll_read.h"
 
+uint32_t xtal_freq;
+
 uint32_t get_vpu_per_freq() {
   return clk_get_freq(&CM_VPUDIV, &CM_VPUCTL);
 }
@@ -16,7 +18,7 @@ uint32_t compute_pll_freq(uint32_t ctrl, uint32_t frac) {
   uint64_t mult1 = (ndiv << 20) | frac;
   mult1 *= pdiv;
   // TODO, the optional /2 phase
-  uint32_t freq = (54000000 * mult1) >> 20;
+  uint32_t freq = (xtal_freq * mult1) >> 20;
   return freq;
 }
 
@@ -63,7 +65,7 @@ uint32_t clk_get_input_freq(volatile uint32_t *ctlreg) {
   case 0: // GND clock source
     return 0;
   case 1: // crystal oscilator
-    return 54000000; // rpi4 xtal is 54mhz
+    return xtal_freq;
   case 2: // test debug 0
   case 3: // test debug 1
     return 0;

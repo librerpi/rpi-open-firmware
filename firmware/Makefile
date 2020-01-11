@@ -18,6 +18,10 @@ SRCS = \
 	drivers/gpclk.cc \
 	hang_cpu.o \
 	utils.cc \
+	pl011.c \
+	pll_read.c \
+	interrupt.c \
+	traps.S \
 	BCM2708PlatformStartup.cc
 
 ARCH = vc4
@@ -44,9 +48,9 @@ CC = $(CROSS_COMPILE)gcc
 CXX = $(CROSS_COMPILE)g++
 AS = $(CC)
 OBJCOPY = $(CROSS_COMPILE)objcopy
-LINKFLAGS = -nostdlib -nostartfiles --build-id=none -T linker.ld --no-omagic # --print-map #-Wl,--gc-sections --entry=_start -Wl,--cref
+LINKFLAGS = -nostdlib -nostartfiles -Wl,--build-id=none -T linker.ld -Wl,--no-omagic # --print-map #-Wl,--gc-sections --entry=_start -Wl,--cref
 
-CFLAGS = -c -nostdlib -Wno-multichar -std=c11 -fsingle-precision-constant -Wdouble-promotion -D__VIDEOCORE4__ -I./vc4_include/ -I./ -Wall -O2 -Werror=return-type
+CFLAGS = -c -nostdlib -Wno-multichar -std=c11 -fsingle-precision-constant -Wdouble-promotion -D__VIDEOCORE4__ -I./vc4_include/ -I./ -Wall -O2 -Werror=return-type -fno-common
 ASFLAGS = -c -nostdlib -x assembler-with-cpp -D__VIDEOCORE4__ -I./vc4_include/ -I./
 CXXFLAGS = -c -nostdlib -Wno-multichar -std=c++11 -fno-exceptions -fno-rtti -D__VIDEOCORE4__ -I./vc4_include/ -I./ -Werror=return-type
 
@@ -94,15 +98,15 @@ start4.elf: startelf4.o startelf.o pll_read.o traps.o trap.o print_timestamp.o h
 
 $(PRODUCT_DIRECTORY)/bootcode.elf: create_build_directory $(OBJ)
 	@echo $(WARN_COLOR)LD  $(NO_COLOR) $@
-	@$(LD) $(LINKFLAGS) $(OBJ) -o $@ -lcommon -lnotc
+	@$(CC) $(LINKFLAGS) $(OBJ) -o $@ -lcommon -lc -lgloss -lgcc -Wl,-print-map
 
 bootcode.stub:
 	truncate bootcode.stub -s 512
 
-bootcode.bin: $(PRODUCT_DIRECTORY)/bootcode.elf bootcode.stub
+bootcode.bin: $(PRODUCT_DIRECTORY)/bootcode.elf
 	@echo $(WARN_COLOR)OBJ$(NO_COLOR) $@
 	@$(OBJCOPY) -O binary $< bootcode.temp
-	cat bootcode.stub bootcode.temp > $(PRODUCT_DIRECTORY)/$@
+	cat bootcode.temp > $(PRODUCT_DIRECTORY)/$@
 
 clean:
 	@echo $(ERROR_COLOR)CLEAN$(NO_COLOR)

@@ -21,24 +21,26 @@ static IODevice* startDeviceByTag(uint32_t tag) {
 }
 
 extern "C" void PEStartPlatform() {
-	IODevice* imagePm = PowerManagementDomain::getDeviceForDomain(kCprPowerDomainImage);
-	assert(imagePm);
-	IODevice* usbPm = PowerManagementDomain::getDeviceForDomain(kCprPowerDomainUSB);
-	assert(usbPm);
+  if (false) {
+    IODevice* imagePm = PowerManagementDomain::getDeviceForDomain(kCprPowerDomainImage);
+    assert(imagePm);
+    IODevice* usbPm = PowerManagementDomain::getDeviceForDomain(kCprPowerDomainUSB);
+    assert(usbPm);
 
-	/*
-	 * All devices in the IMAGE domain have to be disabled before
-	 * starting the domain itself.
-	 */
-	usbPm->stop();
-	/* Bring up IMAGE power domain */
-	imagePm->start();
-	/* Now we can re-enable USB power domain */
-	usbPm->start();
+    /*
+     * All devices in the IMAGE domain have to be disabled before
+     * starting the domain itself.
+     */
+    usbPm->stop();
+    /* Bring up IMAGE power domain */
+    imagePm->start();
+    /* Now we can re-enable USB power domain */
+    usbPm->start();
 
-	/* Start USB PHY */
-	startDeviceByTag('USBP');
+    /* Start USB PHY */
+    startDeviceByTag('USBP');
+  }
 
-	/* Start ARM */
-	startDeviceByTag('ARMC');
+  /* Start ARM */
+  startDeviceByTag('ARMC');
 }

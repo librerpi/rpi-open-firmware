@@ -36,6 +36,7 @@ int tprintf(const char *format, ...) {
 void main_entry() {
   bool gpio_level[64];
   enum BCM2708PinmuxSetting functions[64];
+  xtal_freq = 54000000;
 
   gpio_snapshot(gpio_level, functions);
   poke_the_dog();
@@ -58,7 +59,7 @@ void main_entry() {
 
   __asm__ volatile("ei");
   __cxx_init();
-  hexdump_ram(0x7e100000, 512);
+  //hexdump_ram(0x7e100000, 512);
   //PEStartPlatform();
   //            11112222
   //hexdump_ram(0x7e200000, 512);

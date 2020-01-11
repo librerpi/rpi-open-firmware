@@ -129,7 +129,7 @@ struct BCM2708ArmControl : IODevice {
 		uint8_t* end = &_binary_arm_chainloader_build_arm_chainloader_bin_end;
 		uint32_t size = (uint32_t)(end - start);
 
-		bcopy(start, mem, size);
+		memcpy(mem, start, size);
 
 		IODriverLog("copied %d bytes to 0x%X!", size, ARM_MEMORY_BASE);
 
@@ -155,7 +155,7 @@ struct BCM2708ArmControl : IODevice {
 
     uint32_t index = armAddr >> 24; // div by 16mb
     uint32_t pte = busAddr >> 21; // div by 2mb
-    IODriverLog("mapBusToArm index:%x, pte:%x", index, pte);
+    //IODriverLog("mapBusToArm index:%x, pte:%x", index, pte);
 
     tte[index] = pte;
   }
@@ -188,7 +188,7 @@ void bzero2(void *addr, size_t len) {
 		for (uint32_t i = 0; i < 62; i++) {
 			uint32_t offset = i * 0x1000000;
 			mapBusToArm(ARM_MEMORY_BASE + offset, 0x0 + offset);
-                        IODriverLog("mapped VC 0x%X to ARM 0x%X", ARM_MEMORY_BASE + offset, 0x0 + offset);
+                        //IODriverLog("mapped VC 0x%X to ARM 0x%X", ARM_MEMORY_BASE + offset, 0x0 + offset);
 		}
 
 		//IODriverLog("mapped VC 0x%X to ARM 0x%X", ARM_MEMORY_BASE, 0);

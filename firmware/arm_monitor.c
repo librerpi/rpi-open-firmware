@@ -33,13 +33,13 @@ void arm_monitor_interrupt() {
 }
 
 void monitor_start() {
-	printf("Starting IPC monitor ...\n");
+  printf("Starting IPC monitor ...\n");
 
-	/* enable IRQ */
-	ARM_1_MAIL1_CNF = ARM_MC_IHAVEDATAIRQEN;
+  /* enable IRQ */
+  ARM_1_MAIL1_CNF = ARM_MC_IHAVEDATAIRQEN;
 
-	for(;;) {
-		__asm__ __volatile__ ("sleep" :::);
-		printf("sleep interrupted!\n");
-	}
+  for(;;) {
+    __asm__ __volatile__ ("sleep" :::);
+    printf("sleep interrupted!\n");
+  }
 }
