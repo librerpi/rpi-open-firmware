@@ -106,3 +106,24 @@ void hexdump_ram(uint32_t addr, uint32_t count) {
     printf("|\n");
   }
 }
+
+void test_matrix1() {
+  uint32_t a[16], b[16];
+  for (int i=0; i<16; i++) {
+    a[i] = i;
+  }
+  uint32_t d = 10;
+  __asm__ volatile (
+  // load 16 uint32_t's from a into row 0,0
+      "v32ld HY(0++,0),(%0)\n"
+  // multiply all 16 of them by d, save results into a row starting at 1,0
+      "vmull.ss HY(1,0), HY(0,0), %1\n"
+  // store the row at 1,0 into b
+      "v32st HY(1,0), (%2)"
+      :
+      : "r"(a), "r"(d), "r"(b)
+      :"memory");
+  for (int i=0; i<16; i++) {
+    printf("%d * %ld is %lu\n", i, d, b[i]);
+  }
+}
