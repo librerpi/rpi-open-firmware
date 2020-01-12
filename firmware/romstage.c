@@ -30,6 +30,7 @@ VideoCoreIV first stage bootloader.
 #include "hang_cpu.h"
 #include "pll_read.h"
 #include "interrupt.h"
+#include "traps.h"
 
 uint32_t g_CPUID;
 
@@ -86,7 +87,7 @@ static void switch_vpu_to_pllc() {
 	CM_TIMERCTL = CM_PASSWORD | CM_SRC_OSC | 0x10;
 }
 
-int _main(unsigned int cpuid, unsigned int load_address) {
+int _main(unsigned int cpuid, uint32_t load_address, vc4_saved_state_t* pcb) {
   xtal_freq = 19200000;
   switch_vpu_to_pllc();
 
@@ -94,6 +95,7 @@ int _main(unsigned int cpuid, unsigned int load_address) {
   pl011_uart_init(115200);
 
   printf("CM_UARTCTL is 0x%08lx\nCM_UARTDIV is 0x%08lx\n", CM_UARTCTL, CM_UARTDIV);
+  if (pcb) print_vpu_state(pcb);
 
   setup_irq_handlers();
 

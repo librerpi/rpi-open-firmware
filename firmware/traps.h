@@ -1,5 +1,7 @@
 #pragma once
 
+#include "pcb.h"
+
 void fleh_zero();
 void fleh_misaligned();
 void fleh_dividebyzero();
@@ -16,3 +18,4 @@ void fleh_badl2alias();
 void fleh_breakpoint();
 void fleh_unknown();
 void fleh_irq();
+void print_vpu_state(vc4_saved_state_t* pcb);

@@ -32,6 +32,18 @@ Exception names are from the public release from:
 _start:
   mov sp, _fstack
 
+#if 0
+  stm r0, (--sp) // dummy
+  stm r0, (--sp) // values
+  stm lr, (--sp)
+  stm r0-r5, (--sp)
+  stm r6-r15, (--sp)
+  stm r16-r23, (--sp)
+  mov r2, sp
+#else
+  mov r2, 0
+#endif
+
   version r0
   lea r1, _start
   /* jump to C code */

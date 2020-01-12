@@ -161,7 +161,6 @@ struct BCM2708PowerDomainImage : BCM2708PowerDomain {
 		cpr_power_result_t res;
 
 		IODriverLog("powering on, current PM_IMAGE state: 0x%X", PM_IMAGE);
-                printf("pm reg (0x%08lx) is 0x%08lx\n", pmReg, *pmReg);
 
 		pmv = *pmReg | 0x10000 | PM_PASSWORD;
 		*pmReg = pmv;

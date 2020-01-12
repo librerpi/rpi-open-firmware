@@ -92,13 +92,13 @@ startelf4.o: startelf4.S
 	vc4-elf-gcc startelf4.S -o startelf4.o -c
 
 start4.elf: startelf4.o startelf.o pll_read.o traps.o trap.o print_timestamp.o hang_cpu.o arm_monitor.o panic.o interrupt.o utils.o utils4.o drivers/BCM2708Gpio.o drivers/IODevice.o drivers/BCM2708ClockDomains.o pl011.o BCM2708PlatformStartup.o drivers/BCM2708PowerManagement.o drivers/BCM2708ArmControl.o arm_chainloader.o lib/memcpy.o
-	$(CC) -o $@ $^ start.ld -nostdlib -lcommon -Wl,-print-map
+	$(CC) -o $@ $^ start.ld -nostdlib -lcommon
 
 .PRECIOUS: $(OBJ)
 
 $(PRODUCT_DIRECTORY)/bootcode.elf: create_build_directory $(OBJ)
 	@echo $(WARN_COLOR)LD  $(NO_COLOR) $@
-	@$(CC) $(LINKFLAGS) $(OBJ) -o $@ -lcommon -lc -lgloss -lgcc -Wl,-print-map
+	@$(CC) $(LINKFLAGS) $(OBJ) -o $@ -lcommon -lc -lgloss -lgcc
 
 bootcode.stub:
 	truncate bootcode.stub -s 512

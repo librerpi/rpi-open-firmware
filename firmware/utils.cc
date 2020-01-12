@@ -81,7 +81,7 @@ void hexdump_ram(uint32_t addr, uint32_t count) {
     uint32_t fragment;
     printf("0x%08lx ", i);
     for (int j=0; j<4; j++) {
-      fragment = ram32[(addr/4)+j];
+      fragment = ram32[(i/4)+j];
       uint8_t a,b,c,d;
       a = fragment & 0xff;
       b = (fragment >> 8) & 0xff;
@@ -92,7 +92,7 @@ void hexdump_ram(uint32_t addr, uint32_t count) {
     }
     printf(" |");
     for (int j=0; j<4; j++) {
-      fragment = ram32[(addr/4)+j];
+      fragment = ram32[(i/4)+j];
       uint8_t a,b,c,d;
       a = fragment & 0xff;
       b = (fragment >> 8) & 0xff;

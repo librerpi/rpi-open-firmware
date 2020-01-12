@@ -41,7 +41,7 @@ static const char* exception_name(uint32_t n) {
 	prefix " r12: 0x%08lx r13: 0x%08lx r14: 0x%08lx r15: 0x%08lx\n" \
 	prefix "  pc: 0x%08lx  lr: 0x%08lx  sr: 0x%08lx\n"
 
-static void print_vpu_state(vc4_saved_state_t* pcb) {
+void print_vpu_state(vc4_saved_state_t* pcb) {
 	printf("VPU registers:\n");
 
 	printf(

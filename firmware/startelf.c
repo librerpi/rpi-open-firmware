@@ -7,6 +7,7 @@
 #include "pll_read.h"
 #include "interrupt.h"
 #include "utils.hh"
+#include "traps.h"
 
 #include <stdlib.h>
 
@@ -33,7 +34,7 @@ int tprintf(const char *format, ...) {
   return ret;
 }
 
-void main_entry() {
+void main_entry(vc4_saved_state_t* pcb) {
   bool gpio_level[64];
   enum BCM2708PinmuxSetting functions[64];
   xtal_freq = 54000000;
@@ -47,6 +48,7 @@ void main_entry() {
   set_pl011_funcs();
 
   tprintf("hello from c\n");
+  if (pcb) print_vpu_state(pcb);
 
   //gpio_print_snapshot(gpio_level, functions);
 
@@ -55,12 +57,12 @@ void main_entry() {
 
   setup_irq_handlers();
 
-  puts("vector table installed");
+  tprintf("vector table installed");
 
   __asm__ volatile("ei");
   __cxx_init();
   //hexdump_ram(0x7e100000, 512);
-  //PEStartPlatform();
+  PEStartPlatform();
   //            11112222
   //hexdump_ram(0x7e200000, 512);
   //ST_C0 = 10 * 1000 * 1000;
@@ -68,6 +70,7 @@ void main_entry() {
   //gpclk0_test();
   //spin_the_gpio_wheel();
 
+  tprintf("entering idle loop\n");
   for(;;) {
     __asm__ __volatile__ ("sleep" :::);
     print_timestamp();
