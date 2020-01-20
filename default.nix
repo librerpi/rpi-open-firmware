@@ -104,10 +104,23 @@ let
         nuke-refs -e ${self.stdenv.cc.libc.out} $out
       '';
     };
+    raspi-gpio = self.stdenv.mkDerivation {
+      name = "raspi-gpio";
+      src = self.fetchFromGitHub {
+        owner = "RPi-Distro";
+        repo = "raspi-gpio";
+        rev = "4edfde183ff3ac9ed66cdc015ae25e45f3a5502d";
+        sha256 = "0246m7sh04nbdqmvfgkf456ah0c07qhy0ij99dyqy906df3rvjgy";
+      };
+    };
+    initrd-tools = self.buildEnv {
+      name = "initrd-tools";
+      paths = [ self.raspi-gpio self.busybox ];
+    };
     initrd = self.makeInitrd {
       contents = [
         {
-          object = "${self.busybox}/bin";
+          object = "${self.initrd-tools}/bin";
           symlink = "/bin";
         }
         {
