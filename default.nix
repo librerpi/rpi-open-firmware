@@ -28,6 +28,10 @@ let
       propagatedBuildInputs = [ self.tlsf ];
       enableParallelBuilding = true;
     };
+    uart-manager = self.stdenv.mkDerivation {
+      name = "uart-manager";
+      src = ./uart-manager;
+    };
     notc = self.stdenv.mkDerivation {
       name = "notc";
       src = lib.cleanSource ./notc;
@@ -53,8 +57,10 @@ let
       name = "firmware";
       src = lib.cleanSource ./firmware;
       buildInputs = [ self.common self.notc ];
+      nativeBuildInputs = [ x86_64.uart-manager ];
       preBuild = ''
-        mkdir arm_chainloader
+        mkdir -p arm_chainloader
+        rm arm_chainloader/build || true
         ln -s ${arm.chainloader} arm_chainloader/build
       '';
       enableParallelBuilding = true;
@@ -165,7 +171,7 @@ in pkgs.lib.fix (self: {
     inherit (arm7) linux_rpi2 busybox initrd;
   };
   x86_64 = {
-    inherit (x86_64) test-script;
+    inherit (x86_64) test-script uart-manager;
   };
   # make $makeFlags menuconfig
   # time make $makeFlags zImage -j8
