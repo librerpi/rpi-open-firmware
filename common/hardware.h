@@ -95,7 +95,7 @@ typedef struct {
 	uint32_t reserved[3];
 } firmware_arm_data_t;
 
-void print_timestamp();
+void print_timestamp(void);
 
 #ifdef __arm__
 extern firmware_arm_data_t g_FirmwareData;
