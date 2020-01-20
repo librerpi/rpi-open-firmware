@@ -8,6 +8,8 @@
 #include "interrupt.h"
 #include "utils.hh"
 #include "traps.h"
+#include "BCM2708PlatformStartup.h"
+#include "startelf.h"
 
 #include <stdlib.h>
 
@@ -15,10 +17,6 @@ uint32_t g_CPUID;
 
 enum RamSize g_RAMSize = kRamSize1GB; // FIXME
 
-void test_caches();
-void poke_the_dog();
-void spin_the_gpio_wheel();
-void gpclk0_test();
 void hexdump_ram(uint32_t addr, uint32_t count);
 
 int tprintf(const char *format, ...) __attribute__ ((format (printf, 1, 2)));
