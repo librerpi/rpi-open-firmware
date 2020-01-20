@@ -19,3 +19,5 @@ void fleh_breakpoint();
 void fleh_unknown();
 void fleh_irq();
 void print_vpu_state(vc4_saved_state_t* pcb);
+void sleh_fatal(vc4_saved_state_t* pcb, uint32_t n);
+void sleh_irq(vc4_saved_state_t* pcb, uint32_t tp);

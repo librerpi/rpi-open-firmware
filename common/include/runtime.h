@@ -27,13 +27,6 @@ extern "C" {
 extern void udelay(uint32_t time);
 extern void __cxx_init();
 
-#ifdef __VIDEOCORE4__
-	extern void *__memcpy(void *_dst, const void *_src, unsigned len);
-	#define memcpy(d,s,l) __memcpy(d,s,l)
-#endif
-
-#define bcopy(s,d,l) memcpy(d,s,l)
-
 #ifdef __cplusplus
 }
 #endif

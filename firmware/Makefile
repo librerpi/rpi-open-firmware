@@ -8,7 +8,6 @@ SRCS = \
 	sdram.c \
 	arm_monitor.cc \
 	trap.c \
-	lib/memcpy.c \
 	drivers/IODevice.cc \
 	drivers/BCM2708PowerManagement.cc \
 	drivers/BCM2708UsbPhy.cc \
@@ -50,7 +49,8 @@ AS = $(CC)
 OBJCOPY = $(CROSS_COMPILE)objcopy
 LINKFLAGS = -nostdlib -nostartfiles -Wl,--build-id=none -T linker.ld -Wl,--no-omagic # --print-map #-Wl,--gc-sections --entry=_start -Wl,--cref
 
-CFLAGS = -c -nostdlib -Wno-multichar -std=c11 -fsingle-precision-constant -Wdouble-promotion -D__VIDEOCORE4__ -I./vc4_include/ -I./ -Wall -O2 -Werror=return-type -fno-common
+CFLAGS = -c -nostdlib -Wno-multichar -std=c11 -fsingle-precision-constant -Wdouble-promotion -D__VIDEOCORE4__ -I./vc4_include/ -I./ -Wall -Werror=return-type -fno-common \
+	 -Wmissing-prototypes -Waggressive-loop-optimizations -Werror
 ASFLAGS = -c -nostdlib -x assembler-with-cpp -D__VIDEOCORE4__ -I./vc4_include/ -I./
 CXXFLAGS = -c -nostdlib -Wno-multichar -std=c++11 -fno-exceptions -fno-rtti -D__VIDEOCORE4__ -I./vc4_include/ -I./ -Werror=return-type
 
@@ -91,7 +91,7 @@ arm_chainloader.o: arm_chainloader/build/arm_chainloader.bin
 startelf4.o: startelf4.S
 	vc4-elf-gcc startelf4.S -o startelf4.o -c
 
-start4.elf: startelf4.o startelf.o pll_read.o traps.o trap.o print_timestamp.o hang_cpu.o arm_monitor.o panic.o interrupt.o utils.o utils4.o drivers/BCM2708Gpio.o drivers/IODevice.o drivers/BCM2708ClockDomains.o pl011.o BCM2708PlatformStartup.o drivers/BCM2708PowerManagement.o drivers/BCM2708ArmControl.o arm_chainloader.o lib/memcpy.o
+start4.elf: startelf4.o startelf.o pll_read.o traps.o trap.o print_timestamp.o hang_cpu.o arm_monitor.o panic.o interrupt.o utils.o utils4.o drivers/BCM2708Gpio.o drivers/IODevice.o drivers/BCM2708ClockDomains.o pl011.o BCM2708PlatformStartup.o drivers/BCM2708PowerManagement.o drivers/BCM2708ArmControl.o arm_chainloader.o
 	$(CC) -o $@ $^ start.ld -nostdlib -lcommon
 
 .PRECIOUS: $(OBJ)

@@ -8,6 +8,7 @@
 #include <drivers/IODevice.hpp>
 #include <drivers/BCM2708PowerManagement.hpp>
 #include <drivers/BCM2708ClockDomains.hpp>
+#include <string.h>
 
 #define FLAG_BUSY (1 << 31)
 

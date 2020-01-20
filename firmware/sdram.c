@@ -27,6 +27,8 @@ VideoCoreIV SDRAM initialization code.
 #include "romstage.h"
 #include "sdram.h"
 
+void sdram_init();
+
 /*
  Registers
  =========
@@ -54,7 +56,7 @@ VideoCoreIV SDRAM initialization code.
 
 #define PVT_calibrate_request 0x1
 
-#define logf(fmt, ...) printf("[SDRAM:%s]: " fmt, __FUNCTION__, ##__VA_ARGS__);
+#define logf(fmt, ...) print_timestamp(); printf("[SDRAM:%s]: " fmt, __FUNCTION__, ##__VA_ARGS__);
 
 enum RamSize g_RAMSize = kRamSizeUnknown;
 
@@ -198,7 +200,7 @@ lpddr2_timings_t g_InitSdramParameters = {
 	.banklow = 2
 };
 
-void reset_with_timing(lpddr2_timings_t* T) {
+static void reset_with_timing(lpddr2_timings_t* T) {
 	uint32_t ctrl = 0x4;
 
 	SD_CS = (SD_CS & ~(SD_CS_DEL_KEEP_SET|SD_CS_DPD_SET|SD_CS_RESTRT_SET)) | SD_CS_STBY_SET;
@@ -306,7 +308,7 @@ void reset_with_timing(lpddr2_timings_t* T) {
 	     & ~(SD_CS_STOP_SET|SD_CS_STBY_SET)) | SD_CS_RESTRT_SET;
 }
 
-unsigned int read_mr(unsigned int addr) {
+static unsigned int read_mr(unsigned int addr) {
 	while ((SD_MR & SD_MR_DONE_SET) != SD_MR_DONE_SET) {}
 	SD_MR = addr & 0xFF;
 	unsigned int mrr;
@@ -332,7 +334,7 @@ static unsigned int write_mr(unsigned int addr, unsigned int data, bool wait) {
 	}
 }
 
-void reset_phy() {
+static void reset_phy() {
 	logf("%s: resetting SDRAM PHY ...\n", __FUNCTION__);
 
 	/* reset PHYC */
@@ -356,7 +358,7 @@ static void switch_to_cprman_clock(unsigned int source, unsigned int div) {
 	CM_SDCCTL = CM_PASSWORD | (CM_SDCCTL & CM_SDCCTL_SRC_CLR) | source;
 	CM_SDCCTL |= CM_PASSWORD | CM_SDCCTL_ENAB_SET;
 
-	logf("switching sdram to cprman clock (src=%d, div=%d), waiting for busy (%lX) ...\n", source, div, CM_SDCCTL);
+	logf("switching sdram to cprman clock (src=%d, div=%d), waiting for busy (0x%lX) ...\n", source, div, CM_SDCCTL);
 
 	for (;;) if (CM_SDCCTL & CM_SDCCTL_BUSY_SET) break;
 
@@ -487,6 +489,9 @@ static void selftest() {
 }
 
 #undef RT_ASSERT
+
+
+void sdram_init();
 
 void sdram_init() {
 	uint32_t vendor_id, bc;

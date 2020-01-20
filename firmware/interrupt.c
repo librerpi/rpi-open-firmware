@@ -48,6 +48,7 @@ void setup_irq_handlers() {
   // disable a few select irqs on core 0
   set_interrupt(73 - 64, false, 0); //   9 usb
   set_interrupt(96 - 64, false, 0); //  32 hostport?
+  set_interrupt(117 - 64, false, 0); // 53 i2c
   set_interrupt(120 - 64, false, 0); // 56 sdio
   set_interrupt(121 - 64, false, 0); // 57 uart
   set_interrupt(125 - 64, false, 0); // 61 rng

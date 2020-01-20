@@ -56,7 +56,7 @@ uint32_t clk_get_freq(volatile uint32_t *divreg, volatile uint32_t *ctlreg) {
   uint32_t div = *divreg;
   if (div == 0) return 0;
   uint64_t input_freq = clk_get_input_freq(ctlreg);
-  return ((input_freq << 12) / *divreg);
+  return ((input_freq << 12) / div);
 }
 
 uint32_t clk_get_input_freq(volatile uint32_t *ctlreg) {

@@ -3,6 +3,7 @@
 #include <drivers/BCM2708Gpio.hpp>
 #include "utils.hh"
 #include "drivers/BCM2708ClockDomains.hpp"
+#include <pcb.h>
 
 const char *function_names[] = {
   "IN",

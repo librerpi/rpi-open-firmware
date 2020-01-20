@@ -1,3 +1,3 @@
 #pragma once
 
-void sdram_init();
+void sdram_init(void);
