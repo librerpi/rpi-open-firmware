@@ -178,7 +178,6 @@ void test_matrix1() {
 extern "C" void dump_all_state(void (*)(vc4_saved_state_t*));
 extern "C" void print_vpu_state(vc4_saved_state_t* pcb);
 extern "C" void test_rti(void (*)(), uint32_t sr);
-extern "C" char *decode_reg(uint32_t reg);
 
 void rti_target() {
   dump_all_state(print_vpu_state);
@@ -194,11 +193,6 @@ void test_things() {
   __asm__ volatile("di");
   test_rti(rti_target, 0xf0);
   dump_all_state(print_vpu_state);
-  for (uint32_t i=0; i <= 0xffffffff; i++) {
-    char *str = decode_reg(i);
-    if (str) printf("0x%lx -> %s\n", i, str);
-    if ((i % 0x10000000) == 0) printf("0x%lx\n", i);
-  }
   panic("done testing");
 }
 

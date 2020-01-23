@@ -56,3 +56,36 @@ return_from_exception:
   ldm r0-r5, (sp++)
   ld lr, (sp++)
   rti
+
+.global dump_all_state
+dump_all_state:
+  mov r1, 0xdeadbeef
+  st r1, (--sp)
+  mov r1, sr
+  st r1, (--sp)
+  stm lr, (--sp)
+  stm r0-r5, (--sp)
+  stm r6-r15, (--sp)
+  stm r16-r23, (--sp)
+  mov r1, r0
+  mov r0, sp
+  bl r1
+  ldm r16-r23, (sp++)
+  ldm r6-r15, (sp++)
+  ldm r0-r5, (sp++)
+  ld lr, (sp++)
+  ld r0, (sp++)
+  ld r0, (sp++)
+  rts
+
+.global test_rti
+test_rti:
+  st r0, (--sp)
+  st r1, (--sp)
+  rti
+
+.global swi1_test
+swi1_test:
+  bl dump_all_state
+  rti
+
