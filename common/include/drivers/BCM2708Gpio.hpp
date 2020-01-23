@@ -9,6 +9,8 @@
 
 #include <drivers/IODevice.hpp>
 
+#define GPIO_TAG 0x4750494f
+
 enum BCM2708PinmuxSetting {
 	kBCM2708PinmuxIn = 0,
 	kBCM2708PinmuxOut = 1,

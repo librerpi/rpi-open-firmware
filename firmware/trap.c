@@ -26,6 +26,9 @@ VideoCoreIV second level exception handlers.
 #include <stdio.h>
 #include "arm_monitor.h"
 #include "traps.h"
+#include <stdbool.h>
+#include <drivers/BCM2708Gpio.hpp>
+#include "utils.hh"
 
 static const char* g_ExceptionNames[] = { VC4_EXC_NAMES };
 
@@ -122,11 +125,17 @@ void sleh_irq(vc4_saved_state_t* pcb, uint32_t tp) {
   print_timestamp();
 
   printf("VPU Received interrupt from source %ld\n", source);
+  printf("IC0_VADDR 0x%08lx\n", IC0_VADDR);
 
   switch (source) {
   case INTERRUPT_TIMER0:
     cs = ST_CS;
     ST_CS = cs;
+        bool levels[64];
+        enum BCM2708PinmuxSetting functions[64];
+        gpio_snapshot(levels, functions);
+        gpio_print_snapshot(levels, functions);
+    return;
     ST_C0 += 1 * 1000 * 1000;
     return;
     print_vpu_state(pcb);

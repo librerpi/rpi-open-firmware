@@ -4,6 +4,7 @@
 #include "utils.hh"
 #include "drivers/BCM2708ClockDomains.hpp"
 #include <pcb.h>
+#include "interrupt.h"
 
 const char *function_names[] = {
   "IN",
@@ -17,7 +18,7 @@ const char *function_names[] = {
 };
 
 void dump_all_gpio() {
-  BCM2708Gpio *gpio = static_cast<BCM2708Gpio*>(IODevice::findByTag('GPIO'));
+  BCM2708Gpio *gpio = static_cast<BCM2708Gpio*>(IODevice::findByTag(GPIO_TAG));
   bool gpio_level[64];
   BCM2708PinmuxSetting functions[64];
   gpio_snapshot(gpio_level, functions);
@@ -25,7 +26,7 @@ void dump_all_gpio() {
 }
 
 void set_pl011_funcs() {
-  BCM2708Gpio *gpio = static_cast<BCM2708Gpio*>(IODevice::findByTag('GPIO'));
+  BCM2708Gpio *gpio = static_cast<BCM2708Gpio*>(IODevice::findByTag(GPIO_TAG));
   gpio->setFunction(14, kBCM2708Pinmux_ALT0);
   gpio->setFunction(15, kBCM2708Pinmux_ALT0);
 }
@@ -37,7 +38,7 @@ void gpio_print_snapshot(const bool gpio_level[64], const BCM2708PinmuxSetting f
 }
 
 void gpio_snapshot(bool gpio_level[64], BCM2708PinmuxSetting functions[64]) {
-  BCM2708Gpio *gpio = static_cast<BCM2708Gpio*>(IODevice::findByTag('GPIO'));
+  BCM2708Gpio *gpio = static_cast<BCM2708Gpio*>(IODevice::findByTag(GPIO_TAG));
   for (uint8_t bank = 0; bank <2; bank++) {
     uint32_t state = gpio->getBank(bank);
     for (uint8_t pin = 0; pin < 32; pin++) {
@@ -49,7 +50,7 @@ void gpio_snapshot(bool gpio_level[64], BCM2708PinmuxSetting functions[64]) {
 
 void setup_eth_clock(uint8_t pin) {
   pllc_per.configure(2);
-  BCM2708Gpio *gpio = static_cast<BCM2708Gpio*>(IODevice::findByTag('GPIO'));
+  BCM2708Gpio *gpio = static_cast<BCM2708Gpio*>(IODevice::findByTag(GPIO_TAG));
   gpio->setFunction(pin, kBCM2708Pinmux_ALT0);
 
   // GP0 for testing on header
@@ -63,6 +64,22 @@ void setup_eth_clock(uint8_t pin) {
   CM_GP1CTL = CM_PASSWORD | (2 << 9) | 5 | (1 << 4);
 
   gpio->setFunction(42, kBCM2708Pinmux_ALT0);
+
+  //gpio->setFunction(28, kBCM2708Pinmux_ALT0);
+  //gpio->setFunction(29, kBCM2708Pinmux_ALT0);
+
+  //gpio->setFunction(46, kBCM2708Pinmux_ALT2);
+  //gpio->setFunction(47, kBCM2708Pinmux_ALT2);
+
+  // something usb related
+  gpio->setFunction(29, kBCM2708PinmuxOut);
+  gpio->clearPin(29);
+  udelay(1000);
+  gpio->setFunction(29, kBCM2708PinmuxIn);
+  // 46&47 not i2c?
+
+  gpio->setFunction(2, kBCM2708Pinmux_ALT0);
+  gpio->setFunction(3, kBCM2708Pinmux_ALT0);
 }
 
 void safe_putchar(unsigned char c) {
@@ -71,6 +88,35 @@ void safe_putchar(unsigned char c) {
   } else {
     printf(".");
   }
+}
+
+void peripheral_scan() {
+  uint32_t *ram32 = 0;
+  for (uint32_t i = 0x7e000; i < 0x7ffff; i++) {
+    if (i == 0x7e9c) continue; // hang
+    if (i == 0x7e9d) continue; // hang
+    if (i == 0x7e9e) continue; // hang
+    if (i == 0x7e9f) continue; // hang
+    if ((i & 0xfff0) == 0x7ea0) continue; // exception
+    if ((i & 0xfff0) == 0x7eb0) continue; // exception
+    if ((i & 0xfff0) == 0x7ec0) continue; // exception
+    if ((i & 0xfff0) == 0x7ef0) continue; // exception
+    if ((i & 0xff00) == 0x7f00) continue; // exception
+    uint32_t id = ram32[ ( (i << 12) | 0xfff) / 4];
+    if (id == 0) continue;
+    printf("0x%04lxFFF == 0x%08lx \"", i, id);
+    uint8_t a,b,c,d;
+    a = id & 0xff;
+    b = (id >> 8) & 0xff;
+    c = (id >> 16) & 0xff;
+    d = (id >> 24) & 0xff;
+    safe_putchar(d);
+    safe_putchar(c);
+    safe_putchar(b);
+    safe_putchar(a);
+    printf("\"\n");
+  }
+  puts("scan done");
 }
 
 // addr must be 16 aligned
@@ -127,4 +173,43 @@ void test_matrix1() {
   for (int i=0; i<16; i++) {
     printf("%d * %ld is %lu\n", i, d, b[i]);
   }
+}
+
+extern "C" void dump_all_state(void (*)(vc4_saved_state_t*));
+extern "C" void print_vpu_state(vc4_saved_state_t* pcb);
+extern "C" void test_rti(void (*)(), uint32_t sr);
+extern "C" char *decode_reg(uint32_t reg);
+
+void rti_target() {
+  dump_all_state(print_vpu_state);
+}
+
+void test_things() {
+  uint32_t a;
+  __asm__ volatile ("mov %0, 0x400f\n"
+                    "add %0,-16399"
+                    : "=r"(a));
+  printf("0x%lx\n", a);
+  dump_all_state(print_vpu_state);
+  __asm__ volatile("di");
+  test_rti(rti_target, 0xf0);
+  dump_all_state(print_vpu_state);
+  for (uint32_t i=0; i <= 0xffffffff; i++) {
+    char *str = decode_reg(i);
+    if (str) printf("0x%lx -> %s\n", i, str);
+    if ((i % 0x10000000) == 0) printf("0x%lx\n", i);
+  }
+  panic("done testing");
+}
+
+extern "C" void swi1_test();
+
+void do_irq_test() {
+  puts("in irq test");
+  printf("IC0_VADDR 0x%08lx\n", IC0_VADDR);
+  dump_all_state(print_vpu_state);
+  vectorTable[33] = swi1_test;
+  __asm__ volatile("mov r0, %0\nswi 1"::"r"(print_vpu_state));
+  puts("done irq test");
+  ST_C0 = ST_CLO + (10 * 1000 * 1000);
 }

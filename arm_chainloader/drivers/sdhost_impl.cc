@@ -19,6 +19,7 @@ SDHOST driver. This used to be known as ALTMMC.
 
 #include <chainloader.h>
 #include <hardware.h>
+#include <drivers/BCM2708Gpio.hpp>
 
 #include "sd_proto.hpp"
 #include "block_device.hpp"
@@ -135,10 +136,14 @@ struct BCM2708SDHost : BlockDevice {
 		return send_raw((command & SH_CMD_COMMAND_SET) | SH_CMD_NO_RESPONSE_SET, arg);
 	}
 
-	void configure_pinmux() {
-                // FIXME, messes with alt modes of gpio 40 to 59
-		GP_FSEL4 = 0x24000000;
-		GP_FSEL5 = 0x924;
+  void configure_pinmux() {
+    BCM2708Gpio *gpio = static_cast<BCM2708Gpio*>(IODevice::findByTag(GPIO_TAG));
+    gpio->setFunction(48, kBCM2708Pinmux_ALT0);
+    gpio->setFunction(49, kBCM2708Pinmux_ALT0);
+    gpio->setFunction(50, kBCM2708Pinmux_ALT0);
+    gpio->setFunction(51, kBCM2708Pinmux_ALT0);
+    gpio->setFunction(52, kBCM2708Pinmux_ALT0);
+    gpio->setFunction(53, kBCM2708Pinmux_ALT0);
 
 		logf("waiting for pinmux pull update ...\n");
 

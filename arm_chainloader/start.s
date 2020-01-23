@@ -192,7 +192,7 @@ L_finish_init:
 
 	mov sp, #(MEM_STACK_END)
 	mov r0, r12
-	b main
+	b c_entry
 
 L_deadloop:
         // TODO, break out of loop when signaled by linux

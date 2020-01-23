@@ -60,7 +60,7 @@ struct BCM2708UsbPhy : IODevice {
 		 */
 
 
-                BCM2708Gpio *gpio = static_cast<BCM2708Gpio*>(IODevice::findByTag('GPIO'));
+                BCM2708Gpio *gpio = static_cast<BCM2708Gpio*>(IODevice::findByTag(GPIO_TAG));
                 gpio->setFunction(31, kBCM2708PinmuxOut);
 
 		udelay(300);

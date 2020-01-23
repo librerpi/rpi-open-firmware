@@ -49,7 +49,7 @@ uint32_t BCM2708Gpio::getBank(uint8_t bank) {
 }
 
 void BCM2708Gpio::init() {
-	setTag('GPIO');
+	setTag(GPIO_TAG);
 }
 
 IODriverCreateSingletonInstance(BCM2708Gpio);

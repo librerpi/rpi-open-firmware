@@ -31,6 +31,7 @@ VideoCoreIV first stage bootloader.
 #include "pll_read.h"
 #include "interrupt.h"
 #include "traps.h"
+#include "otp.h"
 
 uint32_t g_CPUID;
 
@@ -119,6 +120,16 @@ int _main(unsigned int cpuid, uint32_t load_address, vc4_saved_state_t* pcb) {
 
         setup_eth_clock(4);
 
+        bool levels[64];
+        enum BCM2708PinmuxSetting functions[64];
+        gpio_snapshot(levels, functions);
+        gpio_print_snapshot(levels, functions);
+  ST_C0 = ST_CLO + (100 * 1000 * 1000);
+
+        //do_irq_test();
+        //peripheral_scan();
+        //dump_otp();
+        //panic("done for now");
 	PEStartPlatform();
   __asm__ volatile("ei");
 

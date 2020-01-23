@@ -38,7 +38,7 @@ void main_entry(vc4_saved_state_t* pcb) {
   xtal_freq = 54000000;
 
   gpio_snapshot(gpio_level, functions);
-  poke_the_dog();
+  //poke_the_dog();
 
   __asm__("version %0" : "=r"(g_CPUID));
 
@@ -59,14 +59,15 @@ void main_entry(vc4_saved_state_t* pcb) {
 
   __asm__ volatile("ei");
   __cxx_init();
-  //hexdump_ram(0x7e100000, 512);
-  PEStartPlatform();
   //            11112222
   //hexdump_ram(0x7e200000, 512);
   //ST_C0 = 10 * 1000 * 1000;
+  test_things();
+  peripheral_scan();
+  panic("done done");
+  PEStartPlatform();
 
   //gpclk0_test();
-  //spin_the_gpio_wheel();
 
   tprintf("entering idle loop\n");
   for(;;) {

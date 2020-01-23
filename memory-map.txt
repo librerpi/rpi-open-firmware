@@ -31,7 +31,9 @@ https://paulwratt.github.io/rpi-internal-registers-online/index.html
 
 0x7e20_0000 -> 0x3E21_FFFF                              peri_audio APB Bridge?
 0x7e20_0000                                             GP_BASE (gpio)
-0x7e20_5000   i2c0                                      I2C0_BASE
+0x7e20_3000                                   " pcm"
+0x7e20_4000                                   "spim"
+0x7e20_5000   i2c0                            " i2c"    I2C0_BASE
 0x7e20_5200   i2c1
 0x7e20_5400   i2c2
 0x7e20_5600   i2c3
@@ -39,9 +41,27 @@ https://paulwratt.github.io/rpi-internal-registers-online/index.html
 0x7e20_5a00   i2c5
 0x7e20_5c00   i2c6
 0x7320_5e00   i2c7
-0x7e20_f000                                             OTP_BASE
+0x7e20_6000                                   "pixv"
+0x7e20_7000                                   "pixv"
+0x7e20_8000                                   ".dpi"
+0x7e20_9000                                   ".dsi"
+0x7e20_c000                                   "pwm0"
+0x7e20_d000                                   "perm"
+0x7e20_f000                                   "otp0"    OTP_BASE
+0x7e21_0000                                   "slim"
+0x7e21_1000                                   " cpg"
+0x7e21_3000                                   "AVSP"
+0x7e24_0000                                   "ave8"
+...                                           "ave8"
+0x7e27_f000                                   "ave8"
 0x7e21_5000                                             AUX_IO_BASE
 0x7e40_0000                                             SCALER_BASE
+0x7e60_0000                                   "smi_"
+...                                           "smi_"
+0x7e6f_f000                                   "smi_"
+0x7e70_0000                                   ".dsi"
+...                                           ".dsi"
+0x7e7f_f000                                   ".dsi"
 0x7ec0_0000                                             V3D_BASE from v3d.h
 0x7ee0_0000                                             SD_BASE from sdc_ctrl.h (dram control)
 0x7ee0_1000                                             L2_BASE from l2_cache_ctrl.h
@@ -50,6 +70,18 @@ https://paulwratt.github.io/rpi-internal-registers-online/index.html
 0x7ee0_5000                                             DMA15_BASE
 0x7ee0_8000                                             APERF1_BASE from axi_performance1.h
 0x7e80_0000 -> 0x3E81_FFFF                              peri_image APB Bridge?
+0x7e80_0000                                   "ucam"
+0x7e80_1000                                   "ucam"
+0x7e80_2000                                   ".cmi"
+0x7e80_4000                                   " i2c"    i2c1 on an rpi3
+0x7e80_5000                                   " i2c"    HDMI EDID i2c (on rpi3)
+0x7e80_6000                                   "veca"
+0x7e80_7000                                   "pixv"
+0x7e80_8000                                   "hdmi"
+0x7e80_9000                                   "hdcp"
+0x7e80_a000                                   "arbr"
+0x7e90_[0-7]000                               "dbus"
+0x7e91_[0-7]000                               "ave0"
 0x7f00_0000                                             H264_BASE
 
 bus address space:

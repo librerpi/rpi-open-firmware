@@ -20,8 +20,8 @@ void IODevice::_afterInit() {
 }
 
 void IODevice::registerDriver() {
-	g_DeviceRegistry[g_NewDriverIndex++] = this;
-	IODriverLog("driver registered on platform IO plane");
+  g_DeviceRegistry[g_NewDriverIndex++] = this;
+  IODriverLog("driver registered on platform IO plane");
 }
 
 void IODevice::driverLog(const char* fnName, const char* fmt, ...) {

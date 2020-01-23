@@ -6,6 +6,10 @@
 #include <stdio.h>
 
 extern uintptr_t* _end;
+extern uint8_t __bss_start;
+extern uint8_t __bss_end;
+
+void main(bool);
 
 #define logf(fmt, ...) { print_timestamp(); printf("[BRINGUP:%s]: " fmt, __FUNCTION__, ##__VA_ARGS__); }
 
@@ -43,6 +47,11 @@ static const char* get_execution_mode_name() {
 	default:
 		return "Unknown Mode";
 	}
+}
+
+void c_entry(bool security_supported) {
+  bzero(&__bss_start, &__bss_end - &__bss_start);
+  main(security_supported);
 }
 
 void main(bool security_supported) {

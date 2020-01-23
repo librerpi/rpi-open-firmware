@@ -8,12 +8,10 @@ SRCS = \
 	sdram.c \
 	arm_monitor.cc \
 	trap.c \
-	drivers/IODevice.cc \
 	drivers/BCM2708PowerManagement.cc \
 	drivers/BCM2708UsbPhy.cc \
 	drivers/BCM2708ArmControl.cc \
 	drivers/BCM2708ClockDomains.cc \
-	drivers/BCM2708Gpio.cc \
 	drivers/gpclk.cc \
 	hang_cpu.o \
 	utils.cc \
@@ -21,6 +19,7 @@ SRCS = \
 	pll_read.c \
 	interrupt.c \
 	traps.S \
+	otp.c \
 	BCM2708PlatformStartup.cc
 
 ARCH = vc4
@@ -34,9 +33,9 @@ OK_COLOR=""
 ERROR_COLOR=""
 WARN_COLOR=""
 
-.PHONY: default all clean create_build_directory device
+.PHONY: default all clean device
 
-default: bootcode.bin start4.elf
+default: $(PRODUCT_DIRECTORY)/bootcode.bin start4.elf
 
 EXTRA_OBJ := arm_chainloader.o
 OBJ := $(addprefix $(TARGET_BUILD_DIR)/, $(addsuffix .o, $(basename $(SRCS)))) $(EXTRA_OBJ)
@@ -57,10 +56,6 @@ CXXFLAGS = -c -nostdlib -Wno-multichar -std=c++11 -fno-exceptions -fno-rtti -D__
 HEADERS := \
 	$(shell find . -type f -name '*.h') \
 	$(shell find . -type f -name '*.hpp')
-
-create_build_directory:
-	@mkdir -p $(TARGET_BUILD_DIR)
-	@mkdir -p $(PRODUCT_DIRECTORY)
 
 CREATE_SUBDIR = \
 	@DIR="$(dir $@)"; \
@@ -91,22 +86,23 @@ arm_chainloader.o: arm_chainloader/build/arm_chainloader.bin
 startelf4.o: startelf4.S
 	vc4-elf-gcc startelf4.S -o startelf4.o -c
 
-start4.elf: startelf4.o startelf.o pll_read.o traps.o trap.o hang_cpu.o arm_monitor.o panic.o interrupt.o utils.o utils4.o drivers/BCM2708Gpio.o drivers/IODevice.o drivers/BCM2708ClockDomains.o pl011.o BCM2708PlatformStartup.o drivers/BCM2708PowerManagement.o drivers/BCM2708ArmControl.o arm_chainloader.o
+start4.elf: startelf4.o startelf.o pll_read.o traps.o trap.o hang_cpu.o arm_monitor.o panic.o interrupt.o utils.o utils4.o drivers/BCM2708ClockDomains.o pl011.o BCM2708PlatformStartup.o drivers/BCM2708PowerManagement.o drivers/BCM2708ArmControl.o arm_chainloader.o
 	$(CC) -o $@ $^ start.ld -nostdlib -lcommon
 
 .PRECIOUS: $(OBJ)
 
-$(PRODUCT_DIRECTORY)/bootcode.elf: create_build_directory $(OBJ)
+$(PRODUCT_DIRECTORY)/bootcode.elf: $(OBJ)
+	mkdir -p $(TARGET_BUILD_DIR)
+	mkdir -p $(PRODUCT_DIRECTORY)
 	@echo $(WARN_COLOR)LD  $(NO_COLOR) $@
 	@$(CC) $(LINKFLAGS) $(OBJ) -o $@ -lcommon -lc -lgloss -lgcc
 
 bootcode.stub:
 	truncate bootcode.stub -s 512
 
-bootcode.bin: $(PRODUCT_DIRECTORY)/bootcode.elf
+$(PRODUCT_DIRECTORY)/bootcode.bin: $(PRODUCT_DIRECTORY)/bootcode.elf
 	@echo $(WARN_COLOR)OBJ$(NO_COLOR) $@
-	@$(OBJCOPY) -O binary $< bootcode.temp
-	cat bootcode.temp > $(PRODUCT_DIRECTORY)/$@
+	@$(OBJCOPY) -O binary $< $@
 
 clean:
 	@echo $(ERROR_COLOR)CLEAN$(NO_COLOR)

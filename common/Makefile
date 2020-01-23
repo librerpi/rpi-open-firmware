@@ -8,10 +8,10 @@ CFLAGS=${BASECFLAGS}
  else
 CFLAGS=${BASECFLAGS} ${ARMCFLAGS}
 endif
-CXXFLAGS=${CFLAGS} -g -fno-exceptions
+CXXFLAGS=${CFLAGS} -g -fno-exceptions -fno-rtti
 LFLAGS=-nostdlib -nostartfiles -ffreestanding
 
-libcommon.a: panic.o udelay.o cxx_runtime.o hardware.o print_timestamp.o
+libcommon.a: panic.o udelay.o cxx_runtime.o hardware.o print_timestamp.o BCM2708Gpio.o IODevice.o
 	${AR} rcs $@ $^
 
 install: libcommon.a
