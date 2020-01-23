@@ -1,8 +1,10 @@
 { pkgs, lib, ... }:
 
-{
+let
+  sources = import ./nix/sources.nix;
+in {
   imports = [
-    <nixpkgs/nixos/modules/profiles/minimal.nix>
+    (sources.nixpkgs + "/nixpkgs/nixos/modules/profiles/minimal.nix")
   ];
   nixpkgs.crossSystem.system = "armv7l-linux";
   fileSystems = {
