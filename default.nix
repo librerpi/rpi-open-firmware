@@ -196,4 +196,5 @@ in pkgs.lib.fix (self: {
       echo to build: 'time make $makeFlags zImage -j8'
     '';
   });
+  nixos = (import (pkgs.path + "/nixos") { configuration = ./nixos.nix; }).system;
 })
