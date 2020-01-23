@@ -75,7 +75,8 @@ void setup_eth_clock(uint8_t pin) {
   gpio->setFunction(29, kBCM2708PinmuxOut);
   gpio->clearPin(29);
   udelay(1000);
-  gpio->setFunction(29, kBCM2708PinmuxIn);
+  gpio->setPin(29);
+  //gpio->setFunction(29, kBCM2708PinmuxIn);
   // 46&47 not i2c?
 
   gpio->setFunction(2, kBCM2708Pinmux_ALT0);

@@ -131,12 +131,13 @@ void sleh_irq(vc4_saved_state_t* pcb, uint32_t tp) {
   case INTERRUPT_TIMER0:
     cs = ST_CS;
     ST_CS = cs;
-        bool levels[64];
-        enum BCM2708PinmuxSetting functions[64];
-        gpio_snapshot(levels, functions);
-        gpio_print_snapshot(levels, functions);
-    return;
-    ST_C0 += 1 * 1000 * 1000;
+    /*
+    bool levels[64];
+    enum BCM2708PinmuxSetting functions[64];
+    gpio_snapshot(levels, functions);
+    gpio_print_snapshot(levels, functions);
+    */
+    //ST_C0 += 30 * 1000 * 1000;
     return;
     print_vpu_state(pcb);
     puts("unexpected timer0, did you forget about the pi while writing code?");
