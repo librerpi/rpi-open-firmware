@@ -2,6 +2,7 @@
 }:
 
 let
+  sources = import ./nix/sources.nix;
   # temporary hack, this rev is upstream
   pkgs = import
   (builtins.fetchTarball https://github.com/input-output-hk/nixpkgs/archive/0ee0489d42e.tar.gz)
@@ -196,5 +197,5 @@ in pkgs.lib.fix (self: {
       echo to build: 'time make $makeFlags zImage -j8'
     '';
   });
-  nixos = (import (pkgs.path + "/nixos") { configuration = ./nixos.nix; }).system;
+  nixos = (import (sources.nixpkgs + "/nixos") { configuration = ./nixos.nix; }).system;
 })
