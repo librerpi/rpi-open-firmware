@@ -13,6 +13,9 @@ in {
         p11-kit = super.p11-kit.overrideDerivation (old: {
           doCheck = false;
         });
+        e2fsprogs = super.e2fsprogs.overrideDerivation (old: {
+          doCheck = false;
+        });
       })
     ];
   };
