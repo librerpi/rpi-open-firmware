@@ -167,6 +167,7 @@ let
     ls -ltrh /mnt/
     umount /mnt
   '';
+  nixos = (import (sources.nixpkgs + "/nixos") { configuration = ./nixos.nix; });
 in pkgs.lib.fix (self: {
   inherit bootdir helper dtbFiles;
   aarch64 = {
@@ -197,5 +198,8 @@ in pkgs.lib.fix (self: {
       echo to build: 'time make $makeFlags zImage -j8'
     '';
   });
-  nixos = (import (sources.nixpkgs + "/nixos") { configuration = ./nixos.nix; }).system;
+  nixos = {
+    inherit (nixos) system;
+    inherit (nixos.config.system.build) initialRamdisk;
+  };
 })
