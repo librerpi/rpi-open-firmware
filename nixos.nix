@@ -6,7 +6,16 @@ in {
   imports = [
     (sources.nixpkgs + "/nixos/modules/profiles/minimal.nix")
   ];
-  nixpkgs.system = "armv7l-linux";
+  nixpkgs = {
+    system = "armv7l-linux";
+    overlays = [
+      (self: super: {
+        p11-kit = super.p11-kit.overrideDerivation (old: {
+          doCheck = false;
+        });
+      })
+    ];
+  };
   fileSystems = {
     "/" = {
       device = "/dev/sda1";
