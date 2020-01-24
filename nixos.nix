@@ -31,7 +31,7 @@ in {
     initrd = {
       extraUtilsCommands = ''
         copy_bin_and_libs ${pkgs.strace}/bin/strace
-        cp ${pkgs.stdenv.cc.cc}/armv7l-unknown-linux-gnueabihf/lib/libgcc_s.so $out/lib/ -v
+        #cp {pkgs.stdenv.cc.cc}/armv7l-unknown-linux-gnueabihf/lib/libgcc_s.so $out/lib/ -v
       '';
       network = {
         enable = true;
