@@ -16,6 +16,9 @@ in {
         e2fsprogs = super.e2fsprogs.overrideDerivation (old: {
           doCheck = false;
         });
+        coreutils = super.coreutils.overrideDerivation (old: {
+          doCheck = false;
+        });
       })
     ];
   };
@@ -31,6 +34,7 @@ in {
     initrd = {
       extraUtilsCommands = ''
         copy_bin_and_libs ${pkgs.strace}/bin/strace
+        copy_bin_and_libs ${pkgs.gdb}/bin/gdb
         #cp {pkgs.stdenv.cc.cc}/armv7l-unknown-linux-gnueabihf/lib/libgcc_s.so $out/lib/ -v
       '';
       network = {
