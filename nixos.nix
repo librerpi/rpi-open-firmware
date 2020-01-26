@@ -34,7 +34,8 @@ in {
     initrd = {
       extraUtilsCommands = ''
         copy_bin_and_libs ${pkgs.strace}/bin/strace
-        copy_bin_and_libs ${pkgs.gdb}/bin/gdb
+        ln -sv ${pkgs.gdb}/bin/gdb $out/bin/gdb
+        ln -sv ${pkgs.valgrind}/bin/valgrind $out/bin/valgrind
         #cp {pkgs.stdenv.cc.cc}/armv7l-unknown-linux-gnueabihf/lib/libgcc_s.so $out/lib/ -v
       '';
       network = {
