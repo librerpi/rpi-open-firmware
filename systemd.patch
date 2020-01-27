@@ -1,0 +1,12 @@
+diff -ru systemd-source-orig/src/basic/fd-util.c systemd-source/src/basic/fd-util.c
+--- systemd-source-orig/src/basic/fd-util.c	2020-01-26 06:30:03.635836180 -0400
++++ systemd-source/src/basic/fd-util.c	2020-01-26 18:14:23.926389160 -0400
+@@ -62,6 +62,7 @@
+ 
+         if (fd >= 0) {
+                 PROTECT_ERRNO;
++                printf("safe_close(%u) %p\r", fd, __builtin_return_address(0));
+ 
+                 /* The kernel might return pretty much any error code
+                  * via close(), but the fd will be closed anyway. The
+Only in systemd-source/src/basic: .fd-util.c.swp

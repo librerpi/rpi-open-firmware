@@ -69,7 +69,7 @@ https://paulwratt.github.io/rpi-internal-registers-online/index.html
 0x7ee0_2100                                             D0CACHE_BASE from hardware_vc4.h
 0x7ee0_5000                                             DMA15_BASE
 0x7ee0_8000                                             APERF1_BASE from axi_performance1.h
-0x7e80_0000 -> 0x3E81_FFFF                              peri_image APB Bridge?
+0x7e80_0000 -> 0x7E81_FFFF                              peri_image APB Bridge?
 0x7e80_0000                                   "ucam"
 0x7e80_1000                                   "ucam"
 0x7e80_2000                                   ".cmi"
