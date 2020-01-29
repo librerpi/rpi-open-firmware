@@ -36,6 +36,8 @@ in {
   fileSystems = {
     "/" = {
       device = "/dev/sda1";
+      fsType = "ext4";
+      noCheck = true;
     };
   };
   boot = {
@@ -45,9 +47,14 @@ in {
     initrd = {
       extraUtilsCommands = ''
         #ln -sv {pkgs.valgrind}/bin/valgrind $out/bin/valgrind
-        #ln -sv {pkgs.strace}/bin/strace $out/bin/strace
-        # cp {pkgs.stdenv.cc.cc}/armv7l-unknown-linux-gnueabihf/lib/libgcc_s.so $out/lib/ -v
+        #ln -sv ${pkgs.strace}/bin/strace $out/bin/strace
         copy_bin_and_libs ${(import pkgs.path { system = "armv7l-linux"; overlays = [ overlay2 ]; }).openiscsi}/bin/iscsistart
+        copy_bin_and_libs ${pkgs.strace}/bin/strace $out/bin/strace
+        cp -v ${pkgs.glibc}/lib/libpthread* $out/lib/
+        cp ${pkgs.stdenv.cc.cc}/armv7l-unknown-linux-gnueabihf/lib/libgcc_s.so $out/lib/ -v
+      '';
+      extraUtilsCommandsTest = ''
+        strace --version
       '';
       network = {
         enable = true;

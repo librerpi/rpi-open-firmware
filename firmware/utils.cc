@@ -26,9 +26,8 @@ void dump_all_gpio() {
 }
 
 void set_pl011_funcs() {
-  BCM2708Gpio *gpio = static_cast<BCM2708Gpio*>(IODevice::findByTag(GPIO_TAG));
-  gpio->setFunction(14, kBCM2708Pinmux_ALT0);
-  gpio->setFunction(15, kBCM2708Pinmux_ALT0);
+  gGPIO.setFunction(14, kBCM2708Pinmux_ALT0);
+  gGPIO.setFunction(15, kBCM2708Pinmux_ALT0);
 }
 
 void gpio_print_snapshot(const bool gpio_level[64], const BCM2708PinmuxSetting functions[64]) {
@@ -65,9 +64,6 @@ void setup_eth_clock(uint8_t pin) {
 
   gpio->setFunction(42, kBCM2708Pinmux_ALT0);
 
-  //gpio->setFunction(28, kBCM2708Pinmux_ALT0);
-  //gpio->setFunction(29, kBCM2708Pinmux_ALT0);
-
   //gpio->setFunction(46, kBCM2708Pinmux_ALT2);
   //gpio->setFunction(47, kBCM2708Pinmux_ALT2);
 
@@ -94,18 +90,20 @@ void safe_putchar(unsigned char c) {
 void peripheral_scan() {
   uint32_t *ram32 = 0;
   for (uint32_t i = 0x7e000; i < 0x7ffff; i++) {
+    if ((i & 0xfffff) == 0x7e981) continue; // hang
     if (i == 0x7e9c) continue; // hang
     if (i == 0x7e9d) continue; // hang
     if (i == 0x7e9e) continue; // hang
     if (i == 0x7e9f) continue; // hang
-    if ((i & 0xfff0) == 0x7ea0) continue; // exception
+    if ((i & 0xfff00) == 0x7ea00) continue; // exception
     if ((i & 0xfff0) == 0x7eb0) continue; // exception
-    if ((i & 0xfff0) == 0x7ec0) continue; // exception
+    if ((i & 0xfff00) == 0x7ec00) continue; // exception
     if ((i & 0xfff0) == 0x7ef0) continue; // exception
-    if ((i & 0xff00) == 0x7f00) continue; // exception
-    uint32_t id = ram32[ ( (i << 12) | 0xfff) / 4];
+    if ((i & 0xff000) == 0x7f000) continue; // exception
+    printf("0x%lx\n", ( (i << 12) | 0xfff));
+    uint32_t id = ram32[ ( (i << 12) | 0xffc) / 4];
     if (id == 0) continue;
-    printf("0x%04lxFFF == 0x%08lx \"", i, id);
+    printf("0x%04lxFFC == 0x%08lx \"", i, id);
     uint8_t a,b,c,d;
     a = id & 0xff;
     b = (id >> 8) & 0xff;

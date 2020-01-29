@@ -28,7 +28,7 @@ Second stage bootloader.
 #include <string.h>
 #include <stdio.h>
 
-#define logf(fmt, ...) printf("[LDR:%s]: " fmt, __FUNCTION__, ##__VA_ARGS__);
+#define logf(fmt, ...) print_timestamp(); printf("[LDR:%s]: " fmt, __FUNCTION__, ##__VA_ARGS__);
 
 FATFS g_BootVolumeFs;
 
@@ -95,7 +95,7 @@ struct LoaderImpl {
 		return len;
 	}
 
-  uint8_t* load_fdt(const char* filename, uint8_t* cmdline, uint8_t *initrd_start, size_t initrd_size) {
+  uint8_t* load_fdt(const char* filename, const char* cmdline, uint8_t *initrd_start, size_t initrd_size) {
     /* read device tree blob */
     uint8_t* fdt = reinterpret_cast<uint8_t*>(DTB_LOAD_ADDRESS);
     size_t sz = read_file(filename, fdt, false);
@@ -131,7 +131,7 @@ struct LoaderImpl {
 
     char dtype[] = "memory";
     struct mem_entry memmap[] = {
-      { .address = htonl(0x100), .size = htonl((256 * 1024 * 1024) - 0x100) }
+      { .address = htonl(1024 * 128), .size = htonl(((256*3) * 1024 * 1024) - (1024 * 128)) }
     };
     res = fdt_setprop(v_fdt, memory, "reg", (void*) memmap, sizeof(memmap));
 
@@ -169,10 +169,12 @@ struct LoaderImpl {
     uint8_t* cmdline;
     size_t cmdlen = read_file("cmdline.txt", cmdline);
 
-    logf("kernel cmdline: %s\n", cmdline);
+    const char *cmdline2 = "print-fatal-signals=1 console=ttyAMA0,115200 earlyprintk loglevel=7 printk.devkmsg=on boot.trace boot.shell_on_fail memtest=4 dyndbg=\"file bcm2835-mailbox.c +p\"";
+
+    logf("kernel cmdline: %s\n", cmdline2);
 
       /* load flat device tree */
-    uint8_t* fdt = load_fdt("rpi.dtb", cmdline, initrd, initrd_size);
+    uint8_t* fdt = load_fdt("rpi.dtb", cmdline2, initrd, initrd_size);
 
     /* once the fdt contains the cmdline, it is not needed */
     delete[] cmdline;

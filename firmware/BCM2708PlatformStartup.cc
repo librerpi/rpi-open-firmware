@@ -8,6 +8,9 @@
 #include <drivers/IODevice.hpp>
 #include <drivers/BCM2708PowerManagement.hpp>
 #include "BCM2708PlatformStartup.h"
+#include <drivers/BCM2708ArmControl.hh>
+
+BCM2708ArmControl gArmControl {};
 
 static IODevice* startDeviceByTag(uint32_t tag) {
 	IODevice* dev = IODevice::findByTag(tag);
@@ -42,5 +45,5 @@ extern "C" void PEStartPlatform() {
   }
 
   /* Start ARM */
-  startDeviceByTag('ARMC');
+  gArmControl.start();
 }

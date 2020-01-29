@@ -46,12 +46,12 @@ CC = $(CROSS_COMPILE)gcc
 CXX = $(CROSS_COMPILE)g++
 AS = $(CC)
 OBJCOPY = $(CROSS_COMPILE)objcopy
-LINKFLAGS = -nostdlib -nostartfiles -Wl,--build-id=none -T linker.ld -Wl,--no-omagic # --print-map #-Wl,--gc-sections --entry=_start -Wl,--cref
+LINKFLAGS = -nostdlib -nostartfiles -Wl,--build-id=none -T linker.ld -Wl,--no-omagic -Wl,--print-map --entry=_start -Wl,--gc-sections # -Wl,--cref
 
 CFLAGS = -c -nostdlib -Wno-multichar -std=c11 -fsingle-precision-constant -Wdouble-promotion -D__VIDEOCORE4__ -I./vc4_include/ -I./ -Wall -Werror=return-type -fno-common \
-	 -Wmissing-prototypes -Waggressive-loop-optimizations -Werror
+	 -Wmissing-prototypes -Waggressive-loop-optimizations -Werror -ffunction-sections
 ASFLAGS = -c -nostdlib -x assembler-with-cpp -D__VIDEOCORE4__ -I./vc4_include/ -I./
-CXXFLAGS = -c -nostdlib -Wno-multichar -std=c++11 -fno-exceptions -fno-rtti -D__VIDEOCORE4__ -I./vc4_include/ -I./ -Werror=return-type
+CXXFLAGS = -c -nostdlib -Wno-multichar -std=c++11 -fno-exceptions -fno-rtti -D__VIDEOCORE4__ -I./vc4_include/ -I./ -Werror=return-type -ffunction-sections
 
 HEADERS := \
 	$(shell find . -type f -name '*.h') \

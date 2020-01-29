@@ -28,10 +28,10 @@ SECTIONS
   .init_array : {
     . = ALIGN(16);
     PROVIDE (__init_array_start = .);
-    *(.init_array)
-    *(.init_array.*)
-    *(.ctors)
-    *(.ctors.*)
+    KEEP(*(.init_array))
+    KEEP(*(.init_array.*))
+    KEEP(*(.ctors))
+    KEEP(*(.ctors.*))
     __init_array_end = .;
   }
 

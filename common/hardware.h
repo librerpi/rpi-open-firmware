@@ -55,7 +55,7 @@ enum RamSize {
   kRamSize128MB = 3,
   kRamSize2GB = 4,
   kRamSize4GB = 5,
-  kRamSizeUnknown = 4
+  kRamSizeUnknown
 };
 
 extern const char *size_to_string[];

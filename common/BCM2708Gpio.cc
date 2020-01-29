@@ -52,4 +52,4 @@ void BCM2708Gpio::init() {
 	setTag(GPIO_TAG);
 }
 
-IODriverCreateSingletonInstance(BCM2708Gpio);
+BCM2708Gpio gGPIO {};

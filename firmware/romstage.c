@@ -84,7 +84,7 @@ static void switch_vpu_to_pllc() {
 	CM_VPUCTL = CM_PASSWORD | CM_SRC_PLLC_CORE0 | CM_VPUCTL_GATE_SET;
 	CM_VPUCTL = CM_PASSWORD | CM_SRC_PLLC_CORE0 | CM_VPUCTL_GATE_SET | 0x10; /* ENAB */
 
-	CM_TIMERDIV = CM_PASSWORD | (19 << 12) | 819;
+	CM_TIMERDIV = CM_PASSWORD | (19 << 12) | 819; // TODO, look into this timer
 	CM_TIMERCTL = CM_PASSWORD | CM_SRC_OSC | 0x10;
 }
 
@@ -93,8 +93,6 @@ int _main(unsigned int cpuid, uint32_t load_address, vc4_saved_state_t* pcb) {
 
   set_pl011_funcs();
   pl011_uart_init(115200);
-
-  printf("pre-pll hello\n");
 
   switch_vpu_to_pllc();
 

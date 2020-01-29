@@ -48,3 +48,4 @@ _start:
   lea r1, _start
   /* jump to C code */
   bl _main
+  b .

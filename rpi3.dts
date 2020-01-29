@@ -35,8 +35,10 @@
     compatible = "simple-bus";
     #address-cells = <0x01>;
     #size-cells = <0x01>;
-    ranges = <0x7e000000 0x3f000000 0x1000000 0x40000000 0x40000000 0x1000>;
-    dma-ranges = <0xc0000000 0x00 0x3f000000>;
+    //        child       parent       length
+    ranges = <0x7e000000 0x3f000000 0x1000000 /* map the MMIO space to 0x3f000000 in arm, 16mb long */
+              0x40000000 0x40000000 0x1000>; /* identity map the local_intc, 0x1000 bytes long */
+    dma-ranges = <0xc0000000 0x00 0x3f000000>; /* map arm physical 0 to the uncached alias, 1008mb long */
 
 
     local_intc: local_intc@40000000 {
@@ -86,6 +88,13 @@
       #dma-cells = <1>;
       brcm,dma-channel-mask = <0x7f35>;
     };
+    /*axiperf: axiperf {
+      compatible = "brcm,bcm2835-axiperf";
+      reg = <0x7e009800 0x100>,
+            <0x7ee08000 0x100>;
+      firmware = <&firmware>;
+      //status = "disabled";
+    };*/
     intc: interrupt-controller@7e00b200 {
       compatible = "brcm,bcm2836-armctrl-ic";
       reg = <0x7e00b200 0x200>;
@@ -166,6 +175,16 @@
         brcm,function = <0x07>;
       };
     };
+    mailbox: mailbox@7e00b880 {
+      compatible = "brcm,bcm2835-mbox";
+      reg = <0x7e00b880 0x40>;
+      interrupts = <0 1>;
+      #mbox-cells = <0>;
+    };
+    firmware: firmware {
+      compatible = "raspberrypi,bcm2835-firmware", "simple-bus";
+      mboxes = <&mailbox>;
+    };
     serial@7e201000 {
       compatible = "brcm,bcm2835-pl011", "arm,pl011", "arm,primecell";
       reg = <0x7e201000 0x200>;
@@ -194,16 +213,16 @@
       brcm,pio-limit = <0x01>;
       //brcm,debug = <1>;
     };
-    i2c@7e205000 {
+    i2c@7e205000 { // i2c0
       compatible = "brcm,bcm2835-i2c";
       reg = <0x7e205000 0x200>;
       interrupts = <0x02 0x15>;
       clocks = <&clocks 0x14>;
       #address-cells = <0x01>;
       #size-cells = <0x00>;
-      pinctrl-names = "default";
-      pinctrl-0 = <&i2c0>;
-      clock-frequency = <0x186a0>;
+      //pinctrl-names = "default";
+      //pinctrl-0 = <&i2c0>;
+      clock-frequency = <100000>;
     };
     serial@7e215040 {
       compatible = "brcm,bcm2835-aux-uart";
@@ -228,6 +247,12 @@
       pinctrl-0 = <&emmc>;
       bus-width = <0x04>;
     };
+    /*
+    vchiq: mailbox@7e00b840 {
+      compatible = "brcm,bcm2835-vchiq";
+      reg = <0x7e00b840 0x3c>;
+      interrupts = <0 2>;
+    };*/
     /*power {
       compatible = "raspberrypi,bcm2835-power";
       firmware = <0x07>;
@@ -265,8 +290,8 @@
       clocks = <&clocks 0x14>;
       #address-cells = <0x01>;
       #size-cells = <0x00>;
-      pinctrl-names = "default";
-      pinctrl-0 = <&i2c1>;
+      //pinctrl-names = "default";
+      //pinctrl-0 = <&i2c1>;
       clock-frequency = <100000>; // 100khz
     };
     i2c@7e805000 { // i2c2
@@ -312,7 +337,10 @@
   timer {
     compatible = "arm,armv7-timer";
     interrupt-parent = <&local_intc>;
-    interrupts = <0x00 0x04 0x01 0x04 0x03 0x04 0x02 0x04>;
+    interrupts = <0x00 0x04
+                  0x01 0x04
+                  0x03 0x04
+                  0x02 0x04>;
     always-on;
   };
   cpus {

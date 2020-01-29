@@ -45,7 +45,7 @@ let
       buildInputs = [ self.tlsf self.common self.notc ];
       enableParallelBuilding = true;
       installPhase = ''
-        $OBJDUMP -t build/arm_chainloader.bin.elf | sort -rk4 | head -n15
+        $OBJDUMP -t build/arm_chainloader.bin.elf | sort -rk4
         mkdir -p $out/nix-support
         cp build/arm_chainloader.bin{,.elf} $out/
         $OBJDUMP -S build/arm_chainloader.bin.elf > $out/chainloader.S

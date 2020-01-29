@@ -43,6 +43,8 @@ static const char* exception_name(uint32_t n) {
 	prefix "  r4: 0x%08lx  r5: 0x%08lx  r6: 0x%08lx  r7: 0x%08lx\n" \
 	prefix "  r8: 0x%08lx  r9: 0x%08lx r10: 0x%08lx r11: 0x%08lx\n" \
 	prefix " r12: 0x%08lx r13: 0x%08lx r14: 0x%08lx r15: 0x%08lx\n" \
+        prefix " r16: 0x%08lx r17: 0x%08lx r18: 0x%08lx r19: 0x%08lx\n" \
+        prefix " r20: 0x%08lx r21: 0x%08lx r22: 0x%08lx r23: 0x%08lx\n" \
 	prefix "  pc: 0x%08lx  lr: 0x%08lx  sr: 0x%08lx\n"
 
 void print_vpu_state(vc4_saved_state_t* pcb) {
@@ -50,22 +52,12 @@ void print_vpu_state(vc4_saved_state_t* pcb) {
 
 	printf(
 	    REGISTER_FORMAT_STRING("   "),
-	    pcb->r0,
-	    pcb->r1,
-	    pcb->r2,
-	    pcb->r3,
-	    pcb->r4,
-	    pcb->r5,
-	    pcb->r6,
-	    pcb->r7,
-	    pcb->r8,
-	    pcb->r9,
-	    pcb->r10,
-	    pcb->r11,
-	    pcb->r12,
-	    pcb->r13,
-	    pcb->r14,
-	    pcb->r15,
+	    pcb->r0, pcb->r1, pcb->r2, pcb->r3,
+	    pcb->r4, pcb->r5, pcb->r6, pcb->r7,
+	    pcb->r8, pcb->r9, pcb->r10, pcb->r11,
+	    pcb->r12, pcb->r13, pcb->r14, pcb->r15,
+            pcb->r16, pcb->r17, pcb->r18, pcb->r19,
+            pcb->r20, pcb->r21, pcb->r22, pcb->r23,
 	    pcb->pc,
 	    pcb->lr,
 	    pcb->sr

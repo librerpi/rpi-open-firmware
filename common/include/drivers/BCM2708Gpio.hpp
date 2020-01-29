@@ -34,4 +34,6 @@ struct BCM2708Gpio : IODevice {
         uint32_t getBank(uint8_t bank);
 	virtual void init();
 };
+
+extern BCM2708Gpio gGPIO;
 #endif

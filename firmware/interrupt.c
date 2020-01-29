@@ -8,7 +8,7 @@
 typedef void (*irqType)();
 
 irqType __attribute__ ((aligned (512))) vectorTable[144]; // might only need to be 128 entries
-char __attribute__ ((aligned (2))) irq_stack[512];
+char __attribute__ ((aligned (4))) irq_stack[512];
 
 void setup_irq_handlers() {
   // https://github.com/hermanhermitage/videocoreiv/wiki/VideoCore-IV-Programmers-Manual#interrupts

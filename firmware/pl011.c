@@ -13,7 +13,7 @@
 FILE *funopen(void *cookie, int (*read)(void*, char *, int), int (*write)(void*, const char*, int), int, int);
 
 static void pl011_putchar(unsigned char c) {
-  if (c == '\n') pl011_putchar('\r');
+  //if (c == '\n') pl011_putchar('\r');
   while(UART_MSR & 0x20);
   UART_RBRTHRDLL = c;
 }
