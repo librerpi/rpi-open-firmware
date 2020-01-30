@@ -21,6 +21,9 @@ that are missing from the release. This is also used by ARM.
 #include <stdint.h>
 
 #pragma once
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #define VC4_PERIPH_BASE 0x7E000000
 #define ARM_PERIPH_BASE 0x3F000000
@@ -99,4 +102,8 @@ void print_timestamp(void);
 
 #ifdef __arm__
 extern firmware_arm_data_t g_FirmwareData;
+#endif
+
+#ifdef __cplusplus
+}
 #endif
