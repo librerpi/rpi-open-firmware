@@ -163,7 +163,7 @@ let
     ls -ltrh /mnt/
     umount /mnt
   '';
-  nixos = (import (<nixpkgs> + "/nixos") { configuration = ./nixos.nix; });
+  nixos = (import (sources.nixpkgs + "/nixos") { configuration = ./nixos.nix; });
 in pkgs.lib.fix (self: {
   inherit bootdir helper dtbFiles;
   aarch64 = {
