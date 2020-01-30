@@ -3,11 +3,7 @@
 
 let
   sources = import ./nix/sources.nix;
-  # temporary hack, this rev is upstream
-  pkgs = import
-  (builtins.fetchTarball https://github.com/input-output-hk/nixpkgs/archive/0ee0489d42e.tar.gz)
-  #/home/clever/apps/rpi/nixpkgs
-  {};
+  pkgs = import sources.nixpkgs {};
   lib = pkgs.lib;
   vc4 = pkgs.pkgsCross.vc4.extend overlay;
   arm = pkgs.pkgsCross.arm-embedded.extend overlay;
@@ -167,7 +163,7 @@ let
     ls -ltrh /mnt/
     umount /mnt
   '';
-  nixos = (import (sources.nixpkgs + "/nixos") { configuration = ./nixos.nix; });
+  nixos = (import (<nixpkgs> + "/nixos") { configuration = ./nixos.nix; });
 in pkgs.lib.fix (self: {
   inherit bootdir helper dtbFiles;
   aarch64 = {
