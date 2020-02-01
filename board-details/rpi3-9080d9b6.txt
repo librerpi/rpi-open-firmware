@@ -1,0 +1,25 @@
+OTP17: 0x3020000a
+  19.2mhz crystal present
+  SDIO pullups should be on?
+  SD card boot enabled
+  USB device boot enabled
+  USB host boot enabled (ethernet/mass-storage)
+
+SoC serial# 0x9080d9b6
+
+HW revision: 0x00a22082
+  Type: 8
+  Rev: 2
+  Proc: 2
+  Manufacturer: 2
+  Ram: 2
+
+Optional Mac Override: 000000000
+
+OTP66: 0x00009daa
+  ETH_CLK on GPIO42
+  ETH_CLK 25mhz
+  LAN_RUN on GPIO29
+
+
+rpi 3b rev 2 1gig, embest

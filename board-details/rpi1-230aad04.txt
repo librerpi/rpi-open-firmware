@@ -1,0 +1,16 @@
+OTP17: 0x1020000a
+  19.2mhz crystal present
+  SDIO pullups should be on?
+  SD card boot enabled
+  USB device boot enabled
+
+SoC serial# 0x230aad04
+
+HW revision: 0x0000000e
+
+Optional Mac Override: 000000000
+
+OTP66: 0x00000000
+
+
+rpi 1 b, rev 2, 512mb, sony uk
