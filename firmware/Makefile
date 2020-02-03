@@ -46,10 +46,10 @@ CC = $(CROSS_COMPILE)gcc
 CXX = $(CROSS_COMPILE)g++
 AS = $(CC)
 OBJCOPY = $(CROSS_COMPILE)objcopy
-LINKFLAGS = -nostdlib -nostartfiles -Wl,--build-id=none -T linker.ld -Wl,--no-omagic -Wl,--print-map --entry=_start -Wl,--gc-sections # -Wl,--cref
+LINKFLAGS = -nostdlib -nostartfiles -Wl,--build-id=none -T linker.ld -Wl,--no-omagic --entry=_start -Wl,--gc-sections # -Wl,--cref
 
 CFLAGS = -c -nostdlib -Wno-multichar -std=c11 -fsingle-precision-constant -Wdouble-promotion -D__VIDEOCORE4__ -I./vc4_include/ -I./ -Wall -Werror=return-type -fno-common \
-	 -Wmissing-prototypes -Waggressive-loop-optimizations -Werror -ffunction-sections
+	 -Wmissing-prototypes -Waggressive-loop-optimizations -Werror -ffunction-sections -g
 ASFLAGS = -c -nostdlib -x assembler-with-cpp -D__VIDEOCORE4__ -I./vc4_include/ -I./
 CXXFLAGS = -c -nostdlib -Wno-multichar -std=c++11 -fno-exceptions -fno-rtti -D__VIDEOCORE4__ -I./vc4_include/ -I./ -Werror=return-type -ffunction-sections
 
@@ -95,7 +95,7 @@ $(PRODUCT_DIRECTORY)/bootcode.elf: $(OBJ)
 	mkdir -p $(TARGET_BUILD_DIR)
 	mkdir -p $(PRODUCT_DIRECTORY)
 	@echo $(WARN_COLOR)LD  $(NO_COLOR) $@
-	@$(CC) $(LINKFLAGS) $(OBJ) -o $@ -lcommon -lc -lgloss -lgcc
+	@$(CC) $(LINKFLAGS) -Wl,-Map=$(PRODUCT_DIRECTORY)/bootcode.map $(OBJ) -o $@ -lcommon -lc -lgloss -lgcc
 
 bootcode.stub:
 	truncate bootcode.stub -s 512

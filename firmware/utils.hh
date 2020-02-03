@@ -9,6 +9,7 @@ extern "C" {
   void gpio_print_snapshot(const bool gpio_level[64], const enum BCM2708PinmuxSetting functions[64]);
   void gpio_snapshot(bool gpio_level[64], enum BCM2708PinmuxSetting functions[64]);
   void set_pl011_funcs();
+  void enable_jtag(void);
   void hexdump_ram(uint32_t addr, uint32_t count);
   void peripheral_scan();
   void test_things();

@@ -11,6 +11,7 @@
 #include <drivers/BCM2708ArmControl.hh>
 #include <string.h>
 #include <stdio.h>
+#include "utils.hh"
 
 #define FLAG_BUSY (1 << 31)
 
@@ -72,13 +73,13 @@ void BCM2708ArmControl::bridgeStart(bool cycleBrespBits) {
     udelay(300);
   }
 
-  //IODriverLog("starting async bridge now!");
+  IODriverLog("starting async bridge now!");
   ARM_CONTROL1 &= ~ARM_C1_REQSTOP;
   udelay(300);
 
   if (!cycleBrespBits) pmDomain->setReset();
 
-  //IODriverLog("bridge init done, PM_PROC is now: 0x%X!", PM_PROC);
+  IODriverLog("bridge init done, PM_PROC is now: 0x%X!", PM_PROC);
 }
 
 void BCM2708ArmControl::setupClock() {
@@ -192,6 +193,10 @@ void BCM2708ArmControl::start() {
   //bzero2((void*)ARM_MEMORY_BASE, 1024*1024*512);
   //IODriverLog("zeroed");
   loadInitialCode();
+  uint8_t aarch64_loop[] = { 0x00, 0x00, 0x00, 0x14 };
+  for (int i=0; i<0x300; i += 4) {
+    memcpy((void*)(ARM_MEMORY_BASE + i), aarch64_loop, 4);
+  }
 
   IODriverLog("original memstart: 0x%X", *((volatile uint32_t*)ARM_MEMORY_BASE));
 
@@ -211,6 +216,13 @@ void BCM2708ArmControl::start() {
   /* see if the ARM block is responding */
   IODriverLog("ARM ID: 0x%X C0: 0x%X", ARM_ID, ARM_CONTROL0);
 
+  enable_jtag();
+  ARM_CONTROL0 |= ARM_C0_JTAGGPIO;
+        bool levels[64];
+        enum BCM2708PinmuxSetting functions[64];
+        gpio_snapshot(levels, functions);
+        gpio_print_snapshot(levels, functions);
+
   /*
    * enable peripheral access, map arm secure bits to axi secure bits 1:1 and
    * set the mem size for who knows what reason.
@@ -220,11 +232,13 @@ void BCM2708ArmControl::start() {
 
   ARM_IRQ_ENBL3 |= ARM_IE_MAIL;
 
-  IODriverLog("using C0: 0x%X", ARM_CONTROL0);
+  printregs();
 
   setupClock();
   //setupOtherClocks();
   pmDomain->start();
+  printregs();
+  IODriverLog("arm is on, starting async bridge");
 
   /*
    * ARM is now powered on but stalling on a bus transaction, start the

@@ -30,6 +30,14 @@ void set_pl011_funcs() {
   gGPIO.setFunction(15, kBCM2708Pinmux_ALT0);
 }
 
+void enable_jtag() {
+  gGPIO.setFunction(22, kBCM2708Pinmux_ALT4); // TRST
+  gGPIO.setFunction(24, kBCM2708Pinmux_ALT4); // TDO
+  gGPIO.setFunction(25, kBCM2708Pinmux_ALT4); // TCK
+  gGPIO.setFunction(26, kBCM2708Pinmux_ALT4); // TDI
+  gGPIO.setFunction(27, kBCM2708Pinmux_ALT4); // TMS
+}
+
 void gpio_print_snapshot(const bool gpio_level[64], const BCM2708PinmuxSetting functions[64]) {
   for (int i=0; i<32; i++) {
     printf("GPIO%02d %4s %s | %s %4s GPIO%02d\n", i, function_names[functions[i]], gpio_level[i] ? "HIGH" : " LOW", gpio_level[i+32] ? "HIGH" : "LOW ", function_names[functions[i+32]], i + 32);

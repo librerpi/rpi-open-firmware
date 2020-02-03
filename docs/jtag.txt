@@ -1,0 +1,42 @@
+`enable_jtag_gpio=1` in `config.txt` configures the stock firmware to allow arm jtag
+
+recommended way to gain control of arm "before" reset is to just make your kernel (or arm stub) contain `b .` so it loops infinitely, jtag can then force it out of the loop
+
+
+for open firmware usage:
+the following gpio must be in alt4 mode
+22 TRST
+24 TDO
+25 TCK
+26 TDI
+27 TMS
+and ARM_CONTROL0 must have the ARM_C0_JTAGGPIO bit set
+
+the arm cpu will hang on boot, but jtag will now respond
+
+pi@raspberrypi:~/openocd $ nix-shell ~/nixpkgs-channels/ -A openocd
+[nix-shell:~/openocd]$ git rev-parse HEAD
+09ac9ab135ed35c846bcec4f7d468c3656852f26
+[nix-shell:~/openocd]$ autoreconfPhase
+
+nix-build -A pkgsCross.aarch64-multiplatform.buildPackages.gdb '<nixpkgs>' -o aarch64-gdb
+
+(gdb) x /i $pc
+
+2020-02-02 19:05:13 < geist> the ESR (exception syndrome register) will tell you why it thinks its there
+2020-02-02 19:05:23 < geist> ELR is the saved PC when it triggeed this
+(gdb) info registers
+2020-02-02 19:05:29 < clever> ESR_EL3        0x2000000           33554432
+2020-02-02 19:05:37 < clever> ELR_EL3        0x204               0x204
+
+
+step 1: boot rpi-open-firmware
+step 2: /home/pi/openocd/src/openocd -s /home/pi/openocd/tcl/ -f /home/pi/rpi-to-rpi.tcl
+step 3:
+./aarch64-gdb/bin/aarch64-unknown-linux-gnu-gdb
+(gdb) set style enabled off
+(gdb) target remote :3333
+(gdb) load /home/clever/apps/rpi-open-firmware/result/arm_chainloader.bin.elf
+
+[clever@system76:~/apps/rpi-open-firmware/arm64]$ ../aarch64-gdb/bin/aarch64-unknown-linux-gnu-gdb -x ../gdb.txt ../arm/arm64.elf 
+
