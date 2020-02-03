@@ -9,7 +9,7 @@ let
   arm = pkgs.pkgsCross.arm-embedded.extend overlay;
   arm7 = pkgs.pkgsCross.armv7l-hf-multiplatform.extend overlay;
   arm6 = pkgs.pkgsCross.raspberryPi.extend overlay;
-  aarch64 = pkgs.pkgsCross.aarch64-multiplatform;
+  aarch64 = pkgs.pkgsCross.aarch64-multiplatform.extend overlay;
   x86_64 = pkgs.extend overlay;
   overlay = self: super: {
     tlsf = self.stdenv.mkDerivation {
@@ -50,6 +50,11 @@ let
         EOF
       '';
     };
+    chainloader64 = aarch64.stdenv.mkDerivation {
+      name = "chainloader64";
+      src = lib.cleanSource ./arm64;
+      enableParallelBuilding = true;
+    };
     firmware = vc4.stdenv.mkDerivation {
       name = "firmware";
       src = lib.cleanSource ./firmware;
@@ -65,7 +70,7 @@ let
       dontStrip = true;
       installPhase = ''
         mkdir -p $out/nix-support
-        cp build/bootcode.{bin,elf} $out/
+        cp build/bootcode.{bin,elf,map} $out/
         cp start4.elf $out/
         ln -s ${arm.chainloader} $out/arm
         $OBJDUMP -d $out/bootcode.elf > $out/bootcode.S
@@ -164,13 +169,19 @@ let
     umount /mnt
   '';
   nixos = (import (sources.nixpkgs + "/nixos") { configuration = ./nixos.nix; });
+  testcycle = pkgs.writeShellScript "testcycle" ''
+    set -e
+    scp ${vc4.firmware}/bootcode.bin root@router.localnet:/tftproot/open-firmware/bootcode.bin
+    exec ${x86_64.uart-manager}/bin/uart-manager
+  '';
 in pkgs.lib.fix (self: {
-  inherit bootdir helper dtbFiles;
+  inherit bootdir helper dtbFiles testcycle;
   aarch64 = {
-    inherit (aarch64) ubootRaspberryPi3_64bit linux_rpi3;
+    inherit (aarch64) ubootRaspberryPi3_64bit linux_rpi3 chainloader64;
   };
   vc4 = {
     inherit (vc4) tlsf firmware common notc;
+    gdb = vc4.buildPackages.gdb;
   };
   arm = {
     inherit (arm) tlsf chainloader common notc;
