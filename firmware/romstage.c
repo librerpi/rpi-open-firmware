@@ -92,61 +92,9 @@ static void switch_vpu_to_pllc() {
 
 void test(int);
 
-void test(int i) {
-  switch (i) {
-  case 0:
-    puts("c");
-    break;
-  case 1:
-  case 2:
-  case 3:
-    puts("a");
-    break;
-  case 4:
-    puts("h");
-    break;
-  case 5:
-    puts("h");
-    break;
-  case 6:
-    puts("h");
-    break;
-  case 7:
-    puts("h");
-    break;
-  case 8:
-    puts("h");
-    break;
-  case 9:
-    puts("h");
-    puts("moar");
-    break;
-  case 10:
-    puts("h");
-    break;
-  case 11:
-    puts("h");
-    puts("moar");
-    break;
-  case 12:
-    puts("h");
-    puts("moar");
-    break;
-  case 13:
-    puts("h");
-    puts("moar");
-    break;
-  case 14:
-    puts("h");
-    puts("moar");
-    break;
-  }
-}
-
 int _main(unsigned int cpuid, uint32_t load_address, vc4_saved_state_t* pcb) {
   xtal_freq = 19200000;
   parse_otp_into(&otpInfo);
-  //test(1);
 
   set_pl011_funcs();
   pl011_uart_init(115200);
