@@ -1,0 +1,47 @@
+28: the 32bit serial# of the chip, as seen in `cat /proc/cpuinfo
+the lower 24 bits of the serial# also become the last 3 bytes of the ethernet mac`
+
+https://github.com/raspberrypi/documentation/blob/master/hardware/raspberrypi/otpbits.md
+
+https://github.com/raspberrypi/firmware/issues/974#issuecomment-486597624
+this comment explains more of the reg17 flags then the official docs do
+
+https://github.com/raspberrypi/firmware/issues/1169 rpi4 otp info
+https://github.com/raspberrypi/firmware/issues/874 SPI/NAND boot info
+
+rpi3 (and maybe older)
+  reg17:
+    bit 0, brick the pi! (may enable signature checks)
+    bit 1, 1==19.2mhz
+    bit 3, enable SDIO pullup
+    bit 5, NAND/SMI boot
+    bit 8, SMI data bus width
+      0=8bit
+      1=16bit
+    bit 9-10, change SMI bus timings, 0->1cycle, 1->2cycles, 2->3cycles, 3->10cycles
+    bit 19, enable GPIO bootmode
+    bit 21, enable booting from SD card
+    bit 22 sets bank to boot from
+    bit 27, BSC slave boot on gpio 18/19
+    bit 28, enable usb device booting
+    bit 29, enable usb host booting (mass-storage, ethernet)
+    bit 30-31, SPI boot
+      0 disable
+      1 gpio 7-11
+
+rpi4:
+  reg17:
+    bit 1, 0=54mhz crystal, 1=192.mhz
+    bit 4-6, spi boot pins
+      0 = none
+      1 = gpio 7-11 alt0
+      2 = gpio 35-39 alt0
+      3 = gpio 40-43 alt4 (pre-burned)
+      4 = gpio 46-49 alt2
+    bit 7, usb device boot (over usb-c port), only used if eeprom fails checksum
+    bit 11-13, emmc pins
+      0 = none
+      1 = ???
+      2 = gpio 22-27 alt3
+      3 = gpio 34-39 alt3
+      4 = gpio48-53 alt3 (wired to sd card slot)

@@ -140,11 +140,35 @@ struct LoaderImpl {
     return fdt;
   }
 
-	void teardown_hardware() {
-		BlockDevice* bd = get_sdhost_device();
-		if (bd)
-			bd->stop();
-	}
+  void teardown_hardware() {
+    BlockDevice* bd = get_sdhost_device();
+    if (bd)
+      bd->stop();
+  }
+
+  const char *detect_model_dtb() {
+    // currently, this detects purely based on the arm model
+    // in future, it should get it from the full board revision, via OTP
+    uint32_t arm_cpuid;
+    // read MIDR reg
+    __asm__("mrc p15, 0, %0, c0, c0, 0" : "=r"(arm_cpuid));
+    // from https://github.com/dwelch67/raspberrypi/blob/master/boards/cpuid/cpuid.c
+    switch (arm_cpuid) {
+    case 0x410FB767:
+      return "rpi1.dtb";
+      break;
+    case 0x410FC075:
+      return "rpi2.dtb";
+      break;
+    case 0x410FD034:
+      return "rpi3.dtb";
+      break;
+    // 410FD083 is cortex A72, rpi4
+    default:
+      logf("unknown rpi model, cpuid is 0x%lx\n", arm_cpuid);
+      return "unknown.dtb";
+    }
+  }
 
 	LoaderImpl() {
 		logf("Mounting boot partitiion ...\n");
@@ -163,18 +187,39 @@ struct LoaderImpl {
 		logf("zImage loaded at 0x%X\n", (unsigned int)kernel);
 
     uint8_t *initrd = reinterpret_cast<uint8_t*>(INITRD_LOAD_ADDRESS);
+#if 0
+    uint32_t *initrd32 = reinterpret_cast<uint32_t*>(INITRD_LOAD_ADDRESS);
+    for (int i=0; i < (1024 * 1024 * 16); i++) {
+      initrd32[i] = i;
+    }
+    logf("pattern loaded\n");
+    udelay(1000 * 1000 * 600);
+    logf("checking pattern\n");
+    for (int i=0; i < (1024 * 1024 * 16); i++) {
+      if (initrd32[i] != i) {
+        printf("mismatch at 0x%x, 0x%lx\n", i, initrd32[i]);
+        panic("memory error");
+      }
+    }
+    logf("memtest done\n");
+    panic("stopping");
+#endif
     size_t initrd_size = read_file("initrd", initrd, false);
 
     /* read the command-line null-terminated */
     uint8_t* cmdline;
     size_t cmdlen = read_file("cmdline.txt", cmdline);
 
-    const char *cmdline2 = "print-fatal-signals=1 console=ttyAMA0,115200 earlyprintk loglevel=7 printk.devkmsg=on boot.trace boot.shell_on_fail memtest=4 dyndbg=\"file bcm2835-mailbox.c +p\"";
+    const char *cmdline2 = "print-fatal-signals=1 console=ttyAMA0,115200 earlyprintk loglevel=7 printk.devkmsg=on boot.shell_on_fail dyndbg=\"file bcm2835-mailbox.c +p\"";
 
     logf("kernel cmdline: %s\n", cmdline2);
 
+    const char *dtb_name = detect_model_dtb();
+
+    logf("using %s\n", dtb_name);
+
       /* load flat device tree */
-    uint8_t* fdt = load_fdt("rpi.dtb", cmdline2, initrd, initrd_size);
+    uint8_t* fdt = load_fdt(dtb_name, cmdline2, initrd, initrd_size);
 
     /* once the fdt contains the cmdline, it is not needed */
     delete[] cmdline;

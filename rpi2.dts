@@ -5,8 +5,12 @@
 /memreserve/ 0x00000000 0x00001000;
 
 / {
-  compatible = "raspberrypi,3-model-b", "brcm,bcm2837";
-  model = "Raspberry Pi 3 Model B";
+  compatible = "raspberrypi,2-model-b", "brcm,bcm2836";
+  model = "Raspberry Pi 2 Model B, with open firmware";
+  #address-cells = <0x01>;
+  #size-cells = <0x01>;
+  interrupt-parent = <&intc>;
+
   chosen {
   };
   memory {
@@ -16,16 +20,21 @@
     compatible = "simple-bus";
     #address-cells = <0x01>;
     #size-cells = <0x01>;
+    //        child       parent       length
+    ranges = <0x7e000000 0x3f000000 0x1000000 /* map the MMIO space to 0x3f000000 in arm, 16mb long */
+              0x40000000 0x40000000 0x1000>; /* identity map the local_intc, 0x1000 bytes long */
+    dma-ranges = <0xc0000000 0x00 0x3f000000>; /* map arm physical 0 to the uncached alias, 1008mb long */
     serial@7e201000 {
-      compatible = "brcm,bcm2835-pl011\0arm,pl011\0arm,primecell";
+      compatible = "brcm,bcm2835-pl011", "arm,pl011", "arm,primecell";
       reg = <0x7e201000 0x200>;
-      //interrupts = <0x02 0x19>;
-      //clocks = <0x03 0x13 0x03 0x14>;
-      clock-names = "uartclk\0apb_pclk";
+      interrupts = <0x02 0x19>;
+      clocks = <&clocks 19
+                &clocks 20>;
+      clock-names = "uartclk", "apb_pclk";
       arm,primecell-periphid = <0x241011>;
       cts-event-workaround;
-      pinctrl-names = "default";
-      pinctrl-0 = <0x08 0x09>;
+      //pinctrl-names = "default";
+      //pinctrl-0 = <0x08 0x09>;
       status = "okay";
       phandle = <0x22>;
     };
@@ -39,12 +48,66 @@
       pinctrl-0 = <0x13>;
       phandle = <0x23>;
     };
+    dma: dma@7e007000 {
+      compatible = "brcm,bcm2835-dma";
+      reg = <0x7e007000 0xf00>;
+      interrupts = <1 16>,
+                   <1 17>,
+                   <1 18>,
+                   <1 19>,
+                   <1 20>,
+                   <1 21>,
+                   <1 22>,
+                   <1 23>,
+                   <1 24>,
+                   <1 25>,
+                   <1 26>,
+                   /* dma channel 11-14 share one irq */
+                   <1 27>,
+                   <1 27>,
+                   <1 27>,
+                   <1 27>,
+                   /* unused shared irq for all channels */
+                   <1 28>;
+      interrupt-names = "dma0",
+                        "dma1",
+                        "dma2",
+                        "dma3",
+                        "dma4",
+                        "dma5",
+                        "dma6",
+                        "dma7",
+                        "dma8",
+                        "dma9",
+                        "dma10",
+                        "dma11",
+                        "dma12",
+                        "dma13",
+                        "dma14",
+                        "dma-shared-all";
+      #dma-cells = <1>;
+      brcm,dma-channel-mask = <0x7f35>;
+    };
     intc: interrupt-controller@7e00b200 {
       compatible = "brcm,bcm2836-armctrl-ic";
       reg = <0x7e00b200 0x200>;
       interrupt-controller;
+      #interrupt-cells = <0x02>;
       interrupt-parent = <&local_intc>;
       interrupts = <8 4>;
+    };
+    clocks: cprman@7e101000 {
+      compatible = "brcm,bcm2835-cprman";
+      #clock-cells = <1>;
+      reg = <0x7e101000 0x2000>;
+
+      /* CPRMAN derives almost everything from the
+       * platform's oscillator.  However, the DSI
+       * pixel clocks come from the DSI analog PHY.
+       */
+      clocks = <&clk_osc>;
+              //<&dsi0 0>, <&dsi0 1>, <&dsi0 2>,
+              //<&dsi1 0>, <&dsi1 1>, <&dsi1 2>;
     };
     local_intc: local_intc@40000000 {
       compatible = "brcm,bcm2836-l1-intc";
@@ -53,19 +116,64 @@
       #interrupt-cells = <2>;
       interrupt-parent = <&local_intc>;
     };
+    usb: usb@7e980000 {
+      compatible = "brcm,bcm2835-usb";
+      reg = <0x7e980000 0x10000>;
+      interrupts = <1 9>;
+      #address-cells = <1>;
+      #size-cells = <0>;
+      clocks = <&clk_usb>;
+      clock-names = "otg";
+      phys = <&usbphy>;
+      phy-names = "usb2-phy";
+    };
+  };
+  clocks {
+    compatible = "simple-bus";
+    #address-cells = <1>;
+    #size-cells = <0>;
+
+    clk_osc: clock@3 {
+      compatible = "fixed-clock";
+      reg = <3>;
+      #clock-cells = <0>;
+      clock-output-names = "osc";
+      clock-frequency = <19200000>;
+    };
+    clk_usb: clock@4 {
+      compatible = "fixed-clock";
+      reg = <4>;
+      #clock-cells = <0>;
+      clock-output-names = "otg";
+      clock-frequency = <480000000>;
+    };
+  };
+  usbphy: phy {
+    compatible = "usb-nop-xceiv";
+    #phy-cells = <0>;
   };
   arm-pmu {
-    compatible = "arm,cortex-a53-pmu";
+    compatible = "arm,cortex-a7-pmu";
     interrupt-parent = <&local_intc>;
     interrupts = <9 4>;
+  };
+  timer {
+    compatible = "arm,armv7-timer";
+    interrupt-parent = <&local_intc>;
+    interrupts = <0x00 0x04
+                  0x01 0x04
+                  0x03 0x04
+                  0x02 0x04>;
+    always-on;
   };
   cpus {
     #address-cells = <1>;
     #size-cells = <0>;
-    cpu@0 {
+    v7_cpu0: cpu@0 {
       device_type = "cpu";
-      compatible = "arm,cortex-a53";
-      reg = <0>;
+      compatible = "arm,cortex-a7";
+      reg = <0xf00>;
+      clock-frequency = <800000000>; // TODO, set from loader.cc?
     };
   };
 };

@@ -17,7 +17,9 @@ static void heap_init() {
 	void* start_of_heap = (void*)MEM_HEAP_START;
 	size_t hs = MEM_HEAP_SIZE;
 
-	logf("Initializing heap at 0x%p with size 0x%d\n", start_of_heap, hs);
+        *(uint32_t*)(start_of_heap) = 0;
+
+	logf("Initializing heap at 0x%p with size 0x%x\n", start_of_heap, hs);
 
 	init_memory_pool(hs, start_of_heap);
 }

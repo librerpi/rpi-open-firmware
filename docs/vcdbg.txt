@@ -1,0 +1,9 @@
+https://github.com/raspberrypi/firmware/issues/377#issuecomment-84022356
+> vcdbg doesn't need to talk to VC for most of the commands. It opens VC's memory and extracts as much as it can, but does rely on finding some symbols from memory.
+
+vcdbg log msg
+vcdbg log assert
+`vcdbg tx -v` requires a non-stripped ELF, which the rpi foundation doesnt release
+
+
+root@raspberrypi:~# vcdbg dumpstate 2>/dev/null

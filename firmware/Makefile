@@ -20,6 +20,7 @@ SRCS = \
 	interrupt.c \
 	traps.S \
 	otp.c \
+	otp_asm.S \
 	BCM2708PlatformStartup.cc
 
 ARCH = vc4

@@ -140,9 +140,10 @@ let
   bootdir = pkgs.runCommand "bootdir" { buildInputs = [ pkgs.dtc ]; } ''
     mkdir $out
     cd $out
-    cp ${vc4.firmware}/bootcode.elf bootcode.bin
+    cp ${vc4.firmware}/bootcode.bin bootcode.bin
     echo print-fatal-signals=1 console=ttyAMA0,115200 earlyprintk loglevel=7 root=/dev/mmcblk0p2 printk.devkmsg=on > cmdline.txt
-    dtc ${./rpi3.dts} -o rpi.dtb
+    dtc ${./rpi2.dts} -o rpi2.dtb
+    dtc ${./rpi3.dts} -o rpi3.dtb
     #cp {./bcm2837-rpi-3-b.dtb} rpi.dtb
     ${if kernelOverride == null then ''
       cp ${arm7.linux_rpi2}/zImage zImage

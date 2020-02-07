@@ -1,0 +1,3 @@
+2020-01-22 20:11:12 < clever> the jtag signals are available at gpio22-27 (but 26 isnt routed out, missing tdi), and some signals are repeated at gpio 4/5/6/12/13
+2020-01-22 20:11:56 < clever> trst is at 22, rtck is at 6/23, tdo is at 5/24, tck at 25, tdi at 4, and tms at 27
+

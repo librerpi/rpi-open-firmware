@@ -193,10 +193,10 @@ void BCM2708ArmControl::start() {
   //bzero2((void*)ARM_MEMORY_BASE, 1024*1024*512);
   //IODriverLog("zeroed");
   loadInitialCode();
-  uint8_t aarch64_loop[] = { 0x00, 0x00, 0x00, 0x14 };
-  for (int i=0; i<0x300; i += 4) {
-    memcpy((void*)(ARM_MEMORY_BASE + i), aarch64_loop, 4);
-  }
+  //uint8_t aarch64_loop[] = { 0x00, 0x00, 0x00, 0x14 };
+  //for (int i=0; i<0x300; i += 4) {
+    //memcpy((void*)(ARM_MEMORY_BASE + i), aarch64_loop, 4);
+  //}
 
   IODriverLog("original memstart: 0x%X", *((volatile uint32_t*)ARM_MEMORY_BASE));
 

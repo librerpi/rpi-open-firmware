@@ -24,7 +24,7 @@ static IODevice* startDeviceByTag(uint32_t tag) {
 }
 
 extern "C" void PEStartPlatform() {
-  if (false) {
+  if (true) {
     IODevice* imagePm = PowerManagementDomain::getDeviceForDomain(kCprPowerDomainImage);
     assert(imagePm);
     IODevice* usbPm = PowerManagementDomain::getDeviceForDomain(kCprPowerDomainUSB);

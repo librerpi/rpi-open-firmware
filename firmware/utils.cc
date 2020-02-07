@@ -5,6 +5,7 @@
 #include "drivers/BCM2708ClockDomains.hpp"
 #include <pcb.h>
 #include "interrupt.h"
+#include "otp.h"
 
 const char *function_names[] = {
   "IN",
@@ -55,36 +56,56 @@ void gpio_snapshot(bool gpio_level[64], BCM2708PinmuxSetting functions[64]) {
   gpio->getAllFunctions(functions);
 }
 
-void setup_eth_clock(uint8_t pin) {
+void setup_eth_clock(struct OtpInfo *info) {
+  int lan_run = 0;
+  int ethclk_pin = 0;
+
+  switch (info->type) {
+  case 4: // 2B
+    lan_run = 31;
+    ethclk_pin = 44;
+    break;
+  case 8: // 3B
+    lan_run = 29;
+    ethclk_pin = 42;
+    break;
+  }
+
   pllc_per.configure(2);
-  BCM2708Gpio *gpio = static_cast<BCM2708Gpio*>(IODevice::findByTag(GPIO_TAG));
-  gpio->setFunction(pin, kBCM2708Pinmux_ALT0);
 
-  // GP0 for testing on header
-  CM_GP0DIV = CM_PASSWORD | 0x28000; // divisor times 0x1000
-  CM_GP0CTL = CM_PASSWORD | (2 << 9) | 5;
-  CM_GP0CTL = CM_PASSWORD | (2 << 9) | 5 | (1 << 4);
+  if (1) {
+    // GP0 for testing on header
+    CM_GP0DIV = CM_PASSWORD | 0x28000; // divisor times 0x1000
+    CM_GP0CTL = CM_PASSWORD | (2 << 9) | 5;
+    CM_GP0CTL = CM_PASSWORD | (2 << 9) | 5 | (1 << 4);
+    gGPIO.setFunction(4, kBCM2708Pinmux_ALT0);
+  }
 
-  // GP1 routed to GPIO42 to drive ethernet/usb chip
-  CM_GP1DIV = CM_PASSWORD | 0x28000; // divisor times 0x1000
-  CM_GP1CTL = CM_PASSWORD | (2 << 9) | 5;
-  CM_GP1CTL = CM_PASSWORD | (2 << 9) | 5 | (1 << 4);
+  if (ethclk_pin > 0) {
+    // GP1 routed to GPIO42 to drive ethernet/usb chip
+    CM_GP1DIV = CM_PASSWORD | 0x28000; // divisor times 0x1000
+    CM_GP1CTL = CM_PASSWORD | (2 << 9) | 5;
+    CM_GP1CTL = CM_PASSWORD | (2 << 9) | 5 | (1 << 4);
 
-  gpio->setFunction(42, kBCM2708Pinmux_ALT0);
+    gGPIO.setFunction(ethclk_pin, kBCM2708Pinmux_ALT0);
+  }
 
   //gpio->setFunction(46, kBCM2708Pinmux_ALT2);
   //gpio->setFunction(47, kBCM2708Pinmux_ALT2);
 
-  // something usb related
-  gpio->setFunction(29, kBCM2708PinmuxOut);
-  gpio->clearPin(29);
-  udelay(1000);
-  gpio->setPin(29);
-  //gpio->setFunction(29, kBCM2708PinmuxIn);
+  if (lan_run > 0) {
+    // toggle the reset line to the usb chip
+    gGPIO.setFunction(lan_run, kBCM2708PinmuxOut);
+    gGPIO.clearPin(lan_run);
+    udelay(1000);
+    gGPIO.setPin(lan_run);
+    //gpio->setFunction(29, kBCM2708PinmuxIn);
+  }
   // 46&47 not i2c?
 
-  gpio->setFunction(2, kBCM2708Pinmux_ALT0);
-  gpio->setFunction(3, kBCM2708Pinmux_ALT0);
+  // i2c bus exploration
+  //gGPIO.setFunction(2, kBCM2708Pinmux_ALT0);
+  //gGPIO.setFunction(3, kBCM2708Pinmux_ALT0);
 }
 
 void safe_putchar(unsigned char c) {

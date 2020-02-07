@@ -120,6 +120,7 @@ struct MbrImpl {
 	}
 
   void read_mbr() {
+    if (!mbr) panic("mbr pointer was null?!");
     logf("Reading master boot record ...\n");
 
     if (!mmc->read_block(0, mbr)) {
@@ -138,15 +139,17 @@ struct MbrImpl {
     }
   }
 
-	MbrImpl() {
-		mbr = new Mbr;
-		mmc = get_sdhost_device();
-		if (!mmc) {
-			panic("parent block device not initilalized!");
-		}
-		read_mbr();
-		logf("Disk ready!\n");
-	}
+  MbrImpl() {
+    mbr = new Mbr;
+    if (!mbr) panic("mbr pointer was null?!");
+    logf("mbr is now %x\n", mbr);
+    mmc = get_sdhost_device();
+    if (!mmc) {
+            panic("parent block device not initilalized!");
+    }
+    read_mbr();
+    logf("Disk ready!\n");
+  }
 };
 
 MbrImpl STATIC_FILESYSTEM g_MbrDisk {};

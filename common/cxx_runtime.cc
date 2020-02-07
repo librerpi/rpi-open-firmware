@@ -49,14 +49,15 @@ extern "C" void __cxa_pure_virtual() {
 }
 
 void __cxx_init() {
-	unsigned ctor_count = (unsigned)(&__init_array_end - &__init_array_start);
-	void (*static_ctor)();
+  unsigned ctor_count = (unsigned)(&__init_array_end - &__init_array_start);
+  void (*static_ctor)();
 
-	printf("__cxx_init: calling %d static constructors (0x%p - 0x%p) ...\n", ctor_count, &__init_array_start, &__init_array_end);
+  printf("__cxx_init: calling %d static constructors (0x%p - 0x%p) ...\n", ctor_count, &__init_array_start, &__init_array_end);
 
-	for (unsigned i = 0; i < ctor_count; i++) {
-		uintptr_t* ptr = (((uintptr_t*)&__init_array_start) + i);
-		static_ctor = reinterpret_cast<void (*)()>(*ptr);
-		static_ctor();
-	}
+  for (unsigned i = 0; i < ctor_count; i++) {
+    uintptr_t* ptr = (((uintptr_t*)&__init_array_start) + i);
+    printf("ctor#%d is %lx\n", i, *ptr);
+    static_ctor = reinterpret_cast<void (*)()>(*ptr);
+    static_ctor();
+  }
 }

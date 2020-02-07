@@ -35,6 +35,8 @@ VideoCoreIV first stage bootloader.
 
 uint32_t g_CPUID;
 
+struct OtpInfo otpInfo;
+
 static void switch_vpu_to_pllc() {
 	A2W_XOSC_CTRL |= A2W_PASSWORD | A2W_XOSC_CTRL_PLLCEN_SET;
 
@@ -88,11 +90,68 @@ static void switch_vpu_to_pllc() {
 	CM_TIMERCTL = CM_PASSWORD | CM_SRC_OSC | 0x10;
 }
 
+void test(int);
+
+void test(int i) {
+  switch (i) {
+  case 0:
+    puts("c");
+    break;
+  case 1:
+  case 2:
+  case 3:
+    puts("a");
+    break;
+  case 4:
+    puts("h");
+    break;
+  case 5:
+    puts("h");
+    break;
+  case 6:
+    puts("h");
+    break;
+  case 7:
+    puts("h");
+    break;
+  case 8:
+    puts("h");
+    break;
+  case 9:
+    puts("h");
+    puts("moar");
+    break;
+  case 10:
+    puts("h");
+    break;
+  case 11:
+    puts("h");
+    puts("moar");
+    break;
+  case 12:
+    puts("h");
+    puts("moar");
+    break;
+  case 13:
+    puts("h");
+    puts("moar");
+    break;
+  case 14:
+    puts("h");
+    puts("moar");
+    break;
+  }
+}
+
 int _main(unsigned int cpuid, uint32_t load_address, vc4_saved_state_t* pcb) {
   xtal_freq = 19200000;
+  parse_otp_into(&otpInfo);
+  //test(1);
 
   set_pl011_funcs();
   pl011_uart_init(115200);
+  puts("pre-pll hello\n");
+  pretty_print_otp();
 
   switch_vpu_to_pllc();
 
@@ -116,12 +175,8 @@ int _main(unsigned int cpuid, uint32_t load_address, vc4_saved_state_t* pcb) {
 	sdram_init();
 	puts("SDRAM initialization completed successfully!\n");
 
-        setup_eth_clock(4);
+        setup_eth_clock(&otpInfo);
 
-        bool levels[64];
-        enum BCM2708PinmuxSetting functions[64];
-        gpio_snapshot(levels, functions);
-        gpio_print_snapshot(levels, functions);
   ST_C0 = ST_CLO + (100 * 1000 * 1000);
 
         //do_irq_test();

@@ -319,26 +319,26 @@ struct BCM2708SDHost : BlockDevice {
 		return true;
 	}
 
-	void drain_fifo() {
-		/* fuck me with a rake ... gently */
+  void drain_fifo() {
+    /* fuck me with a rake ... gently */
 
-		wait();
+    wait();
 
-		while (SH_HSTS & SH_HSTS_DATA_FLAG_SET) {
-			SH_DATA;
-			mfence();
-		}
-	}
+    while (SH_HSTS & SH_HSTS_DATA_FLAG_SET) {
+      SH_DATA;
+      mfence();
+    }
+  }
 
-	void drain_fifo_nowait() {
-		while (true) {
-			SH_DATA;
+  void drain_fifo_nowait() {
+    while (true) {
+      SH_DATA;
 
-			uint32_t hsts = SH_HSTS;
-			if (hsts != SH_HSTS_DATA_FLAG_SET)
-				break;
-		}
-	}
+      uint32_t hsts = SH_HSTS;
+      if (hsts != SH_HSTS_DATA_FLAG_SET)
+        break;
+    }
+  }
 
 	virtual bool read_block(uint32_t sector, uint32_t* buf) override {
 		if (!card_ready)
@@ -346,6 +346,14 @@ struct BCM2708SDHost : BlockDevice {
 
 		if (!is_high_capacity)
 			sector <<= 9;
+
+#ifdef DUMP_READ
+		if (buf) {
+		  logf("Reading %d bytes from sector %d using FIFO ...\n", block_size, sector);
+                } else {
+                  logf("Reading %d bytes from sector %d using FIFO > /dev/null ...\n", block_size, sector);
+                }
+#endif
 
 		/* drain junk from FIFO */
 		drain_fifo();
@@ -356,10 +364,6 @@ struct BCM2708SDHost : BlockDevice {
 		int i;
 		uint32_t hsts_err = 0;
 
-#ifdef DUMP_READ
-		if (buf)
-			logf("Reading %d bytes from sector %d using FIFO ...\n", block_size, sector);
-#endif
 
 #ifdef DUMP_READ
 		if (buf)
@@ -392,8 +396,9 @@ struct BCM2708SDHost : BlockDevice {
 		send_raw(MMC_STOP_TRANSMISSION | SH_CMD_BUSY_CMD_SET);
 
 #ifdef DUMP_READ
+                printf("\n");
 		if (buf)
-			printf("\n----------------------------------------------------\n");
+			printf("----------------------------------------------------\n");
 #endif
 
 		if (hsts_err) {
