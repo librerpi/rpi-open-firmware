@@ -155,6 +155,13 @@ L_armv7_or_higher:
 	and r3, r0, #0xc0000000		// multiprocessing extensions and
 	teq r3, #0x80000000			// not part of a uniprocessor system?
 	bne L_setup_monitor		 	// no, assume UP
+#if 1
+  // based on https://github.com/raspberrypi/tools/blob/509f504e8f130ead31b85603016d94d5c854c10c/armstubs/armstub7.S#L78-L82
+  mrc p15, 0, r0, c1, c0, 1 @ Read Auxiliary Control Register
+  orr r0, r0, #(1<<6)       @ SMP
+  mcr p15, 0, r0, c1, c0, 1 @ Write Auxiliary Control Register
+#endif
+	mrc p15, 0, r0, c0, c0, 5	// read MPIDR
 	ands r0, r0, #0x03			// CPU 0?
 	bne L_deadloop				// if not, spin.
 

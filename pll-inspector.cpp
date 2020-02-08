@@ -122,5 +122,11 @@ int main(int argc, char **argv) {
 	print_pll_subdivider(pll_base, "H_AUX", 0x360);
 	print_pll_subdivider(pll_base, "H_RCAL", 0x460);
 	print_pll_subdivider(pll_base, "H_PIX", 0x560);
+	volatile uint32_t *words = (volatile uint32_t*)pll_base;
+	for (int i=0; i<256; i++) {
+		if ((i % 4) == 0) printf("\n%08x: ", i*4);
+		printf("%08x ", words[i]);
+	}
+	printf("\n");
 	return 0;
 }

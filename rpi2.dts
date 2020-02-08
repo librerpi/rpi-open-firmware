@@ -11,6 +11,10 @@
   #size-cells = <0x01>;
   interrupt-parent = <&intc>;
 
+  aliases {
+    ethernet0 = &ethernet;
+    mmc0 = "/soc/mmc@7e202000";
+  };
   chosen {
   };
   memory {
@@ -109,6 +113,36 @@
               //<&dsi0 0>, <&dsi0 1>, <&dsi0 2>,
               //<&dsi1 0>, <&dsi1 1>, <&dsi1 2>;
     };
+    gpio@7e200000 {
+      compatible = "brcm,bcm2835-gpio";
+      reg = <0x7e200000 0xb4>;
+      interrupts = <&intc 0x11>,
+                   <&intc 0x12>;
+      gpio-controller;
+      #gpio-cells = <0x02>;
+      interrupt-controller;
+      #interrupt-cells = <0x02>;
+      pinctrl-names = "default";
+      sdhost: sdhost_gpio48 {
+        brcm,pins = <0x30 0x31 0x32 0x33 0x34 0x35>;
+        brcm,function = <0x04>;
+      };
+    };
+    mmc@7e202000 {
+      compatible = "brcm,bcm2835-sdhost";
+      reg = <0x7e202000 0x100>;
+      interrupts = <2 24>;
+      clocks = <&clocks 20>; // BCM2835_CLOCK_VPU
+      dmas = <&dma (13|(1<<29))>; //0x2000000d>;
+      dma-names = "rx-tx";
+      status = "okay";
+      pinctrl-names = "default";
+      pinctrl-0 = <&sdhost>;
+      bus-width = <0x04>;
+      brcm,overclock-50 = <0x00>;
+      brcm,pio-limit = <0x01>;
+      //brcm,debug = <1>;
+    };
     local_intc: local_intc@40000000 {
       compatible = "brcm,bcm2836-l1-intc";
       reg = <0x40000000 0x100>;
@@ -126,6 +160,17 @@
       clock-names = "otg";
       phys = <&usbphy>;
       phy-names = "usb2-phy";
+      usb1@1 {
+        compatible = "usb424,9514";
+        reg = <1>;
+        #address-cells = <1>;
+        #size-cells = <0>;
+        ethernet: usbether@1 {
+          compatible = "usb424,ec00";
+          reg = <1>;
+          local-mac-address = [ b8 27 eb 77 df 95 ];
+        };
+      };
     };
   };
   clocks {

@@ -112,6 +112,11 @@ struct LoaderImpl {
     /* pass in command line args */
     res = fdt_open_into(v_fdt, v_fdt, sz + 4096);
 
+    //char *serial_number = "123456789";
+    //res = fdt_setprop(v_fdt, NULL, "serial-number", serial_number, strlen(serial_number)+1);
+    // /system/linux,serial is an 8byte raw serial#
+    // /serial-number is an ascii string containing the serial#
+
     int node = fdt_path_offset(v_fdt, "/chosen");
     if (node < 0) panic("no chosen node in fdt");
 

@@ -32,7 +32,11 @@ in {
     ];
   };
   networking.useDHCP = false;
-  networking.interfaces.eth0.useDHCP = true;
+  #networking.interfaces.eth0.useDHCP = true;
+  networking.useNetworkd = true;
+  systemd.network.enable = true;
+  systemd.network.links.eth0.enable = true;
+  systemd.network.networks.eth0.networkConfig = "KeepConfiguration=dhcp";
   fileSystems = {
     "/" = {
       device = "/dev/sda1";

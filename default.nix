@@ -29,6 +29,19 @@ let
       name = "uart-manager";
       src = ./uart-manager;
     };
+    pll-inspector = self.stdenv.mkDerivation {
+      name = "pll-inspector";
+      unpackPhase = ''
+        mkdir source
+        cp ${./pll-inspector.cpp} source/pll-inspector.cpp
+        sourceRoot=source
+      '';
+      buildPhase = "$CXX pll-inspector.cpp -o pll-inspector -fpermissive";
+      installPhase = ''
+        mkdir -pv $out/bin
+        cp pll-inspector $out/bin/
+      '';
+    };
     notc = self.stdenv.mkDerivation {
       name = "notc";
       src = lib.cleanSource ./notc;
@@ -191,7 +204,7 @@ in pkgs.lib.fix (self: {
     inherit (arm6) initrd;
   };
   arm7 = {
-    inherit (arm7) linux_rpi2 busybox initrd;
+    inherit (arm7) linux_rpi2 busybox initrd openssl pll-inspector;
   };
   x86_64 = {
     inherit (x86_64) test-script uart-manager;
