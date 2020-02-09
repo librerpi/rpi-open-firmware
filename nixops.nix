@@ -4,7 +4,6 @@
   rpi = {
     imports = [
       ./nixos.nix
-      ./bootloader.nix
     ];
     deployment.targetHost = "192.168.2.177";
   };

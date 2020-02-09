@@ -5,6 +5,7 @@ let
 in {
   imports = [
     (sources.nixpkgs + "/nixos/modules/profiles/minimal.nix")
+    ./bootloader.nix
   ];
   nixpkgs = {
     crossSystem.system = "armv7l-linux";
