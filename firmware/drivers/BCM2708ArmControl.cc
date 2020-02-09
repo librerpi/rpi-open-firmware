@@ -216,12 +216,14 @@ void BCM2708ArmControl::start() {
   /* see if the ARM block is responding */
   IODriverLog("ARM ID: 0x%X C0: 0x%X", ARM_ID, ARM_CONTROL0);
 
+#if 0
   enable_jtag();
   ARM_CONTROL0 |= ARM_C0_JTAGGPIO;
-        bool levels[64];
-        enum BCM2708PinmuxSetting functions[64];
-        gpio_snapshot(levels, functions);
-        gpio_print_snapshot(levels, functions);
+#endif
+  bool levels[64];
+  enum BCM2708PinmuxSetting functions[64];
+  gpio_snapshot(levels, functions);
+  gpio_print_snapshot(levels, functions);
 
   /*
    * enable peripheral access, map arm secure bits to axi secure bits 1:1 and

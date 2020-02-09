@@ -157,7 +157,6 @@ let
     echo print-fatal-signals=1 console=ttyAMA0,115200 earlyprintk loglevel=7 root=/dev/mmcblk0p2 printk.devkmsg=on > cmdline.txt
     dtc ${./rpi2.dts} -o rpi2.dtb
     dtc ${./rpi3.dts} -o rpi3.dtb
-    #cp {./bcm2837-rpi-3-b.dtb} rpi.dtb
     ${if kernelOverride == null then ''
       cp ${arm7.linux_rpi2}/zImage zImage
     '' else ''

@@ -31,22 +31,33 @@ in {
       })
     ];
   };
-  networking.useDHCP = false;
-  #networking.interfaces.eth0.useDHCP = true;
-  networking.useNetworkd = true;
+  networking = {
+    useDHCP = false;
+    #interfaces.eth0.useDHCP = true;
+    useNetworkd = true;
+    nameservers = [ "192.168.2.1" ];
+    firewall.enable = false;
+  };
   systemd.network.enable = true;
   systemd.network.links.eth0.enable = true;
-  systemd.network.networks.eth0.networkConfig = "KeepConfiguration=dhcp";
+  #systemd.network.networks.eth0.networkConfig.KeepConfiguration = "dhcp";
   fileSystems = {
     "/" = {
       device = "/dev/sda1";
       fsType = "ext4";
-      noCheck = true;
+    };
+    "/boot" = {
+      device = "/dev/mmcblk0p1";
+      fsType = "vfat";
+      options = [ "nofail" ];
     };
   };
   boot = {
     loader = {
       grub.enable = false;
+      openpi = {
+        enable = true;
+      };
     };
     initrd = {
       extraUtilsCommands = ''
@@ -76,8 +87,11 @@ in {
   };
   fonts.fontconfig.enable = false;
   security.polkit.enable = false;
-  services.udisks2.enable = lib.mkForce false;
-  services.openssh.enable = true;
+  services = {
+    udisks2.enable = lib.mkForce false;
+    openssh.enable = true;
+    ntp.enable = false; # cross-compile breaks it
+  };
   users.users.root = {
     openssh.authorizedKeys.keys = [
       "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC34wZQFEOGkA5b0Z6maE3aKy/ix1MiK1D0Qmg4E9skAA57yKtWYzjA23r5OCF4Nhlj1CuYd6P1sEI/fMnxf+KkqqgW3ZoZ0+pQu4Bd8Ymi3OkkQX9kiq2coD3AFI6JytC6uBi6FaZQT5fG59DbXhxO5YpZlym8ps1obyCBX0hyKntD18RgHNaNM+jkQOhQ5OoxKsBEobxQOEdjIowl2QeEHb99n45sFr53NFqk3UCz0Y7ZMf1hSFQPuuEC/wExzBBJ1Wl7E1LlNA4p9O3qJUSadGZS4e5nSLqMnbQWv2icQS/7J8IwY0M8r1MsL8mdnlXHUofPlG1r4mtovQ2myzOx clever@nixos"

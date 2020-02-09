@@ -280,6 +280,7 @@
         usbether@1 {
           compatible = "usb424,ec00";
           reg = <0x01>;
+          local-mac-address = [ b8 27 eb 77 df 95 ];
         };
       };
     };
