@@ -12,6 +12,7 @@
 #include <string.h>
 #include <stdio.h>
 #include "utils.hh"
+#include "otp.h"
 
 #define FLAG_BUSY (1 << 31)
 
@@ -125,14 +126,16 @@ void BCM2708ArmControl::setupOtherClocks() {
   A2W_XOSC_CTRL |= A2W_PASSWORD | A2W_XOSC_CTRL_PLLDEN_SET;
 }
 
-void BCM2708ArmControl::patchFirmwareData() {
+void BCM2708ArmControl::patchFirmwareData(struct OtpInfo *info) {
   volatile firmware_arm_data_t* firmware_data = reinterpret_cast<firmware_arm_data_t*>(ARM_MEMORY_BASE + 32);
 
   firmware_data->sdram_size = g_RAMSize;
   firmware_data->vpu_cpuid = g_CPUID;
+  firmware_data->serial = info->serial;
+  firmware_data->revision = info->revision;
 }
 
-void BCM2708ArmControl::loadInitialCode() {
+void BCM2708ArmControl::loadInitialCode(struct OtpInfo *info) {
   uint32_t* mem = (uint32_t*)(ARM_MEMORY_BASE);
 
   uint8_t* start = &_binary_arm_chainloader_build_arm_chainloader_bin_start;
@@ -152,7 +155,7 @@ void BCM2708ArmControl::loadInitialCode() {
             *((uint32_t*)&start[i]));
   }
 
-  patchFirmwareData();
+  patchFirmwareData(info);
 }
 
 // maps a 16mb chunk of ram
@@ -183,7 +186,7 @@ void BCM2708ArmControl::bzero2(void *addr, size_t len) {
   };
 }
 
-void BCM2708ArmControl::start() {
+void BCM2708ArmControl::start(struct OtpInfo *info) {
   IODriverLog("arm starting ...");
 
   pmDomain = PowerManagementDomain::getDeviceForDomain(kCprPowerDomainARM);
@@ -192,7 +195,7 @@ void BCM2708ArmControl::start() {
   //IODriverLog("about to zero out, stack near %x", pmDomain);
   //bzero2((void*)ARM_MEMORY_BASE, 1024*1024*512);
   //IODriverLog("zeroed");
-  loadInitialCode();
+  loadInitialCode(info);
   //uint8_t aarch64_loop[] = { 0x00, 0x00, 0x00, 0x14 };
   //for (int i=0; i<0x300; i += 4) {
     //memcpy((void*)(ARM_MEMORY_BASE + i), aarch64_loop, 4);

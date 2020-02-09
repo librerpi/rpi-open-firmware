@@ -130,7 +130,7 @@ int _main(unsigned int cpuid, uint32_t load_address, vc4_saved_state_t* pcb) {
         //do_irq_test();
         //peripheral_scan();
         //dump_otp();
-	PEStartPlatform();
+  PEStartPlatform(&otpInfo);
   __asm__ volatile("ei");
 
 	/* start vpu monitor */

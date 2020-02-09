@@ -23,7 +23,7 @@ static IODevice* startDeviceByTag(uint32_t tag) {
 	return dev;
 }
 
-extern "C" void PEStartPlatform() {
+void PEStartPlatform(struct OtpInfo *info) {
   if (true) {
     IODevice* imagePm = PowerManagementDomain::getDeviceForDomain(kCprPowerDomainImage);
     assert(imagePm);
@@ -45,5 +45,5 @@ extern "C" void PEStartPlatform() {
   }
 
   /* Start ARM */
-  gArmControl.start();
+  gArmControl.start(info);
 }

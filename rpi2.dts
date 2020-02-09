@@ -17,6 +17,8 @@
   };
   chosen {
   };
+  system {
+  };
   memory {
     device_type = "memory";
   };

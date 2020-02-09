@@ -93,9 +93,11 @@ extern const char *size_to_string[];
 #define CM_SRC_PLLC_CORE2		9
 
 typedef struct {
-	uint32_t sdram_size;
-	uint32_t vpu_cpuid;
-	uint32_t reserved[3];
+  uint32_t sdram_size;
+  uint32_t vpu_cpuid;
+  uint32_t serial;
+  uint32_t revision;
+  uint32_t reserved[1];
 } firmware_arm_data_t;
 
 void print_timestamp(void);

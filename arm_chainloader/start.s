@@ -44,9 +44,9 @@ _start:
 .globl g_FirmwareData
 g_FirmwareData:
 	.long 0 /* SDRAM capacity */
-	.long 0 /* VPU CPUID */
-	.long 0 /* Reserved */
-	.long 0 /* Reserved */
+	.long 0 /* VPU CPUID      */
+	.long 0 /* serial#        */
+	.long 0 /* revision       */
 	.long 0 /* Reserved */
 
 value: .word 0x63ff

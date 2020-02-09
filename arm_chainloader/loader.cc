@@ -54,6 +54,19 @@ uint32_t htonl(uint32_t hostlong) {
          ((hostlong & 0xff000000) >> 24);
 }
 
+void hex32(uint32_t input, char *output) {
+  output[8] = 0;
+  for (int i=7; i>=0; i--) {
+    int nibble = input & 0xf;
+    if (nibble <= 9) {
+      output[i] = 0x30 + nibble;
+    } else {
+      output[i] = 0x57 + nibble;
+    }
+    input = input >> 4;
+  }
+}
+
 struct LoaderImpl {
 	inline bool file_exists(const char* path) {
 		return f_stat(path, NULL) == FR_OK;
@@ -109,17 +122,40 @@ struct LoaderImpl {
       panic("fdt blob invalid, fdt_check_header returned %d", res);
     }
 
-    /* pass in command line args */
     res = fdt_open_into(v_fdt, v_fdt, sz + 4096);
 
-    //char *serial_number = "123456789";
-    //res = fdt_setprop(v_fdt, NULL, "serial-number", serial_number, strlen(serial_number)+1);
-    // /system/linux,serial is an 8byte raw serial#
+    char serial_number[9];
+    hex32(g_FirmwareData.serial, serial_number);
     // /serial-number is an ascii string containing the serial#
+    res = fdt_setprop(v_fdt, NULL, "serial-number", serial_number, 9);
+    // /system/linux,serial is an 8byte raw serial#
 
-    int node = fdt_path_offset(v_fdt, "/chosen");
+    int node = fdt_path_offset(v_fdt, "ethernet0");
+    if (node < 0) {
+      panic("cant find ethernet0");
+    } else {
+      uint32_t serial = g_FirmwareData.serial;
+      uint8_t mac[] = { 0xb8
+                      , 0x27
+                      , 0xeb
+                      , (serial >> 16) & 0xff
+                      , (serial >> 8) & 0xff
+                      , serial & 0xff };
+      res = fdt_setprop(v_fdt, node, "local-mac-address", mac, 6);
+    }
+
+    node = fdt_path_offset(v_fdt, "/system");
+    if (node < 0) {
+      panic("cant find /system");
+    } else {
+      uint32_t revision = htonl(g_FirmwareData.revision);
+      res = fdt_setprop(v_fdt, node, "linux,revision", &revision, 4);
+    }
+
+    node = fdt_path_offset(v_fdt, "/chosen");
     if (node < 0) panic("no chosen node in fdt");
 
+    /* pass in command line args */
     res = fdt_setprop(v_fdt, node, "bootargs", cmdline, strlen((char*) cmdline) + 1);
     // chosen.txt describes linux,initrd-start and linux,initrd-end within the chosen node
     uint32_t value = htonl((uint32_t)initrd_start);
@@ -212,19 +248,17 @@ struct LoaderImpl {
     size_t initrd_size = read_file("initrd", initrd, false);
 
     /* read the command-line null-terminated */
-    uint8_t* cmdline;
+    uint8_t *cmdline;
     size_t cmdlen = read_file("cmdline.txt", cmdline);
 
-    const char *cmdline2 = "print-fatal-signals=1 console=ttyAMA0,115200 earlyprintk loglevel=7 printk.devkmsg=on boot.shell_on_fail dyndbg=\"file bcm2835-mailbox.c +p\"";
-
-    logf("kernel cmdline: %s\n", cmdline2);
+    logf("kernel cmdline: %s\n", cmdline);
 
     const char *dtb_name = detect_model_dtb();
 
     logf("using %s\n", dtb_name);
 
       /* load flat device tree */
-    uint8_t* fdt = load_fdt(dtb_name, cmdline2, initrd, initrd_size);
+    uint8_t* fdt = load_fdt(dtb_name, (char*)cmdline, initrd, initrd_size);
 
     /* once the fdt contains the cmdline, it is not needed */
     delete[] cmdline;

@@ -12,6 +12,7 @@
   interrupt-parent = <&intc>;
 
   aliases {
+    ethernet0 = &ethernet;
     serial0 = "/soc/serial@7e215040";
     serial1 = "/soc/serial@7e201000";
     soc = "/soc";
@@ -27,6 +28,8 @@
     usb = "/soc/usb@7e980000";
   };
   chosen {
+  };
+  system {
   };
   memory {
     device_type = "memory";
@@ -277,7 +280,7 @@
         #address-cells = <0x01>;
         #size-cells = <0x00>;
 
-        usbether@1 {
+        ethernet: usbether@1 {
           compatible = "usb424,ec00";
           reg = <0x01>;
           local-mac-address = [ b8 27 eb 77 df 95 ];

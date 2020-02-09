@@ -14,6 +14,7 @@
 #include <stdlib.h>
 
 uint32_t g_CPUID;
+struct OtpInfo otpInfo;
 
 enum RamSize g_RAMSize = kRamSize1GB; // FIXME
 
@@ -36,6 +37,7 @@ void main_entry(vc4_saved_state_t* pcb) {
   bool gpio_level[64];
   enum BCM2708PinmuxSetting functions[64];
   xtal_freq = 54000000;
+  parse_otp_into(&otpInfo);
 
   gpio_snapshot(gpio_level, functions);
   //poke_the_dog();
@@ -65,7 +67,7 @@ void main_entry(vc4_saved_state_t* pcb) {
   test_things();
   peripheral_scan();
   panic("done done");
-  PEStartPlatform();
+  PEStartPlatform(&otpInfo);
 
   //gpclk0_test();
 

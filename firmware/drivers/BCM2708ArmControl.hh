@@ -10,12 +10,12 @@ struct BCM2708ArmControl : IODevice {
   void bridgeStart(bool cycleBrespBits);
   void setupClock();
   void setupOtherClocks();
-  void patchFirmwareData();
-  void loadInitialCode();
+  void patchFirmwareData(struct OtpInfo *info);
+  void loadInitialCode(struct OtpInfo *info);
   void mapBusToArm(uint32_t busAddr, uint32_t armAddr);
   void printregs();
   void bzero2(void *addr, size_t len);
-  virtual void start() override;
+  void start(struct OtpInfo *info);
   virtual void init() override;
 };
 

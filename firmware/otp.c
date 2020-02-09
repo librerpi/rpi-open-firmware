@@ -26,6 +26,10 @@ void parse_otp_into(struct OtpInfo *dest) {
     //printf("  Manufacturer: %ld\n", (revision >> 16) & 0xf);
     //printf("  Ram: %ld\n", (revision >> 20) & 0x7);
   }
+  uint32_t serial = otp_read(28);
+  if (~serial != otp_read(29)) printf("WARNING: serial# duplicate doesnt match\n");
+  dest->serial = serial;
+  dest->revision = otp_read(30);
 }
 
 void pretty_print_otp() {

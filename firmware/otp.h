@@ -6,6 +6,8 @@ struct OtpInfo {
   int type;
   int rev;
   int proc;
+  uint32_t serial;
+  uint32_t revision;
 };
 
 void dump_otp(void);
