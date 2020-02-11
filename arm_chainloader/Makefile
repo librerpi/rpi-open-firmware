@@ -89,7 +89,7 @@ $(TARGET_BUILD_DIR)/%.o: %.s $(HEADERS)
 
 $(TARGET_ARM_CHAINLOADER): create_build_directory $(OBJ)
 	@echo $(WARN_COLOR)LD  $(NO_COLOR) $@.elf
-	@$(CC) $(OBJ) $(LINKFLAGS) -o $(PRODUCT_DIRECTORY)/$@.elf
+	@$(CC) $(OBJ) $(LINKFLAGS) -o $(PRODUCT_DIRECTORY)/$@.elf -Wl,-Map=$(PRODUCT_DIRECTORY)/chainloader.map
 	@echo $(WARN_COLOR)OBJ$(NO_COLOR) $@
 	@$(OBJCOPY) -O binary $(PRODUCT_DIRECTORY)/$@.elf $(PRODUCT_DIRECTORY)/$@
 

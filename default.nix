@@ -24,6 +24,8 @@ let
       src = lib.cleanSource ./common;
       propagatedBuildInputs = [ self.tlsf ];
       enableParallelBuilding = true;
+      hardeningDisable = [ "fortify" "stackprotector" ];
+      dontStrip = true;
     };
     uart-manager = self.stdenv.mkDerivation {
       name = "uart-manager";
@@ -47,6 +49,8 @@ let
       src = lib.cleanSource ./notc;
       propagatedBuildInputs = [];
       enableParallelBuilding = true;
+      hardeningDisable = [ "fortify" "stackprotector" ];
+      dontStrip = true;
     };
     chainloader = arm.stdenv.mkDerivation {
       name = "chainloader";
@@ -56,7 +60,7 @@ let
       installPhase = ''
         $OBJDUMP -t build/arm_chainloader.bin.elf | sort -rk4
         mkdir -p $out/nix-support
-        cp build/arm_chainloader.bin{,.elf} $out/
+        cp build/arm_chainloader.bin{,.elf} build/chainloader.map $out/
         $OBJDUMP -S build/arm_chainloader.bin.elf > $out/chainloader.S
         cat <<EOF > $out/nix-support/hydra-metrics
         arm_chainloader.bin $(stat --printf=%s $out/arm_chainloader.bin) bytes
@@ -66,7 +70,10 @@ let
     chainloader64 = aarch64.stdenv.mkDerivation {
       name = "chainloader64";
       src = lib.cleanSource ./arm64;
+      buildInputs = [ self.common self.notc ];
+      hardeningDisable = [ "fortify" "stackprotector" ];
       enableParallelBuilding = true;
+      dontStrip = true;
     };
     firmware = vc4.stdenv.mkDerivation {
       name = "firmware";
@@ -190,7 +197,7 @@ let
 in pkgs.lib.fix (self: {
   inherit bootdir helper dtbFiles testcycle;
   aarch64 = {
-    inherit (aarch64) ubootRaspberryPi3_64bit linux_rpi3 chainloader64;
+    inherit (aarch64) ubootRaspberryPi3_64bit linux_rpi3 chainloader64 common;
   };
   vc4 = {
     inherit (vc4) tlsf firmware common notc;
@@ -217,6 +224,20 @@ in pkgs.lib.fix (self: {
       echo to configure: 'make $makeFlags menuconfig'
       echo to build: 'time make $makeFlags zImage -j8'
     '';
+  });
+  aarch64-shell = x86_64.stdenv.mkDerivation {
+    name = "aarch64-shell";
+    buildInputs = [
+      x86_64.ddd
+      arm7.buildPackages.gdb
+      aarch64.buildPackages.gdb
+      x86_64.telnet
+    ];
+  };
+  uboot-shell = aarch64.ubootRaspberryPi3_64bit.overrideAttrs (drv: {
+    # export NIX_BUILD_LDFLAGS="${NIX_BUILD_LDFLAGS} -lncursesw"
+    # make $makeFlags
+    nativeBuildInputs = drv.nativeBuildInputs ++ (with x86_64; [ ncurses pkgconfig ]);
   });
   nixos = {
     inherit (nixos) system;

@@ -1,2 +1,8 @@
 set style enabled off
 target remote :3333
+set disassemble-next-line on
+
+define doit
+  shell nix-build .. -A aarch64.chainloader64 --option substituters '' --option builders ''
+  load result/arm64.elf
+  file result/arm64.elf

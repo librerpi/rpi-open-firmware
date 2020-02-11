@@ -38,5 +38,6 @@ step 3:
 (gdb) target remote :3333
 (gdb) load /home/clever/apps/rpi-open-firmware/result/arm_chainloader.bin.elf
 
-[clever@system76:~/apps/rpi-open-firmware/arm64]$ ../aarch64-gdb/bin/aarch64-unknown-linux-gnu-gdb -x ../gdb.txt ../arm/arm64.elf 
+[clever@system76:~/apps/rpi-open-firmware/arm64]$ ../aarch64-gdb/bin/aarch64-unknown-linux-gnu-gdb -x ../gdb.txt ../arm/arm64.elf
+[nix-shell:~/apps/rpi/rpi-open-firmware/arm64]$ ddd --debugger aarch64-unknown-linux-gnu-gdb result/arm64.elf &
 

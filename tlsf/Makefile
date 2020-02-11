@@ -4,8 +4,12 @@ FPUFLAGS=-mfpu=vfp -mfloat-abi=hard
 ARMCFLAGS=-mtune=arm1176jzf-s -march=armv6zk ${FPUFLAGS}
 ifeq (${CC},vc4-elf-gcc)
 CFLAGS=
- else
-CFLAGS=${ARMCFLAGS}
+else
+  ifeq (${CC},aarch64-unknown-linux-gnu-gcc)
+    CFLAGS=${BASECFLAGS}
+  else
+    CFLAGS=${ARMCFLAGS}
+  endif
 endif
 
 libtlsf.a: tlsf.o

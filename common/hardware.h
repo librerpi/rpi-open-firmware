@@ -32,7 +32,7 @@ extern "C" {
 
 #define VC4_CPUID_BCM2709_PLUS 0x40
 
-#ifdef __arm__
+#if defined(__arm__) | defined(__aarch64__)
 #define HW_REGISTER_RW(addr) (*(volatile uint32_t *)(VC4_TO_ARM_PERIPH(addr)))
 #define HW_REGISTER_RO(addr) (*(const volatile uint32_t *)(VC4_TO_ARM_PERIPH(addr)))
 #else

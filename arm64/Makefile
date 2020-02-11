@@ -3,7 +3,7 @@ all: arm64.elf arm64.bin
 CFLAGS = -nostdlib -nostartfiles -ffreestanding -g
 
 arm64.elf: start.o main.o
-	$(LD) $^ -o $@ -Map=arm64.map -g -T stub.ld
+	$(LD) $^ -o $@ -Map=arm64.map -g -T stub.ld -lcommon -N -lnotc -nostdlib
 
 arm64.bin: arm64.elf
 	$(OBJCOPY) -O binary $< $@

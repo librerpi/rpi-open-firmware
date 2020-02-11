@@ -1,11 +1,15 @@
 all: libnotc.a
 
-BASECFLAGS=-Iinclude
+BASECFLAGS=-Iinclude -g
 ARMCFLAGS=-mtune=arm1176jzf-s -march=armv6zk -mfpu=vfp -mfloat-abi=hard
 ifeq (${CC},vc4-elf-gcc)
   CFLAGS=${BASECFLAGS}
 else
-  CFLAGS=${BASECFLAGS} ${ARMCFLAGS}
+  ifeq (${CC},aarch64-unknown-linux-gnu-gcc)
+    CFLAGS=${BASECFLAGS}
+  else
+    CFLAGS=${BASECFLAGS} ${ARMCFLAGS}
+  endif
 endif
 
 libnotc.a: xprintf.o puts.o putchar.o printf.o
