@@ -2,10 +2,26 @@
 
 let
   sources = import ./nix/sources.nix;
+  self = import ./. {};
+  customKernel = pkgs.linux_rpi2.override {
+    extraConfig = ''
+      DEBUG_LL y
+      DEBUG_BCM2836 y
+      DEBUG_UART_PL01X y
+      DEBUG_UNCOMPRESS y
+      EARLY_PRINTK y
+      RASPBERRYPI_FIRMWARE n
+    '';
+  };
+  customKernelPackages = pkgs.linuxPackagesFor customKernel;
 in {
   imports = [
     (sources.nixpkgs + "/nixos/modules/profiles/minimal.nix")
     ./bootloader.nix
+  ];
+  environment.systemPackages = [
+    self.arm7.pll-inspector
+    pkgs.i2c-tools
   ];
   nixpkgs = {
     crossSystem.system = "armv7l-linux";
@@ -28,6 +44,7 @@ in {
     };
   };
   boot = {
+    kernelPackages = customKernelPackages;
     kernelParams = [
       "print-fatal-signals=1"
       "console=ttyAMA0,115200"
