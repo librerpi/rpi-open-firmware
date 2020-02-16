@@ -1,0 +1,14 @@
+boot little-kernel start4.elf
+
+] dw -b 0x60010218 64
+0x60010218: ________ ________ ________ ________
+0x60010228: ________ 5c5c5c5c 5c5c5c5c 5c5c5c5c
+0x60010238: 5c5c5c5c 5c5c5c5c 5c5c5c5c 5c5c5c5c
+0x60010248: 5c5c5c5c 5c5c5c5c 5c5c5c5c 5c5c5c5c
+
+that is the o_key_pad the mask rom left in sram, and the SPI bootcode.bin didnt overwrite
+the first 20 bytes, are the master key, xor'd with 5c5c5c5c
+
+if you xor them again, you will get the key for hmac-sha1
+
+not currently sure on the rules around sharing this key, so it has been censored out, but others are free to reproduce the work
