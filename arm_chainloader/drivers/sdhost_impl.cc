@@ -155,6 +155,7 @@ struct BCM2708SDHost : BlockDevice {
 		logf("waiting for pinmux clock update ...\n");
 
 		/* are these in bank 1 or 2? ah who gives a fuck ... */
+                // TODO, this changes EVERY SINGLE PIN to pullup, not just the ones we care about
 		GP_PUDCLK1 = GP_PUDCLK1_PUDCLKn32_SET;
 		GP_PUDCLK2 = GP_PUDCLK2_PUDCLKn64_SET;
 		udelay(500);
