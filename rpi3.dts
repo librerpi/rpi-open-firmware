@@ -36,8 +36,8 @@
   };
   soc {
     compatible = "simple-bus";
-    #address-cells = <0x01>;
-    #size-cells = <0x01>;
+    #address-cells = <1>;
+    #size-cells = <1>;
     //        child       parent       length
     ranges = <0x7e000000 0x3f000000 0x1000000 /* map the MMIO space to 0x3f000000 in arm, 16mb long */
               0x40000000 0x40000000 0x1000>; /* identity map the local_intc, 0x1000 bytes long */
@@ -138,37 +138,38 @@
         brcm,function = <0x04>;
       };
 
-      i2c0_gpio0 {
+      i2c0_bus0: i2c0_gpio0 {
         brcm,pins = <0 1>;
         brcm,function = <0x04>;
       };
-      i2c0_gpio28 {
+      i2c0_bus28: i2c0_gpio28 {
+        // do not use
+        // changing altmode of 29 breaks usb
         brcm,pins = <28 29>;
         brcm,function = <0x04>;
       };
-      i2c0_gpio44 {
-        brcm,pins = <0x2c 0x2d>;
+      i2c0_cam: i2c0_gpio44 {
+        brcm,pins = <44 45>;
+        brcm,function = <0x05>;
+      };
+      i2c0_smps: i2c0_smps {
+        brcm,pins = <46 47>;
+        brcm,function = <0x04>;
+      };
+
+      i2c1_bus2: i2c1_gpio2 {
+        brcm,pins = <2 3>;
+        brcm,function = <0x04>;
+      };
+      i2c1_cam: i2c1_gpio44 {
+        brcm,pins = <44 45>;
+        brcm,function = <0x06>;
+      };
+      i2c1_smps: i2c1_smps {
+        brcm,pins = <46 47>;
         brcm,function = <0x05>;
       };
 
-      i2c1_gpio2 {
-        brcm,pins = <0x02 0x03>;
-        brcm,function = <0x04>;
-      };
-      i2c1_gpio44 {
-        brcm,pins = <0x2c 0x2d>;
-        brcm,function = <0x06>;
-      };
-
-      i2c0: i2c0 {
-        brcm,pins = <0x00 0x01>;
-        brcm,function = <0x04>;
-      };
-
-      i2c1: i2c1 {
-        brcm,pins = <0x02 0x03>;
-        brcm,function = <0x04>;
-      };
       sdhost: sdhost_gpio48 {
         brcm,pins = <0x30 0x31 0x32 0x33 0x34 0x35>;
         brcm,function = <0x04>;
@@ -216,7 +217,7 @@
       brcm,pio-limit = <0x01>;
       //brcm,debug = <1>;
     };
-    i2c@7e205000 { // i2c0
+    i2c0: i2c@7e205000 {
       compatible = "brcm,bcm2835-i2c";
       reg = <0x7e205000 0x200>;
       interrupts = <0x02 0x15>;
@@ -224,7 +225,7 @@
       #address-cells = <0x01>;
       #size-cells = <0x00>;
       //pinctrl-names = "default";
-      //pinctrl-0 = <&i2c0>;
+      //pinctrl-0 = <&i2c0_bus0>;
       clock-frequency = <100000>;
     };
     serial@7e215040 {
@@ -287,7 +288,7 @@
         };
       };
     };
-    i2c@7e804000 { // i2c1
+    i2c1: i2c@7e804000 {
       compatible = "brcm,bcm2835-i2c";
       reg = <0x7e804000 0x1000>;
       interrupts = <0x02 0x15>;
@@ -306,6 +307,34 @@
       #address-cells = <0x01>;
       #size-cells = <0x00>;
       clock-frequency = <100000>; // 100khz
+    };
+    i2cmux0 {
+      compatible = "i2c-mux-pinctrl";
+      #address-cells = <1>;
+      #size-cells = <0>;
+      i2c-parent = <&i2c0>;
+      pinctrl-names = "bus0", "cam0", "smps0";
+      pinctrl-0 = <&i2c0_bus0>;
+      pinctrl-1 = <&i2c0_cam>;
+      pinctrl-2 = <&i2c0_smps>;
+
+      i2c_bus0: i2c@0 {
+        reg = <0>;
+        #address-cells = <1>;
+        #size-cells = <0>;
+      };
+    };
+
+    i2cmux1 {
+      compatible = "i2c-mux-pinctrl";
+      #address-cells = <1>;
+      #size-cells = <0>;
+      i2c-parent = <&i2c1>;
+      pinctrl-names = "bus2", "cam1", "smps1";
+      pinctrl-0 = <&i2c1_bus2>;
+      pinctrl-1 = <&i2c1_cam>;
+      pinctrl-2 = <&i2c1_smps>;
+      status = "disabled"; // not much need for the 2nd mux
     };
   };
   clocks {
