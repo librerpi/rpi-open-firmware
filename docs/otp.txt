@@ -45,3 +45,24 @@ rpi4:
       2 = gpio 22-27 alt3
       3 = gpio 34-39 alt3
       4 = gpio48-53 alt3 (wired to sd card slot)
+
+
+
+rpi4 only?
+OTP register 66 defines two pins that can be used to control boot behaviour
+[3:06 PM]
+the layout is:
+  bit 0-5: boot pin 0 (eMMC/flash boot enable when active)
+  bit 6: polarity (0: active HIGH, 1: active LOW)
+  bit 7: enable
+  bit 8-13: boot pin 1 (disable when active onboard devices)
+  bit 14: polarity (0: active HIGH, 1: active LOW)
+  bit 15: enable
+  bit 24-31: flash start address bits 8-23
+
+to disable onboard devices (sdcard, spi), you must set bit 15 (enable that half), configure 14 (the polarity), and put a pin# in 24-31
+
+66:000095d4 an example value
+gpio 20 will enable SD booting when low
+gpio 21 will enable SPI booting when low
+yes, the action when the requested polatrity is met, is backwards
