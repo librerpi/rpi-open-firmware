@@ -201,7 +201,7 @@ in pkgs.lib.fix (self: {
   };
   vc4 = {
     inherit (vc4) tlsf firmware common notc;
-    gdb = vc4.buildPackages.gdb;
+    #gdb = vc4.buildPackages.gdb;
   };
   arm = {
     inherit (arm) tlsf chainloader common notc;
