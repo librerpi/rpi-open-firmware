@@ -205,6 +205,9 @@ in pkgs.lib.fix (self: {
   inherit bootdir helper dtbFiles testcycle;
   aarch64 = {
     inherit (aarch64) ubootRaspberryPi3_64bit linux_rpi3 bcm2835;
+    myHsPkgs = {
+      inherit (aarch64.myHsPkgs) HPi brick;
+    };
   };
   arm64 = {
     inherit (arm64) chainloader64 common;
