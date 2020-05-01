@@ -22,6 +22,7 @@ in {
   environment.systemPackages = [
     self.arm7.pll-inspector
     pkgs.i2c-tools
+    pkgs.screen
   ];
   nixpkgs = {
     crossSystem.system = "armv7l-linux";
@@ -66,6 +67,7 @@ in {
     udisks2.enable = lib.mkForce false;
     openssh.enable = true;
     ntp.enable = false; # cross-compile breaks it
+    avahi.enable = true;
   };
   users.users.root = {
     openssh.authorizedKeys.keys = [
