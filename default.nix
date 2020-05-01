@@ -10,8 +10,13 @@ let
   arm7 = pkgs.pkgsCross.armv7l-hf-multiplatform.extend overlay;
   arm6 = pkgs.pkgsCross.raspberryPi.extend overlay;
   aarch64 = pkgs.pkgsCross.aarch64-multiplatform.extend overlay;
+  arm64 = pkgs.pkgsCross.aarch64-embedded.extend overlay;
   x86_64 = pkgs.extend overlay;
+  hsoverlay = hself: hsuper: {
+    HPi = hself.callPackage ./HPi.nix {};
+  };
   overlay = self: super: {
+    bcm2835 = self.callPackage ./bcm2835.nix {};
     tlsf = self.stdenv.mkDerivation {
       name = "tlsf";
       src = lib.cleanSource ./tlsf;
@@ -27,6 +32,7 @@ let
       hardeningDisable = [ "fortify" "stackprotector" ];
       dontStrip = true;
     };
+    myHsPkgs = self.haskellPackages.extend hsoverlay;
     uart-manager = self.stdenv.mkDerivation {
       name = "uart-manager";
       src = ./uart-manager;
@@ -67,7 +73,7 @@ let
         EOF
       '';
     };
-    chainloader64 = aarch64.stdenv.mkDerivation {
+    chainloader64 = arm64.stdenv.mkDerivation {
       name = "chainloader64";
       src = lib.cleanSource ./arm64;
       buildInputs = [ self.common self.notc ];
@@ -197,7 +203,10 @@ let
 in pkgs.lib.fix (self: {
   inherit bootdir helper dtbFiles testcycle;
   aarch64 = {
-    inherit (aarch64) ubootRaspberryPi3_64bit linux_rpi3 chainloader64 common;
+    inherit (aarch64) ubootRaspberryPi3_64bit linux_rpi3 common;
+  };
+  arm64 = {
+    inherit (arm64) chainloader64 bcm2835;
   };
   vc4 = {
     inherit (vc4) tlsf firmware common notc;
@@ -207,10 +216,13 @@ in pkgs.lib.fix (self: {
     inherit (arm) tlsf chainloader common notc;
   };
   arm6 = {
-    inherit (arm6) initrd;
+    inherit (arm6) initrd bcm2835;
   };
   arm7 = {
-    inherit (arm7) linux_rpi2 busybox initrd openssl pll-inspector;
+    inherit (arm7) linux_rpi2 busybox initrd openssl pll-inspector bcm2835;
+    myHsPkgs = {
+      inherit (arm7.myHsPkgs) HPi;
+    };
   };
   x86_64 = {
     inherit (x86_64) test-script uart-manager;
