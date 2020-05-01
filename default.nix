@@ -8,6 +8,7 @@ let
   vc4 = pkgs.pkgsCross.vc4.extend overlay;
   arm = pkgs.pkgsCross.arm-embedded.extend overlay;
   arm7 = pkgs.pkgsCross.armv7l-hf-multiplatform.extend overlay;
+  arm732 = pkgs.pkgsi686Linux.pkgsCross.armv7l-hf-multiplatform.extend overlay;
   arm6 = pkgs.pkgsCross.raspberryPi.extend overlay;
   aarch64 = pkgs.pkgsCross.aarch64-multiplatform.extend overlay;
   arm64 = pkgs.pkgsCross.aarch64-embedded.extend overlay;
@@ -221,7 +222,12 @@ in pkgs.lib.fix (self: {
   arm7 = {
     inherit (arm7) linux_rpi2 busybox initrd openssl pll-inspector bcm2835;
     myHsPkgs = {
-      inherit (arm7.myHsPkgs) HPi;
+      inherit (arm7.myHsPkgs) HPi brick;
+    };
+  };
+  arm732 = {
+    myHsPkgs = {
+      inherit (arm732.myHsPkgs) HPi brick;
     };
   };
   x86_64 = {
