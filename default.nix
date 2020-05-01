@@ -203,10 +203,10 @@ let
 in pkgs.lib.fix (self: {
   inherit bootdir helper dtbFiles testcycle;
   aarch64 = {
-    inherit (aarch64) ubootRaspberryPi3_64bit linux_rpi3 common;
+    inherit (aarch64) ubootRaspberryPi3_64bit linux_rpi3 bcm2835;
   };
   arm64 = {
-    inherit (arm64) chainloader64 bcm2835;
+    inherit (arm64) chainloader64 common;
   };
   vc4 = {
     inherit (vc4) tlsf firmware common notc;
