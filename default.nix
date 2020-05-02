@@ -236,7 +236,7 @@ in pkgs.lib.fix (self: {
     inherit (arm6) initrd bcm2835;
   };
   arm7 = {
-    inherit (arm7) linux_rpi2 busybox initrd openssl pll-inspector bcm2835 pkgSet;
+    inherit (arm7) linux_rpi2 busybox initrd openssl pll-inspector bcm2835;
     myHsPkgs = {
       inherit (arm7.myHsPkgs) HPi brick;
     };
