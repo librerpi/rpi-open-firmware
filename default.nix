@@ -9,16 +9,16 @@ let
   vc4 = pkgs.pkgsCross.vc4.extend overlay;
   arm = pkgs.pkgsCross.arm-embedded.extend overlay;
   arm7 = pkgs.pkgsCross.armv7l-hf-multiplatform.extend overlay;
-  arm732 = pkgs.pkgsi686Linux.pkgsCross.armv7l-hf-multiplatform.extend overlay;
   arm6 = pkgs.pkgsCross.raspberryPi.extend overlay;
   aarch64 = pkgs.pkgsCross.aarch64-multiplatform.extend overlay;
   arm64 = pkgs.pkgsCross.aarch64-embedded.extend overlay;
   x86_64 = pkgs.extend overlay;
-  hsoverlay = hself: hsuper: {
-    HPi = hself.callPackage ./HPi.nix {};
-    data-clist = pkgs.haskell.lib.dontCheck hsuper.data-clist;
-    brick = pkgs.haskell.lib.dontCheck hsuper.brick;
-  };
+  trimHaskellNixTree = input: filter:
+  let
+    f1 = k: v: {
+      cexes = input.config.hsPkgs.${k}.components.exes;
+    };
+  in lib.mapAttrs f1 filter;
   overlay = self: super: {
     bcm2835 = self.callPackage ./bcm2835.nix {};
     tlsf = self.stdenv.mkDerivation {
@@ -36,16 +36,11 @@ let
       hardeningDisable = [ "fortify" "stackprotector" ];
       dontStrip = true;
     };
-    myHsPkgs = self.haskellPackages.extend hsoverlay;
+    # nix-shell -p haskellPackages.cabal-install haskellPackages.ghc
+    # cabal new-configure
+    # nt/bin/plan-to-nix --output . --plan-json dist-newstyle/cache/plan.json --cabal-project cabal.project
     pkgSet = self.haskell-nix.mkCabalProjectPkgSet {
-      plan-pkgs = {
-        extras = { ... }: {
-          packages = {
-          };
-        };
-        pkgs = { ... }: {
-        };
-      };
+      plan-pkgs = import ./pkgs.nix;
     };
     uart-manager = self.stdenv.mkDerivation {
       name = "uart-manager";
@@ -214,13 +209,14 @@ let
     scp ${vc4.firmware}/bootcode.bin root@router.localnet:/tftproot/open-firmware/bootcode.bin
     exec ${x86_64.uart-manager}/bin/uart-manager
   '';
+  filterArmUserlandPackages = input: {
+    inherit (input) initrd bcm2835 busybox openssl pll-inspector linux_rpi2;
+    hs = trimHaskellNixTree input.pkgSet { hs-gpio = true; };
+  };
 in pkgs.lib.fix (self: {
   inherit bootdir helper dtbFiles testcycle;
   aarch64 = {
     inherit (aarch64) ubootRaspberryPi3_64bit linux_rpi3 bcm2835;
-    myHsPkgs = {
-      inherit (aarch64.myHsPkgs) HPi brick vty;
-    };
   };
   arm64 = {
     inherit (arm64) chainloader64 common;
@@ -232,20 +228,8 @@ in pkgs.lib.fix (self: {
   arm = {
     inherit (arm) tlsf chainloader common notc;
   };
-  arm6 = {
-    inherit (arm6) initrd bcm2835;
-  };
-  arm7 = {
-    inherit (arm7) linux_rpi2 busybox initrd openssl pll-inspector bcm2835;
-    myHsPkgs = {
-      inherit (arm7.myHsPkgs) HPi brick;
-    };
-  };
-  arm732 = {
-    myHsPkgs = {
-      inherit (arm732.myHsPkgs) HPi brick;
-    };
-  };
+  arm6 = filterArmUserlandPackages arm6;
+  arm7 = filterArmUserlandPackages arm7;
   x86_64 = {
     inherit (x86_64) test-script uart-manager;
     haskell-nix = {
