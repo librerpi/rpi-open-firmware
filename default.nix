@@ -3,7 +3,8 @@
 
 let
   sources = import ./nix/sources.nix;
-  pkgs = import sources.nixpkgs {};
+  haskellNix = import sources."haskell.nix" {};
+  pkgs = import sources.nixpkgs haskellNix.nixpkgsArgs;
   lib = pkgs.lib;
   vc4 = pkgs.pkgsCross.vc4.extend overlay;
   arm = pkgs.pkgsCross.arm-embedded.extend overlay;
@@ -15,6 +16,8 @@ let
   x86_64 = pkgs.extend overlay;
   hsoverlay = hself: hsuper: {
     HPi = hself.callPackage ./HPi.nix {};
+    data-clist = pkgs.haskell.lib.dontCheck hsuper.data-clist;
+    brick = pkgs.haskell.lib.dontCheck hsuper.brick;
   };
   overlay = self: super: {
     bcm2835 = self.callPackage ./bcm2835.nix {};
@@ -34,6 +37,16 @@ let
       dontStrip = true;
     };
     myHsPkgs = self.haskellPackages.extend hsoverlay;
+    pkgSet = self.haskell-nix.mkCabalProjectPkgSet {
+      plan-pkgs = {
+        extras = { ... }: {
+          packages = {
+          };
+        };
+        pkgs = { ... }: {
+        };
+      };
+    };
     uart-manager = self.stdenv.mkDerivation {
       name = "uart-manager";
       src = ./uart-manager;
@@ -206,7 +219,7 @@ in pkgs.lib.fix (self: {
   aarch64 = {
     inherit (aarch64) ubootRaspberryPi3_64bit linux_rpi3 bcm2835;
     myHsPkgs = {
-      inherit (aarch64.myHsPkgs) HPi brick;
+      inherit (aarch64.myHsPkgs) HPi brick vty;
     };
   };
   arm64 = {
@@ -223,7 +236,7 @@ in pkgs.lib.fix (self: {
     inherit (arm6) initrd bcm2835;
   };
   arm7 = {
-    inherit (arm7) linux_rpi2 busybox initrd openssl pll-inspector bcm2835;
+    inherit (arm7) linux_rpi2 busybox initrd openssl pll-inspector bcm2835 pkgSet;
     myHsPkgs = {
       inherit (arm7.myHsPkgs) HPi brick;
     };
@@ -235,6 +248,9 @@ in pkgs.lib.fix (self: {
   };
   x86_64 = {
     inherit (x86_64) test-script uart-manager;
+    haskell-nix = {
+      inherit (x86_64.haskell-nix) nix-tools;
+    };
   };
   # make $makeFlags menuconfig
   # time make $makeFlags zImage -j8
