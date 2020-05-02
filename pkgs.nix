@@ -12,6 +12,7 @@
         "unix".revision = (((hackage."unix")."2.7.2.2").revisions).default;
         "mtl".revision = (((hackage."mtl")."2.2.2").revisions).default;
         "rts".revision = (((hackage."rts")."1.0").revisions).default;
+        "shared-memory".revision = (((hackage."shared-memory")."0.2.0.0").revisions).default;
         "megaparsec".revision = (((hackage."megaparsec")."7.0.5").revisions).default;
         "megaparsec".flags.dev = false;
         "QuickCheck".revision = (((hackage."QuickCheck")."2.13.2").revisions).default;
@@ -27,6 +28,8 @@
         "splitmix".flags.random = true;
         "dlist".revision = (((hackage."dlist")."0.8.0.7").revisions).default;
         "parsec".revision = (((hackage."parsec")."3.1.13.0").revisions).default;
+        "hsc2hs".revision = (((hackage."hsc2hs")."0.68.6").revisions).default;
+        "hsc2hs".flags.in-ghc-tree = false;
         "directory".revision = (((hackage."directory")."1.3.3.0").revisions).default;
         "transformers-compat".revision = (((hackage."transformers-compat")."0.6.5").revisions).default;
         "transformers-compat".flags.five = false;
@@ -74,6 +77,7 @@
         "hashable".flags.examples = false;
         "vty".revision = (((hackage."vty")."5.26").revisions).default;
         "filepath".revision = (((hackage."filepath")."1.4.2.1").revisions).default;
+        "process".revision = (((hackage."process")."1.6.5.0").revisions).default;
         "microlens-mtl".revision = (((hackage."microlens-mtl")."0.2.0.1").revisions).default;
         "pretty".revision = (((hackage."pretty")."1.1.3.6").revisions).default;
         "microlens".revision = (((hackage."microlens")."0.4.11.2").revisions).default;
@@ -83,8 +87,6 @@
         "config-ini".flags.enable-doctests = false;
         "th-abstraction".revision = (((hackage."th-abstraction")."0.3.1.0").revisions).default;
         "array".revision = (((hackage."array")."0.5.3.0").revisions).default;
-        "mmap".revision = (((hackage."mmap")."0.5.9").revisions).default;
-        "mmap".flags.mmaptest = false;
         "integer-gmp".revision = (((hackage."integer-gmp")."1.0.2.0").revisions).default;
         };
       compiler = {
@@ -109,6 +111,7 @@
           "terminfo" = "0.4.1.2";
           "transformers" = "0.5.6.2";
           "filepath" = "1.4.2.1";
+          "process" = "1.6.5.0";
           "pretty" = "1.1.3.6";
           "ghc-boot-th" = "8.6.5";
           "array" = "0.5.3.0";

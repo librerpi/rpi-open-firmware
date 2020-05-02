@@ -61,7 +61,7 @@ in { system, compiler, flags, pkgs, hsPkgs, pkgconfPkgs, ... }:
             (hsPkgs."base" or (buildDepError "base"))
             (hsPkgs."brick" or (buildDepError "brick"))
             (hsPkgs."HPi" or (buildDepError "HPi"))
-            (hsPkgs."mmap" or (buildDepError "mmap"))
+            (hsPkgs."shared-memory" or (buildDepError "shared-memory"))
             ];
           buildable = true;
           };

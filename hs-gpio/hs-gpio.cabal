@@ -20,6 +20,8 @@ executable hs-gpio
   build-depends:       base >=4.12 && <4.13
                      , brick
                      , HPi
-                     , mmap
+                     , shared-memory
+                     , unix
   -- hs-source-dirs:
   default-language:    Haskell2010
+  C-sources:           cbits/helper.c
