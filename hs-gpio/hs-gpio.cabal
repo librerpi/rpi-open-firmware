@@ -22,6 +22,10 @@ executable hs-gpio
                      , HPi
                      , shared-memory
                      , unix
+                     , formatting
+                     , vty
+                     , async
   -- hs-source-dirs:
   default-language:    Haskell2010
   C-sources:           cbits/helper.c
+  ghc-options:         -threaded
