@@ -15,7 +15,8 @@
       src = ./install-openpi.sh;
       name = "install-openpi.sh";
       isExecutable = true;
-      bootdir = (import ./. {}).bootdir;
+      bootdir = (import ./. {}).arm7.bootdir;
+      crossShell = pkgs.runtimeShell;
     };
   };
 }

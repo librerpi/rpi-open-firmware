@@ -7,7 +7,9 @@
 #include <panic.h>
 
 #ifdef __arm__
-#define HAS_DYNAMIC_ALLOCATIONS
+# ifdef BAREMETAL
+#   define HAS_DYNAMIC_ALLOCATIONS
+# endif
 #endif
 
 #ifdef HAS_DYNAMIC_ALLOCATIONS

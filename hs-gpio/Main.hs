@@ -5,17 +5,12 @@ module Main where
 
 --import System.RaspberryPi.GPIO
 import GHC.Ptr
-import Data.Word
-import MMAP
 import System.Posix.IO.ByteString
 import System.Posix.Types
 import           Foreign.C.Types
-import           Foreign.Storable
 import           Formatting
-import           Formatting.ShortFormatters
-import           Data.Bits
+import           Formatting.ShortFormatters hiding (s, f)
 import           Brick
-import           Brick.Main
 import qualified Graphics.Vty as V
 import           Brick.BChan (BChan, newBChan, writeBChan)
 import qualified Brick.Widgets.List as L
@@ -24,20 +19,9 @@ import Brick.Forms (focusedFormInputAttr, invalidFormInputAttr)
 import Data.List
 import Control.Concurrent.Async
 import Control.Concurrent
-
-newtype Pin = Pin Int deriving Show
-
-instance Bounded Pin where
-  minBound = Pin 0
-  maxBound = Pin 59
-
-instance Num Pin where
-  fromInteger p = Pin $ fromIntegral p
-
-instance Enum Pin where
-  succ (Pin p) = Pin $ succ p
-  fromEnum (Pin p) = p
-  toEnum p = Pin p
+import Control.Monad
+import GPIO
+import Data.Word
 
 theMap :: A.AttrMap
 theMap = A.attrMap V.defAttr
@@ -53,6 +37,7 @@ theMap = A.attrMap V.defAttr
   , (alt5Attr            , V.cyan `on` V.black)
   ]
 
+alt0Attr, alt1Attr, alt2Attr, alt3Attr, alt4Attr, alt5Attr :: AttrName
 alt0Attr = attrName "alt0"
 alt1Attr = attrName "alt1"
 alt2Attr = attrName "alt2"
@@ -62,13 +47,12 @@ alt5Attr = attrName "alt5"
 
 main :: IO ()
 main = do
-  (addr, fd) <- openGPIO
+  (addr, fd) <- openGPIO GpioMem
   print addr
-  dumpFsel addr
   getPinAltMode addr 14 >>= print
   getPinAltMode addr 15 >>= print
   eventChan <- newBChan 10
-  replyChan <- newBChan 10
+  --replyChan <- newBChan 10
   let
     mkVty = V.mkVty V.defaultConfig
     app :: App State StateUpdate ()
@@ -83,6 +67,7 @@ main = do
   vty <- mkVty
   bgthread <- async $ backgroundThread addr eventChan
   finalState <- customMain vty mkVty (Just eventChan) app (State 0 pinModes "")
+  cancel bgthread
   print finalState
 
 getPinStates :: Ptr GPIO -> IO [(Pin, AltMode)]
@@ -97,11 +82,10 @@ getPinStates addr = do
   mapM f allPins
 
 backgroundThread :: Ptr GPIO -> BChan StateUpdate -> IO ()
-backgroundThread addr eventChan = do
+backgroundThread addr eventChan = forever $ do
   newState <- getPinStates addr
   writeBChan eventChan $ StateUpdate newState
   threadDelay 1000000
-  backgroundThread addr eventChan
 
 data StateUpdate = StateUpdate [(Pin, AltMode)] deriving Show
 
@@ -118,11 +102,11 @@ handleEvent s@State{eventCount} e = do
     }
 
 drawEverything :: State -> [Widget ()]
-drawEverything s@State{pinModeList,debugmsg} = [ hBox [ padLeftRight 1 $ vBox leftList, padLeftRight 1 $ vBox rightList, str debugmsg ] ]
+drawEverything State{pinModeList,debugmsg} = [ hBox [ padLeftRight 1 $ vBox leftList, padLeftRight 1 $ vBox rightList, str debugmsg ] ]
   where
-    (left, right) = partition (\(Pin p,_) -> p < 32) pinModeList
-    leftList = map pinToRow left
-    rightList = map pinToRow right
+    (leftcol, rightcol) = partition (\(Pin p,_) -> p < 32) pinModeList
+    leftList = map pinToRow leftcol
+    rightList = map pinToRow rightcol
 
 pinToRow :: (Pin, AltMode) -> Widget ()
 pinToRow (Pin pin, mode) = addAttr mode $ txt $ sformat (d % " " % shown) pin mode
@@ -142,56 +126,18 @@ data State = State
   , debugmsg :: String
   } deriving Show
 
---app :: App _ _ _
---app = 
+data MMIOMethod = GpioMem | RawMem
 
-openGPIO :: IO (Ptr GPIO, Fd)
-openGPIO = do
+openGPIO :: MMIOMethod -> IO (Ptr GPIO, Fd)
+openGPIO GpioMem = do
   fd <- openFd "/dev/gpiomem" ReadWrite Nothing defaultFileFlags
-  ptr <- c_mmap_helper fd
+  ptr <- c_mmap_helper 0 fd
+  pure (ptr, fd)
+openGPIO RawMem = do
+  fd <- openFd "/dev/mem" ReadWrite Nothing defaultFileFlags
+  ptr <- c_mmap_helper 0x3f200000 fd
   pure (ptr, fd)
 
-foreign import ccall unsafe "c_mmap_helper" c_mmap_helper :: Fd -> IO (Ptr GPIO)
+foreign import ccall unsafe "c_mmap_helper" c_mmap_helper :: Word32 -> Fd -> IO (Ptr GPIO)
 
-data GPIO
 
-dumpFsel :: Ptr GPIO -> IO ()
-dumpFsel addr = do
-  let
-    f :: Int -> IO Word32
-    f bank = do
-      reg <- peek (addr `plusPtr` (4 * bank))
-      fprint (d % " " % x % "\n") bank reg
-      pure reg
-  f 0
-  f 1
-  f 2
-  f 3
-  f 4
-  f 5
-  pure ()
-
-data AltMode = AltIn | AltOut | Alt0 | Alt1 | Alt2 | Alt3 | Alt4 | Alt5 deriving Show
-
-getPinAltMode :: Ptr GPIO -> Pin -> IO AltMode
-getPinAltMode addr (Pin pin) = do
-  let
-    bank :: Int
-    row :: Int
-    (bank, row) = pin `divMod` 10
-  reg <- peek (addr `plusPtr` (4 * bank))
-  let
-    rawMode = (shiftR reg (3 * row)) .&. 7
-    mode = rawModeToAltMode rawMode
-  --fprint ("bank: "%d%" row: "%d%" reg: "%x%" rawMode: "%d%" mode: "%shown%"\n") bank row (reg :: Word32) rawMode mode
-  pure mode
-
-rawModeToAltMode :: Word32 -> AltMode
-rawModeToAltMode 0 = AltIn
-rawModeToAltMode 1 = AltOut
-rawModeToAltMode 2 = Alt5
-rawModeToAltMode 3 = Alt4
-rawModeToAltMode 4 = Alt0
-rawModeToAltMode 5 = Alt1
-rawModeToAltMode 6 = Alt2
-rawModeToAltMode 7 = Alt3

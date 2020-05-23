@@ -37,6 +37,8 @@ FATFS g_BootVolumeFs;
 #define KERNEL_LOAD_ADDRESS 0x2000000 // 32mb from start
 #define INITRD_LOAD_ADDRESS 0x4000000 // 64mb from start
 
+extern "C" void disable_cache();
+
 typedef void (*linux_t)(uint32_t, uint32_t, void*);
 
 struct mem_entry {
@@ -127,7 +129,7 @@ struct LoaderImpl {
     char serial_number[9];
     hex32(g_FirmwareData.serial, serial_number);
     // /serial-number is an ascii string containing the serial#
-    res = fdt_setprop(v_fdt, NULL, "serial-number", serial_number, 9);
+    res = fdt_setprop(v_fdt, 0, "serial-number", serial_number, 9);
     // /system/linux,serial is an 8byte raw serial#
 
     int node = fdt_path_offset(v_fdt, "ethernet0");
@@ -138,9 +140,9 @@ struct LoaderImpl {
       uint8_t mac[] = { 0xb8
                       , 0x27
                       , 0xeb
-                      , (serial >> 16) & 0xff
-                      , (serial >> 8) & 0xff
-                      , serial & 0xff };
+                      , (uint8_t)((serial >> 16) & 0xff)
+                      , (uint8_t)((serial >> 8) & 0xff)
+                      , (uint8_t)(serial & 0xff) };
       res = fdt_setprop(v_fdt, node, "local-mac-address", mac, 6);
     }
 
@@ -271,6 +273,7 @@ struct LoaderImpl {
 
     /* the eMMC card in particular needs to be reset */
     teardown_hardware();
+    disable_cache();
 
     /* fire away -- this should never return */
     logf("Jumping to the Linux kernel...\n");

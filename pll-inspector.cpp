@@ -74,9 +74,9 @@ void print_pll_subdivider(volatile uint8_t *base, const char *name, uint32_t off
 }
 
 int main(int argc, char **argv) {
-	int fd = open("/dev/vc-mem", O_RDWR);
+	int fd = open("/dev/mem", O_RDWR);
 	uint32_t len = 16 * 1024 * 1024;
-	void *rawaddr = mmap(NULL, len, PROT_READ, MAP_SHARED, fd, 0x3f000000);
+	void *rawaddr = mmap(NULL, len, PROT_READ, MAP_SHARED, fd, 0x20000000);
 	volatile uint8_t *addr = static_cast<volatile uint8_t*>(rawaddr);
 	if (rawaddr == -1) {
 		perror("while trying to mmap");

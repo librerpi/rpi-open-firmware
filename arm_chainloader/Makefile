@@ -25,7 +25,12 @@ SRCS = \
 	chainloader.c \
 	main.c
 
+
+# rpi1 and up
 ARCH = armv6zk
+
+# rpi2 and up
+#ARCH = armv7-a
 
 BUILD_DIR = build
 TARGET_BUILD_DIR = $(BUILD_DIR)/$(ARCH)-objects
@@ -47,11 +52,11 @@ CC = $(CROSS_COMPILE)gcc
 CXX = $(CROSS_COMPILE)gcc
 AS = $(CC)
 OBJCOPY = $(CROSS_COMPILE)objcopy
-LINKFLAGS = -nostdlib -march=$(ARCH) -Wl,--build-id=none -T linker.lds -ltlsf -lgcc -lcommon -lnotc
-FPUFLAGS=-mfpu=vfp -mfloat-abi=hard
-COMMON_FLAGS = -c -nostdlib -nostartfiles -ffreestanding -march=$(ARCH) -I../ -I./ -I./drivers/libfdt/ -mtune=arm1176jzf-s ${FPUFLAGS}
+LINKFLAGS = -nostdlib -march=$(ARCH) -Wl,--build-id=none -T linker.lds -ltlsf -lgcc -lcommon -lnotc -Wl,--gc-sections -ltlsf
+FPUFLAGS=-mfpu=vfp -mfloat-abi=softfp
+COMMON_FLAGS = -c -nostdlib -nostartfiles -ffreestanding -march=$(ARCH) -I../ -I./ -I./drivers/libfdt/ -mtune=arm1176jzf-s ${FPUFLAGS} -ffunction-sections -fdata-sections
 
-CFLAGS = $(COMMON_FLAGS) -std=c11 -g
+CFLAGS = $(COMMON_FLAGS) -std=c11 -g -O
 CXXFLAGS = $(COMMON_FLAGS) -std=c++11 -fno-exceptions -fno-rtti -g
 ASFLAGS = $(COMMON_FLAGS) -x assembler-with-cpp
 
@@ -72,13 +77,13 @@ CREATE_SUBDIR = \
 #
 $(TARGET_BUILD_DIR)/%.o: %.c $(HEADERS)
 	$(CREATE_SUBDIR)
-	@echo $(WARN_COLOR)CC  $(NO_COLOR) $@
-	@$(CC) $(CFLAGS) $< -o $@
+	@echo $(WARN_COLOR)CC  $(NO_COLOR) $@ #-mthumb
+	@$(CC) $(CFLAGS) $< -o $@ #-mthumb
 
 $(TARGET_BUILD_DIR)/%.o: %.cc $(HEADERS)
 	$(CREATE_SUBDIR)
-	@echo $(WARN_COLOR)CXX $(NO_COLOR) $@
-	@$(CXX) $(CXXFLAGS) $< -o $@
+	@echo $(WARN_COLOR)CXX $(NO_COLOR) $@ #-mthumb
+	@$(CXX) $(CXXFLAGS) $< -o $@ #-mthumb
 
 $(TARGET_BUILD_DIR)/%.o: %.s $(HEADERS)
 	$(CREATE_SUBDIR)

@@ -6,6 +6,7 @@
 #include <pcb.h>
 #include "interrupt.h"
 #include "otp.h"
+#include <hexdump.h>
 
 const char *function_names[] = {
   "IN",
@@ -17,6 +18,8 @@ const char *function_names[] = {
   "ALT2",
   "ALT3"
 };
+
+static __thread int foo;
 
 void dump_all_gpio() {
   BCM2708Gpio *gpio = static_cast<BCM2708Gpio*>(IODevice::findByTag(GPIO_TAG));
@@ -69,6 +72,10 @@ void setup_eth_clock(struct OtpInfo *info) {
     lan_run = 29;
     ethclk_pin = 42;
     break;
+  case 0xd: // 3B+
+    lan_run = 30;
+    ethclk_pin = 42;
+    break;
   }
 
   pllc_per.configure(2);
@@ -108,14 +115,6 @@ void setup_eth_clock(struct OtpInfo *info) {
   //gGPIO.setFunction(3, kBCM2708Pinmux_ALT0);
 }
 
-void safe_putchar(unsigned char c) {
-  if ((c >= ' ') && (c <= '~')) {
-    printf("%c", c);
-  } else {
-    printf(".");
-  }
-}
-
 void peripheral_scan() {
   uint32_t *ram32 = 0;
   for (uint32_t i = 0x7e000; i < 0x7ffff; i++) {
@@ -147,40 +146,6 @@ void peripheral_scan() {
   puts("scan done");
 }
 
-// addr must be 16 aligned
-// count must be a multiple of 16 bytes
-void hexdump_ram(uint32_t addr, uint32_t count) {
-  volatile uint32_t *ram32 = 0;
-  volatile uint8_t *ram8 = 0;
-  for (uint32_t i = addr; i < (addr + count); i += 16) {
-    uint32_t fragment;
-    printf("0x%08lx ", i);
-    for (int j=0; j<4; j++) {
-      fragment = ram32[(i/4)+j];
-      uint8_t a,b,c,d;
-      a = fragment & 0xff;
-      b = (fragment >> 8) & 0xff;
-      c = (fragment >> 16) & 0xff;
-      d = (fragment >> 24) & 0xff;
-      printf("%02x %02x %02x %02x ", a,b,c,d);
-      if (j == 1) printf(" ");
-    }
-    printf(" |");
-    for (int j=0; j<4; j++) {
-      fragment = ram32[(i/4)+j];
-      uint8_t a,b,c,d;
-      a = fragment & 0xff;
-      b = (fragment >> 8) & 0xff;
-      c = (fragment >> 16) & 0xff;
-      d = (fragment >> 24) & 0xff;
-      safe_putchar(a);
-      safe_putchar(b);
-      safe_putchar(c);
-      safe_putchar(d);
-    }
-    printf("|\n");
-  }
-}
 
 void test_matrix1() {
   uint32_t a[16], b[16];

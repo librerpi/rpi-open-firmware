@@ -19,11 +19,20 @@ in {
     (sources.nixpkgs + "/nixos/modules/profiles/minimal.nix")
     ./bootloader.nix
   ];
-  environment.systemPackages = [
-    self.arm7.pll-inspector
-    pkgs.i2c-tools
-    pkgs.screen
-  ];
+  environment = {
+    systemPackages = [
+      self.arm7.pll-inspector
+      self.arm7.hs.hs-gpio.cexes.hs-gpio
+      pkgs.i2c-tools
+      pkgs.screen
+      pkgs.ncdu
+      pkgs.usbutils
+      self.arm7.utils
+      pkgs.dtc
+      #pkgs.gdb
+    ];
+    etc.busybox.source = pkgs.busybox;
+  };
   nixpkgs = {
     crossSystem.system = "armv7l-linux";
   };
@@ -32,17 +41,6 @@ in {
     interfaces.eth0.useDHCP = true;
     nameservers = [ "192.168.2.1" ];
     firewall.enable = false;
-  };
-  fileSystems = {
-    "/" = {
-      device = "/dev/mmcblk0p2";
-      fsType = "ext4";
-    };
-    "/boot" = {
-      device = "/dev/mmcblk0p1";
-      fsType = "vfat";
-      options = [ "nofail" ];
-    };
   };
   boot = {
     kernelPackages = customKernelPackages;
@@ -53,6 +51,7 @@ in {
       "printk.devkmsg=on"
       "boot.shell_on_fail"
       ''dyndbg="file bcm2835-mailbox.c +p"''
+      "iomem=relaxed"
     ];
     loader = {
       grub.enable = false;

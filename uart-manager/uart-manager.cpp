@@ -26,7 +26,8 @@ int main(int argc, char **argv) {
   struct epoll_event events[MAX_EVENTS];
   char buffer[512];
   ssize_t size;
-  int fd, epollfd, flags, signals;
+  int fd, epollfd, signals;
+  const int flags = TIOCM_DTR;
   sigset_t sigmask;
   struct termios old_tio, new_tio;
 
@@ -41,7 +42,20 @@ int main(int argc, char **argv) {
     perror("unable to open uart");
     return 1;
   }
-  flags = TIOCM_DTR;
+  struct termios options;
+  tcgetattr(fd, &options);
+  printf("before c_cflag: %x\n", options.c_cflag);
+  options.c_cflag &= ~CRTSCTS;
+  options.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG);
+  options.c_iflag &= ~(IXON | IXOFF | IXANY);
+  options.c_iflag |= IGNCR;
+
+  options.c_oflag &= ~ONOCR;
+  options.c_oflag &= ~OPOST;
+
+  options.c_cflag &= ~HUPCL;
+  tcsetattr(fd, TCSANOW, &options);
+
 
   tcgetattr(STDIN_FILENO,&old_tio);
   new_tio=old_tio;
@@ -63,6 +77,7 @@ int main(int argc, char **argv) {
   while (run) {
     int nfds = epoll_wait(epollfd, events, MAX_EVENTS, -1);
     if (nfds < 0) {
+      printf("%d ", nfds);
       perror("epoll_wait failed");
       return 5;
     }
@@ -93,6 +108,7 @@ int main(int argc, char **argv) {
       }
     }
   }
+  puts("closing");
   close(fd);
   tcsetattr(STDIN_FILENO,TCSANOW,&old_tio);
   return 0;

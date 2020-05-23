@@ -12,7 +12,6 @@ extern "C" {
   void gpio_snapshot(bool gpio_level[64], enum BCM2708PinmuxSetting functions[64]);
   void set_pl011_funcs();
   void enable_jtag(void);
-  void hexdump_ram(uint32_t addr, uint32_t count);
   void peripheral_scan();
   void test_things();
   void do_irq_test(void);

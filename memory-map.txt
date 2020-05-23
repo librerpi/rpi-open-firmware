@@ -29,7 +29,7 @@ https://paulwratt.github.io/rpi-internal-registers-online/index.html
 0x7e10_1000                                             CM_BASE, cpr_clkman.h mapped to bcm2835-cprman in DT
 0x7e10_2000                                             A2W_BASE, allows enabling/disabling PLL blocks A/B/C/D/H
 
-0x7e20_0000 -> 0x3E21_FFFF                              peri_audio APB Bridge?
+0x7e20_0000 -> 0x7E21_FFFF                              peri_audio APB Bridge?
 0x7e20_0000                                             GP_BASE (gpio)
 0x7e20_3000                                   " pcm"
 0x7e20_4000                                   "spim"

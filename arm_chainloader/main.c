@@ -1,15 +1,23 @@
 #include <chainloader.h>
 #include <hardware.h>
+#include <tlsf/tlsf.h>
 
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <strings.h>
 
 extern uintptr_t* _end;
 extern uint8_t __bss_start;
 extern uint8_t __bss_end;
 
-void main(bool);
+void main(void);
+void asm_drop_secure();
+void asm_enable_fpu();
+void asm_set_ACTLR();
+void set_CPUECTLR();
+void enable_cache();
+uint32_t arm_lowlevel_setup();
 
 #define logf(fmt, ...) { print_timestamp(); printf("[BRINGUP:%s]: " fmt, __FUNCTION__, ##__VA_ARGS__); }
 
@@ -51,15 +59,84 @@ static const char* get_execution_mode_name() {
 	}
 }
 
-void c_entry(bool security_supported) {
-  bzero(&__bss_start, &__bss_end - &__bss_start);
-  main(security_supported);
+void c_entry(uint32_t r0) {
+  /* wait for peripheral access */
+  while(ARM_ID != ARM_IDVAL);
+  int corenr = arm_lowlevel_setup();
+  switch (corenr) {
+  case 0:
+    putchar('1');
+    break;
+  case 1:
+    putchar('2');
+    break;
+  case 2:
+    putchar('3');
+    break;
+  case 3:
+    putchar('4');
+    break;
+  }
+  if (corenr == 0) {
+    bzero(&__bss_start, &__bss_end - &__bss_start);
+    udelay(30000); // the first few prints get cut off if this delay is lower
+    heap_init();
+    printf("r0 is %x\n", r0);
+    main();
+  }
 }
 
-void main(bool security_supported) {
-	/* wait for peripheral access */
-	while(ARM_ID != ARM_IDVAL);
-	udelay(30000); // the next 2 prints get cut off if this delay is lower
+uint32_t arm_lowlevel_setup() {
+  uint32_t arm_cpuid;
+  bool need_timer = false;
+  bool unlock_coproc = false;
+  bool enable_fpu = false;
+  bool unlock_l2 = false;
+  bool enable_smp = false;
+  // read MIDR reg
+  __asm__("mrc p15, 0, %0, c0, c0, 0" : "=r"(arm_cpuid));
+  switch (arm_cpuid) {
+  case 0x410FB767: // armv6? rpi 0/1
+    break;
+  case 0x410FC075: // rpi2
+    need_timer = true;
+    unlock_coproc = true;
+    enable_smp = true;
+    break;
+  case 0x410FD034: // Cortex A53 rpi3
+    need_timer = true;
+    unlock_coproc = true;
+    enable_fpu = true;
+    unlock_l2 = true;
+    break;
+  }
+  if (need_timer) {
+    // setup timer freq
+    // based loosely on https://github.com/raspberrypi/tools/blob/509f504e8f130ead31b85603016d94d5c854c10c/armstubs/armstub7.S#L130-L135
+    __asm__ __volatile__ ("mcr p15, 0, %0, c14, c0, 0": :"r"(19200000));
+  }
+  if (unlock_coproc) {
+    // NSACR = all copros to non-sec
+    __asm__ __volatile__ ("mcr p15, 0, %0, c1, c1, 2": :"r"(0x63ff));
+  }
+  if (enable_fpu) {
+    asm_enable_fpu();
+  }
+  if (enable_smp) {
+    asm_set_ACTLR(1<<6);
+  }
+  if (unlock_l2) {
+    //asm_set_ACTLR(1<<6 | 1<<5 | 1<<4 || 1<<1 | 1<<0);
+    set_CPUECTLR();
+  }
+  asm_drop_secure();
+  enable_cache();
+  uint32_t mpidr;
+  __asm__ __volatile__("mrc p15, 0, %0, c0, c0, 5":"=r"(mpidr));
+  return mpidr & 0xf;
+}
+
+void main() {
 
 	logf("Started on ARM, continuing boot from here ...\n");
 
@@ -79,22 +156,16 @@ void main(bool security_supported) {
           logf("rpi 2\n");
           break;
         case 0x410FD034:
-          logf("cortex A53, rpi 3\n");
+          logf("%lx cortex A53, rpi 3\n", arm_cpuid);
           break;
         // 410FD083 is cortex A72, rpi4
         default:
           logf("unknown rpi model, cpuid is 0x%lx\n", arm_cpuid);
         }
 
-	if (security_supported) {
-		logf("Security extensions are supported! but NS bit set\n");
-	}
-
 	logf("Execution mode: %s\n", get_execution_mode_name());
         uint32_t cpsr = arm_get_cpsr();
         logf("CPSR: %lx\n", cpsr);
-
-	heap_init();
 
 #if 0
         double foo = 1.1;

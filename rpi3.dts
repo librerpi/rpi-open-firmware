@@ -2,7 +2,17 @@
 
 // #define IRQ_TYPE_LEVEL_HIGH      4
 
+#define BCM2835_FSEL_ALT0 4
+
+#define BCM2835_CLOCK_V3D           21
+#define BCM2835_CLOCK_ISP           22
+#define BCM2835_CLOCK_H264          23
+#define BCM2835_CLOCK_TSENS         27
+#define BCM2835_CLOCK_PERI_IMAGE    29
+
+
 /memreserve/ 0x00000000 0x00001000;
+// /memreserve/ 0x20000000 0x1000000; // 16mb of MMIO
 
 / {
   compatible = "raspberrypi,3-model-b", "brcm,bcm2837";
@@ -34,12 +44,43 @@
   memory {
     device_type = "memory";
   };
+  /*
+  leds: leds {
+    compatible = "gpio-leds";
+    act {
+      label = "ACT";
+      default-state = "keep";
+      linux,default-trigger = "heartbeat";
+      gpios = <&gpio XX GPIO_ACTIVE_HIGH>;
+    };
+  };
+  */
+  thermal-zones {
+    cpu_thermal: cpu-thermal {
+      polling-delay-passive = <0>;
+      polling-delay = <1000>;
+      coefficients = <(-538) 412000>;
+
+      thermal-sensors = <&thermal>;
+
+      trips {
+        cpu-crit {
+          temperature = <80000>;
+          hysteresis  = <0>;
+          type        = "critical";
+        };
+      };
+
+      cooling-maps {
+      };
+    };
+  };
   soc {
     compatible = "simple-bus";
     #address-cells = <1>;
     #size-cells = <1>;
     //        child       parent       length
-    ranges = <0x7e000000 0x3f000000 0x1000000 /* map the MMIO space to 0x3f000000 in arm, 16mb long */
+    ranges = <0x7e000000 0x20000000 0x1000000 /* map the MMIO space to 0x3f000000 in arm, 16mb long */
               0x40000000 0x40000000 0x1000>; /* identity map the local_intc, 0x1000 bytes long */
     dma-ranges = <0xc0000000 0x00 0x3f000000>; /* map arm physical 0 to the uncached alias, 1008mb long */
 
@@ -106,6 +147,12 @@
       interrupt-parent = <&local_intc>;
       interrupts = <8 4>;
     };
+    mailbox: mailbox@7e00b880 {
+      compatible = "brcm,bcm2835-mbox";
+      reg = <0x7e00b880 0x40>;
+      interrupts = <0 1>;
+      #mbox-cells = <0>;
+    };
     clocks: cprman@7e101000 {
       compatible = "brcm,bcm2835-cprman";
       #clock-cells = <1>;
@@ -119,6 +166,11 @@
               //<&dsi0 0>, <&dsi0 1>, <&dsi0 2>,
               //<&dsi1 0>, <&dsi1 1>, <&dsi1 2>;
     };
+    // enable using BCM2835_DEVGPIOMEM
+    gpiomem@7e200000 {
+      compatible = "brcm,bcm2835-gpiomem";
+      reg = <0x7e200000 0x1000>;
+    };
     gpio@7e200000 {
       compatible = "brcm,bcm2835-gpio";
       reg = <0x7e200000 0xb4>;
@@ -128,6 +180,8 @@
       #gpio-cells = <0x02>;
       interrupt-controller;
       #interrupt-cells = <0x02>;
+      gpio-line-names = "ID_SDA", // based on arch/arm/boot/dts/bcm2835-rpi-b-plus.dts
+                        "ID_SCL";
       pinctrl-names = "default";
       gpclk0_gpio4 {
         brcm,pins = <0x04>;
@@ -135,7 +189,7 @@
       };
       gpclk1_gpio5 {
         brcm,pins = <0x05>;
-        brcm,function = <0x04>;
+        brcm,function = <BCM2835_FSEL_ALT0>;
       };
 
       i2c0_bus0: i2c0_gpio0 {
@@ -179,12 +233,6 @@
         brcm,function = <0x07>;
       };
     };
-    mailbox: mailbox@7e00b880 {
-      compatible = "brcm,bcm2835-mbox";
-      reg = <0x7e00b880 0x40>;
-      interrupts = <0 1>;
-      #mbox-cells = <0>;
-    };
     firmware: firmware {
       compatible = "raspberrypi,bcm2835-firmware", "simple-bus";
       mboxes = <&mailbox>;
@@ -201,6 +249,26 @@
       //pinctrl-names = "default";
       //pinctrl-0 = <0x08 0x09>;
       status = "okay";
+    };
+    pm: watchdog@7e100000 {
+      compatible = "brcm,bcm2835-pm", "brcm,bcm2835-pm-wdt";
+      #power-domain-cells = <1>;
+      #reset-cells = <1>;
+      reg = <0x7e100000 0x114>,
+            <0x7e00a000 0x24>;
+      clocks = <&clocks BCM2835_CLOCK_V3D>,
+               <&clocks BCM2835_CLOCK_PERI_IMAGE>,
+               <&clocks BCM2835_CLOCK_H264>,
+               <&clocks BCM2835_CLOCK_ISP>;
+      clock-names = "v3d", "peri_image", "h264", "isp";
+      system-power-controller;
+    };
+    thermal: thermal@7e212000 {
+      compatible = "brcm,bcm2837-thermal";
+      reg = <0x7e212000 0x8>;
+      clocks = <&clocks BCM2835_CLOCK_TSENS>;
+      #thermal-sensor-cells = <0>;
+      //status = "disabled";
     };
     mmc@7e202000 {
       compatible = "brcm,bcm2835-sdhost";
@@ -257,11 +325,11 @@
       reg = <0x7e00b840 0x3c>;
       interrupts = <0 2>;
     };*/
-    /*power {
+    power {
       compatible = "raspberrypi,bcm2835-power";
-      firmware = <0x07>;
+      //firmware = <0x07>;
       #power-domain-cells = <0x01>;
-    };*/
+    };
     usb@7e980000 {
       compatible = "brcm,bcm2708-usb";
       reg = <0x7e980000 0x10000 0x7e006000 0x1000>;

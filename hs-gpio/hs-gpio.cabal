@@ -15,12 +15,11 @@ build-type:          Simple
 
 executable hs-gpio
   main-is:             Main.hs
-  -- other-modules:
+  other-modules:       GPIO
   -- other-extensions:
   build-depends:       base >=4.12 && <4.13
                      , brick
                      , HPi
-                     , shared-memory
                      , unix
                      , formatting
                      , vty
@@ -28,4 +27,4 @@ executable hs-gpio
   -- hs-source-dirs:
   default-language:    Haskell2010
   C-sources:           cbits/helper.c
-  ghc-options:         -threaded
+  ghc-options:         -threaded -Wall

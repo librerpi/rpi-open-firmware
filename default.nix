@@ -28,16 +28,8 @@ let
     #linux_rpi2 = super.linux_rpi2.overrideAttrs (drv: {
       #nativeBuildInputs = drv.nativeBuildInputs ++ (with self; [ ncurses pkgconfig ]);
     #});
-    common = self.stdenv.mkDerivation {
-      name = "common";
-      src = lib.cleanSource ./common;
-      propagatedBuildInputs = [ self.tlsf ];
-      enableParallelBuilding = true;
-      hardeningDisable = [ "fortify" "stackprotector" ];
-      dontStrip = true;
-    };
-    # nix-shell -p haskellPackages.cabal-install haskellPackages.ghc
-    # cabal new-configure
+    common = self.callPackage ./common {};
+    # nix-shell -p haskellPackages.cabal-install haskellPackages.ghc --run "cabal new-configure"
     # nt/bin/plan-to-nix --output . --plan-json dist-newstyle/cache/plan.json --cabal-project cabal.project
     pkgSet = self.haskell-nix.mkCabalProjectPkgSet {
       plan-pkgs = import ./pkgs.nix;
@@ -59,6 +51,7 @@ let
         cp pll-inspector $out/bin/
       '';
     };
+    utils = self.callPackage ./utils {};
     notc = self.stdenv.mkDerivation {
       name = "notc";
       src = lib.cleanSource ./notc;
@@ -73,7 +66,7 @@ let
       buildInputs = [ self.tlsf self.common self.notc ];
       enableParallelBuilding = true;
       installPhase = ''
-        $OBJDUMP -t build/arm_chainloader.bin.elf | sort -rk4
+        #$OBJDUMP -t build/arm_chainloader.bin.elf | sort -rk4
         mkdir -p $out/nix-support
         cp build/arm_chainloader.bin{,.elf} build/chainloader.map $out/
         $OBJDUMP -S build/arm_chainloader.bin.elf > $out/chainloader.S
@@ -166,26 +159,64 @@ let
         }
       ];
     };
+    bootdir = self.buildPackages.runCommandCC "bootdir" { buildInputs = [ pkgs.dtc ]; } ''
+      mkdir $out
+      cd $out
+      cp ${vc4.firmware}/bootcode.bin bootcode.bin
+      echo print-fatal-signals=1 console=ttyAMA0,115200 earlyprintk loglevel=7 root=/dev/mmcblk0p2 printk.devkmsg=on > cmdline.txt
+      builddtb() {
+        cc -x assembler-with-cpp -E $1 -o temp
+        egrep -v '^#' < temp > temp2
+        dtc temp2 -o $2
+        rm temp temp2
+      }
+      builddtb ${./rpi2.dts} rpi2.dtb
+      builddtb ${./rpi3.dts} rpi3.dtb
+      ${if kernelOverride == null then ''
+        cp ${arm7.linux_rpi2}/zImage zImage
+      '' else ''
+        cp ${kernelOverride} zImage
+      ''}
+      echo bootdir is $out
+    '';
+    diskImage = let
+      eval = import (self.path + "/nixos") {
+        configuration = {
+          imports = [
+            ./nixos.nix
+            (pkgs.path + "/nixos/modules/installer/cd-dvd/sd-image.nix")
+          ];
+          users.users.root.initialPassword = "password";
+          sdImage = {
+            firmwareSize = 128;
+            populateRootCommands = ''
+            '';
+            populateFirmwareCommands = ''
+              for file in rpi2.dtb rpi3.dtb bootcode.bin; do
+                cp -v ${self.bootdir}/$file firmware/
+              done
+              cp -vL ${./zImage} firmware/zImage
+              cp -vL ${eval.config.system.build.toplevel}/initrd firmware/initrd
+              echo "systemConfig=${eval.config.system.build.toplevel} init=${eval.config.system.build.toplevel}/init $(cat ${eval.config.system.build.toplevel}/kernel-params)" > firmware/cmdline.txt
+            '';
+          };
+        };
+      };
+    in eval.config.system.build.sdImage;
+    helper = pkgs.writeShellScript "helper" ''
+      set -e
+      set -x
+      mount -v /dev/mmcblk0p1 /mnt
+      cp -v ${self.bootdir}/* /mnt/
+      ls -ltrh /mnt/
+      umount /mnt
+    '';
     test-script = pkgs.writeShellScript "test-script" ''
       #!${self.stdenv.shell}
 
       ${self.qemu}/bin/qemu-system-x86_64 -kernel ${self.linux}/bzImage -initrd ${self.initrd}/initrd -nographic -append 'console=ttyS0,115200'
     '';
   };
-  bootdir = pkgs.runCommand "bootdir" { buildInputs = [ pkgs.dtc ]; } ''
-    mkdir $out
-    cd $out
-    cp ${vc4.firmware}/bootcode.bin bootcode.bin
-    echo print-fatal-signals=1 console=ttyAMA0,115200 earlyprintk loglevel=7 root=/dev/mmcblk0p2 printk.devkmsg=on > cmdline.txt
-    dtc ${./rpi2.dts} -o rpi2.dtb
-    dtc ${./rpi3.dts} -o rpi3.dtb
-    ${if kernelOverride == null then ''
-      cp ${arm7.linux_rpi2}/zImage zImage
-    '' else ''
-      cp ${kernelOverride} zImage
-    ''}
-    echo bootdir is $out
-  '';
   dtbFiles = pkgs.runCommand "dtb-files" { buildInputs = [ pkgs.dtc pkgs.strace pkgs.stdenv.cc.cc ]; src = ./dts; } ''
     unpackPhase
     cd $sourceRoot
@@ -195,14 +226,6 @@ let
     echo compiling
     dtc $out/rpi3b.dts -o $out/rpi3b.dtb
   '';
-  helper = pkgs.writeShellScript "helper" ''
-    set -e
-    set -x
-    mount -v /dev/mmcblk0p1 /mnt
-    cp -v ${bootdir}/* /mnt/
-    ls -ltrh /mnt/
-    umount /mnt
-  '';
   nixos = (import (sources.nixpkgs + "/nixos") { configuration = ./nixos.nix; });
   testcycle = pkgs.writeShellScript "testcycle" ''
     set -e
@@ -210,11 +233,11 @@ let
     exec ${x86_64.uart-manager}/bin/uart-manager
   '';
   filterArmUserlandPackages = input: {
-    inherit (input) initrd bcm2835 busybox openssl pll-inspector linux_rpi2;
+    inherit (input) initrd bcm2835 busybox openssl pll-inspector linux_rpi2 diskImage bootdir utils;
     hs = trimHaskellNixTree input.pkgSet { hs-gpio = true; };
   };
 in pkgs.lib.fix (self: {
-  inherit bootdir helper dtbFiles testcycle;
+  inherit dtbFiles testcycle;
   aarch64 = {
     inherit (aarch64) ubootRaspberryPi3_64bit linux_rpi3 bcm2835;
   };
@@ -263,5 +286,12 @@ in pkgs.lib.fix (self: {
   nixos = {
     inherit (nixos) system;
     inherit (nixos.config.system.build) initialRamdisk;
+  };
+  test1 = pkgs.callPackage <nixpkgs/nixos/lib/make-system-tarball.nix> {
+    contents = [];
+    storeContents = [
+      { symlink = "/gdb"; object = arm6.gdb; }
+      { symlink = "/strace"; object = arm6.strace; }
+    ];
   };
 })

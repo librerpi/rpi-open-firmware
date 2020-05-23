@@ -30,27 +30,24 @@ the boot process.
 .text
 .globl _start
 _start:
-	/* vectors */
-	b _common_start /* reset */
-	b _fleh_undef /* undefined */
-	b _secure_monitor /* swi/smc */
-	b _fleh_prefabt /* prefetch abort */
-	b _fleh_dataabt /* data abort */
-	b _fleh_addrexc /* reserved */
-	b _fleh_irq /* irq */
-	b _fleh_fiq /* fiq */
+  /* vectors */
+  b _common_start /* reset */
+  b _fleh_undef /* undefined */
+  b _secure_monitor /* swi/smc */
+  b _fleh_prefabt /* prefetch abort */
+  b _fleh_dataabt /* data abort */
+  b _fleh_addrexc /* reserved */
+  b _fleh_irq /* irq */
+  b _fleh_fiq /* fiq */
 
 .org 32
 .globl g_FirmwareData
 g_FirmwareData:
-	.long 0 /* SDRAM capacity */
-	.long 0 /* VPU CPUID      */
-	.long 0 /* serial#        */
-	.long 0 /* revision       */
-	.long 0 /* Reserved */
-
-value: .word 0x63ff
-osc: .word 19200000
+  .long 0 /* SDRAM capacity */
+  .long 0 /* VPU CPUID      */
+  .long 0 /* serial#        */
+  .long 0 /* revision       */
+  .long 0 /* Reserved */
 
 # based on https://github.com/mrvn/moose/blob/master/kernel/entry.S
 .macro SaveRegisters, offset
@@ -121,6 +118,67 @@ _secure_monitor:
         ldr sp, =\newsp
 .endm
 
+.global asm_enable_fpu
+asm_enable_fpu:
+  mrc p15, 0, r0, c1, c1, 2 // read NSACR -> r0
+  orr r0, r0, #3<<10        // enable FPU
+  mcr p15, 0, r0, c1, c1, 2 // write back to NSACR
+  ldr r0, =(0xF << 20)
+  mcr p15, 0, r0, c1, c0, 2 // CPACR
+  mov r0, #0x40000000
+  vmsr fpexc, r0
+  bx lr
+.global asm_drop_secure
+asm_drop_secure:
+  // set non-secure flag
+  mrc p15, 0, r0, c1, c1, 0 // SCR -> r0
+  orr r0, r0, #1 /* set NS */
+  mcr p15, 0, r0, c1, c1, 0 // r0 -> SCR, but with NS set
+  bx lr
+.global asm_set_ACTLR
+asm_set_ACTLR:
+  // based on https://github.com/raspberrypi/tools/blob/509f504e8f130ead31b85603016d94d5c854c10c/armstubs/armstub7.S#L78-L82
+  mrc p15, 0, r1, c1, c0, 1 @ Read Auxiliary Control Register
+  orr r1, r1, r0
+  mcr p15, 0, r1, c1, c0, 1 @ Write Auxiliary Control Register
+  bx lr
+
+.global set_CPUECTLR
+set_CPUECTLR:
+  // based on https://github.com/raspberrypi/tools/blob/509f504e8f130ead31b85603016d94d5c854c10c/armstubs/armstub7.S#L83-L86
+  mrrc p15, 1, r0, r1, c15  @ CPU Extended Control Register
+  orr r0, r0, #(1<<6)       @ SMP
+  and r1, r1, #(~3)         @ Set L2 load data prefetch to 0b00 = 16
+  mcrr p15, 1, r0, r1, c15  @ CPU Extended Control Register
+  bx lr
+
+.global enable_cache
+enable_cache:
+  mrc p15, 0, r0, c1, c0, 0 // SCTLR -> r0
+  orr r0, r0, #(1<<12)      // r0 |= 1<<12 icache
+  //orr r0, r0, #(1<<2)       // r0 |= 1<<2  dcache
+  mcr p15, 0, r0, c1, c0, 0 // r0 -> SCTLR
+  bx lr
+
+.global disable_cache
+disable_cache:
+  mrc p15, 0, r0, c1, c0, 0 // SCTLR -> r0
+  bic r0, r0, #(1<<12)      // clear bit 12 icache
+  //bic r0, r0, #(1<<2)       // clear bit 2 dcache
+  mcr p15, 0, r0, c1, c0, 0 // r0 -> SCTLR
+  bx lr
+
+.global lock_obtain
+lock_obtain:
+  mov r1, #0xff           // lock taken flag
+try:
+  ldrex r2, [r0]          // load lock value
+  cmp r2, #0              // check if lock free
+  strexeq r1, r2, [r0]    // if free, try to write as taken
+  cmpeq r2, #0            // if was free, check if write worked
+  bne try                 // if write failed, retry
+  bx lr
+
 _common_start:
         mrs r0, cpsr
 
@@ -136,72 +194,53 @@ _common_start:
 	lsr r0, #16
 	and r0, #0xF
 	cmp r0, #0x7 // check if MIDR ends in 0x7__
-	mov r12, #0
 	beq L_finish_init
 
 L_armv7_or_higher:
 	/*
 	 * okay, we're an ARMv7 or an ARMv8.
 	 */
-        // setup timer freq
-        // based loosely on https://github.com/raspberrypi/tools/blob/509f504e8f130ead31b85603016d94d5c854c10c/armstubs/armstub7.S#L130-L135
-        ldr r1, value
-        mcr p15, 0, r1, c1, c1, 2 // NSACR = all copros to non-sec
-
-        ldr r1, osc
-        mcr p15, 0, r1, c14, c0, 0 // CNTFRQ = 19.2mhz
 
 	mrc p15, 0, r0, c0, c0, 5	// read MPIDR
 	and r3, r0, #0xc0000000		// multiprocessing extensions and
 	teq r3, #0x80000000			// not part of a uniprocessor system?
 	bne L_setup_monitor		 	// no, assume UP
-#if 1
-  // based on https://github.com/raspberrypi/tools/blob/509f504e8f130ead31b85603016d94d5c854c10c/armstubs/armstub7.S#L78-L82
-  mrc p15, 0, r0, c1, c0, 1 @ Read Auxiliary Control Register
-  orr r0, r0, #(1<<6)       @ SMP
-  mcr p15, 0, r0, c1, c0, 1 @ Write Auxiliary Control Register
-#endif
-	mrc p15, 0, r0, c0, c0, 5	// read MPIDR
+
+        mrc p15, 0, r0, c0, c0, 5	// read MPIDR
 	ands r0, r0, #0x03			// CPU 0?
-	bne L_deadloop				// if not, spin.
+        //cmp r0, #2
+	//bne L_deadloop				// if not, spin.
+
+  cmp r0, #3
+  ldrls r0, [pc, r0, lsl #2]
+  b after_table
+  .word 0x24000
+  .word 0x28000
+  .word 0x2c000
+  .word 0x30000
+after_table:
+  mov sp, r0
 
 L_setup_monitor:
-	adr	r1, _start
+	//adr	r1, _start
 	//mcr	p15, 0, r1, c12, c0, 1 /* MVBAR */
 	//mcr p15, 0, r1, c7, c5, 4 /* ISB (ARMv6 compatible way) */
 
-//#ifdef ENABLE_VFP
-        // enable VFP
-        mrc p15, 0, r0, c1, c1, 2 // read NSACR -> r0
-        orr r0, r0, #3<<10 // enable FPU
-        mcr p15, 0, r0, c1, c1, 2 // write back to NSACR
 
-        ldr r0, =(0xF << 20)
-        mcr p15, 0, r0, c1, c0, 2 // CPACR
-
-        mov r0, #0x40000000
-        vmsr fpexc, r0
-//#endif
-
-        // set non-secure flag
-	mrc p15, 0, r0, c1, c1, 0 // SCR -> r0
-	orr r0, r0, #1 /* set NS */
-	mcr p15, 0, r0, c1, c1, 0 // r0 -> SCR, but with NS set
-
-	mov r12, #1
 	//smc 0
 
 L_finish_init:
 	/* enable instruction cache */
-	//mrc p15, 0, r0, c1, c0, 0
-	//orr r0, r0, #(1<<12)
-	//mcr p15, 0, r0, c1, c0, 0
+	//mrc p15, 0, r0, c1, c0, 0   // SCTLR -> r0
+	//orr r0, r0, #(1<<12)        // r0 |= 1<<12 i-cache enable
+	//mcr p15, 0, r0, c1, c0, 0   // r0 -> SCTLR
 
-	mov sp, #(MEM_STACK_END)
-	mov r0, r12
-	b c_entry
+  bl c_entry
+  b .
 
 L_deadloop:
+        mov r0, #0x43
+        //bl uart_putc
         // TODO, break out of loop when signaled by linux
 	cpsie if
 	wfi

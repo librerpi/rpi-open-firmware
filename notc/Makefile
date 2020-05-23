@@ -1,7 +1,7 @@
 all: libnotc.a
 
 BASECFLAGS=-Iinclude -g
-ARMCFLAGS=-mtune=arm1176jzf-s -march=armv6zk -mfpu=vfp -mfloat-abi=hard
+ARMCFLAGS=-mtune=arm1176jzf-s -march=armv6zk -mfpu=vfp -mfloat-abi=softfp #-mthumb
 ifeq (${CC},vc4-elf-gcc)
   CFLAGS=${BASECFLAGS}
 else

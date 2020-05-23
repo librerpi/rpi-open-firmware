@@ -1,7 +1,7 @@
 all: libtlsf.a
 
-FPUFLAGS=-mfpu=vfp -mfloat-abi=hard
-ARMCFLAGS=-mtune=arm1176jzf-s -march=armv6zk ${FPUFLAGS}
+FPUFLAGS=-mfpu=vfp -mfloat-abi=softfp
+ARMCFLAGS=-mtune=arm1176jzf-s -march=armv6zk ${FPUFLAGS} #-mthumb
 ifeq (${CC},vc4-elf-gcc)
 CFLAGS=
 else
