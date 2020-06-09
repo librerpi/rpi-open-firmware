@@ -80,7 +80,7 @@ void BCM2708ArmControl::bridgeStart(bool cycleBrespBits) {
 
   if (!cycleBrespBits) pmDomain->setReset();
 
-  IODriverLog("bridge init done, PM_PROC is now: 0x%X!", PM_PROC);
+  //IODriverLog("bridge init done, PM_PROC is now: 0x%X!", PM_PROC);
 }
 
 void BCM2708ArmControl::setupClock() {
@@ -232,7 +232,11 @@ void BCM2708ArmControl::start(struct OtpInfo *info) {
    * enable peripheral access, map arm secure bits to axi secure bits 1:1 and
    * set the mem size for who knows what reason.
    */
-  ARM_CONTROL0 |= 0x008 | ARM_C0_APROTPASS | ARM_C0_SIZ1G | ARM_C0_FULLPERI; // | ARM_C0_AARCH64;
+  ARM_CONTROL0 |= 0x008
+                | ARM_C0_APROTPASS | ARM_C0_APROTMSK  // allow both kernel and userland to access mmio
+                | ARM_C0_SIZ1G
+                | ARM_C0_FULLPERI;                    // allow access to all peripherals
+  // | ARM_C0_AARCH64;
   ARM_CONTROL1 |= ARM_C1_PERSON;
 
   ARM_IRQ_ENBL3 |= ARM_IE_MAIL;
