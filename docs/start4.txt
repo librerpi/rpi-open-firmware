@@ -1,0 +1,28 @@
+.text.firmware_rev is a 16 byte section detailing what the start4.elf supports
+
+byte 0 bit 0 must be set for it to boot on cpuid 0x4000162
+byte 0 bit 0&1 must be set, if some_flag1 bit 1 is present
+byte 0 bit 2   must be set, if some_flag2 is non-zero
+byte 0 bit 3   must be set, if flag1 and flag2 are both non-zero
+byte 0 bit 5 must be set for it to boot with usb mass-storage
+
+.text.bootloader_state is a 16 byte section
+001f7550  42 53 54 41 00 00 00 00  00 00 00 00 00 00 00 00  |BSTA............|
+if the first 4 bytes contain this magic, then 0x40000 is put into the the uint32_t at offset 4
+
+the vaddr of every DT_LOAD must be above 32mb
+when filesize is less then memsize, the extra space is zero'd
+
+0xc002_0000 length 0x400 gets zero'd before passing control
+something of length 0x1b8 gets copied to 0xc004_0000
+
+return address will be pointing to a bkpr opcode
+
+12mb max start4.elf size
+
+fixup data:
+bits
+0-7,   directly from fixup_record[0]
+8-15,  from fixup-record[1]
+10-17, from fixup-record[2]
+overlay just or's together

@@ -11,6 +11,7 @@ https://paulwratt.github.io/rpi-internal-registers-online/index.html
 
 0x6000_0000                                             mask rom
 0x6001_0738                                             core0 stack pointer, at start of mask rom for rpi4
+0x7dc2_0000             rpi4                            used by 2020-05-15 bootcode.bin in combination with 7e001
 0x7e00_0000 -> 0x3fff_ffff (992mb to 1024mb, 32mb long) IO peripherals (only exists in the 4-alias)
 0x7e00_0000                                             MS_BASE from multicore_sync.h
 0x7e00_1000                                             CCP2TX_BASE

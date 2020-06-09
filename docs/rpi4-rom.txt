@@ -1,0 +1,6 @@
+reading over it, it will detect the following MBR type codes
+0x83 (linux stuff, completely ignored)
+0xee (gpt protective mbr)
+0x01, 0x04, 0x06, 0x0b, 0x0c, 0x0e (all the fats)
+0x07 (ntfs or exfat) has a special branch in the code
+if it encounters any other type, i think it stops iterating over partitions

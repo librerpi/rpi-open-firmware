@@ -1,0 +1,43 @@
+digraph {
+  sdhost [label="SDHOST\n0x7e202000\nSD0_x"]
+  sdhci [label="SDHCI\n0x7e300000\nSD1_x"]
+  EMMC2
+  genet
+
+  sd_bank0 -> GPIO22_27
+  sd_bank1 -> GPIO34_43
+  sd_bank2 -> GPIO48_53
+
+  sdhost -> sd_bank0
+  sdhost -> sd_bank2
+
+  PL011 -> GPIO30_33
+
+  EMMC2 -> sdmux [color=green,dir=both]
+
+  sdhci -> sd_bank0
+  sdhci -> sd_bank1 [color=green,dir=both]
+  sdhci -> sd_bank2
+  sdhci -> sdmux [color=red,dir=both]
+
+  genet -> ethernetmux [dir=both]
+  genet -> GPIO28_29 [dir=both]
+  ethernetmux -> GPIO46_57 [label="RGMII",dir=both]
+
+  sdmux -> uSD [dir=both]
+
+  uSD [label="uSD slot\nnot on gpio array"]
+  sd_bank1 [label="sd_bank1\n8bit capable"]
+
+  SPI2 -> GPIO40_45 [label="40-45",color=red,dir=both]
+  PWM1 -> GPIO40_45 [label="40,41",color=green]
+
+  GPIO28_29 -> gigabit_phy [label="MDIO",dir=both]
+  GPIO30_33 -> bluetooth
+  GPIO34_43 -> wifi [label="34-39\n4bit mode"]
+  GPIO40_45 -> analog_audio [label="40,41",color=green]
+  GPIO40_45 -> status_led [label="42",color=green]
+  GPIO40_45 -> camera [label="44,45",color=green,dir=both]
+  GPIO40_45 -> eeprom [label="40-43",color=red,dir=both]
+  GPIO46_57 -> gigabit_phy [label="RGMII",dir=both]
+}

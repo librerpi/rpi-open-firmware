@@ -1,0 +1,143 @@
+https://github.com/raspberrypi/firmware/wiki/Mailbox-property-interface
+
+0x00000001    get firmware version
+0x00008010    fb set cursor info
+0x00008011    fb set cursor state
+0x00010001    get board model
+0x00010002    get board revision
+0x00010003    get board mac address
+0x00010004    get board serial
+0x00010005    get arm memory
+0x00010006    get vpu memory
+0x00010007    get clocks
+0x00020001    get power state
+0x00020002    get timing
+0x00028001    set power state
+0x00030001    get clock state
+0x00030002    get clock rate
+0x00030003    get voltage
+0x00030004    get clock max rate
+0x00030005    get voltage max
+0x00030006    get temperature
+0x00030007    get clock min rate
+0x00030008    get voltage min
+0x00030009    get turbo
+0x0003000a    get max temperature
+0x0003000c    allocate memory
+0x0003000d    lock memory
+0x0003000e    unlock memory
+0x0003000f    release memory
+0x00030010    execute code
+0x00030014    get dispmanx resource memory handle
+0x00030020    get edid block
+0x00038001    set clock state
+0x00038002    set clock rate
+0x00038003    set voltage
+0x00038009    set turbo
+0x00040001    framebuffer allocate
+0x00040002    framebuffer blank screen
+0x00040003    framebuffer get display w/h
+0x00040004    framebuffer get virtual w/h
+0x00040005    framebuffer get depth
+0x00040006    framebuffer get pixel order
+0x00040007    framebuffer get alpha mode
+0x00040008    framebuffer get pitch
+0x00040009    fb
+0x0004000a    fb
+0x0004000b    fb
+0x00044003    framebuffer test display w/h
+0x00044004    framebuffer test virtual w/h
+0x00044005    framebuffer test depth
+0x00044006    framebuffer test pixel order
+0x00044007    fb
+0x00044009    fb
+0x0004400a    fb
+0x0004400b    fb
+0x00048001    framebuffer release
+0x00048003    framebuffer set display w/h
+0x00048004    framebuffer set virtual w/h
+0x00048005    framebuffer set depth
+0x00048006    fb
+0x00048007    fb
+0x00048009    fb
+0x0004800a    fb
+0x0004800b    fb
+0x00050001    get command line
+0x00060001    get dma channels
+
+u-boot/arch/arm/mach-bcm283x/include/mach/mbox.h
+no undocumented tags
+
+http://u-boot.10912.n7.nabble.com/PATCH-v3-0-2-usb-xhci-Load-Raspberry-Pi-4-VL805-s-firmware-td410664.html#a410665
+0x00030058    tells rpi4 firmware to load vl805 firmware over pcie
+
+linux/include/soc/bcm2835/raspberrypi-firmware.h
+0x00000002    get firmware variant
+0x00000003    get firmware hash
+0x0003000b    set stc
+0x00030011    execute qpu
+0x00030012    set enable qpu
+0x00030021    get customer otp
+0x00030023    get edid block display
+0x00030030    get domain state
+0x00030041    set gpio state
+0x00030043    get gpio config
+0x00030045    get periph reg
+0x00030046    get throttled
+0x00030047    get clock measured
+0x00030048    notify reboot
+0x00030049    get poe hat val
+0x00030050    set poe hat val
+0x00038021    set customer otp
+0x00038030    set domain state
+0x00038041    get gpio state
+0x00038042    set sdhost clock
+0x00038043    set gpio config
+0x00038045    set periph reg
+0x0004000c    framebuffer get layer
+0x0004000d    framebuffer get transform
+0x0004000e    framebuffer get vsync
+0x00040013    framebuffer get num displays
+0x00040014    get display settings
+0x00040016    framebuffer get display id
+0x00040017    get display timing
+0x00040018    get display cfg
+0x00048010    vchiq init
+0x00048013    framebuffer get display num
+
+undocumented:
+0x0004000f
+0x00040010
+0x00040011
+0x00040020
+0x00040021
+0x00044002
+0x00044008
+0x0004400c
+0x0004400d
+0x0004400e
+0x0004800c
+0x00048008
+0x0004800d
+0x0004800e
+0x0004800f
+0x00048015
+0x00048017
+0x00048019
+0x0004801f
+0x00048020
+0x00030013    vpu job??
+0x00030018    calls some qpu things??
+0x00030022
+0x00030040
+0x00030044
+0x00030051    set mac address
+0x00030052
+0x00030053
+0x00030054
+0x00030055
+0x00030056
+0x00030057    something involving global_reset pin
+0x00030059
+0x00030060    voltage related
+0x00030061    board rev ext?
