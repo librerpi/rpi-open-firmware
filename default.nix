@@ -180,6 +180,10 @@ let
       echo bootdir is $out
     '';
     diskImage = let
+      zImage = pkgs.fetchurl {
+        url = "https://ext.earthtools.ca/videos/private/rpi/zImage-2020-05-19";
+        sha256 = "09kijy3rrwzf6zgrq3pbww9267b1dr0s9rippz7ygk354lr3g7c8";
+      };
       eval = import (self.path + "/nixos") {
         configuration = {
           imports = [
@@ -195,7 +199,7 @@ let
               for file in rpi2.dtb rpi3.dtb bootcode.bin; do
                 cp -v ${self.bootdir}/$file firmware/
               done
-              cp -vL ${./zImage} firmware/zImage
+              cp -vL ${zImage} firmware/zImage
               cp -vL ${eval.config.system.build.toplevel}/initrd firmware/initrd
               echo "systemConfig=${eval.config.system.build.toplevel} init=${eval.config.system.build.toplevel}/init $(cat ${eval.config.system.build.toplevel}/kernel-params)" > firmware/cmdline.txt
             '';
