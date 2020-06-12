@@ -1,0 +1,15 @@
+rpi1:
+0x4000104 rpi1 with composite video
+0x4000104 rpi1 with composite video and i2s header
+
+rpi2:
+0x4000140 rpi2 model b v1.1 2014 no composite, no wifi
+
+rpi3:
+0x4000140 rpi3 with wifi
+
+
+rpi4:
+0x4000160  mentioned in bootcode 2020-05-15
+0x4000161  mentioned in bootcode 2020-05-15, potentially has 2 different mask roms
+0x4000162  bootcode-2020-05-15 checks for this cpuid, if present, .text.firmware_rev[0] bit 0 must be set

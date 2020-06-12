@@ -1,0 +1,21 @@
+enable_jtag_gpio=1
+uart_2ndstage=1
+gpio=4=a5
+gpio=27=a4
+gpio=23-25=a4
+
+root@raspberrypi:~# /home/pi/openocd/src/openocd -s /home/pi/openocd/tcl/ -f rpi4-to-rpi1.tcl
+
+ssh pi@pi4 -L 3333:localhost:3333 -L 4444:localhost:4444
+
+[clever@amd-nixos:~/apps/rpi/rpi-open-firmware]$ nix-shell default.nix -A aarch64-shell
+[nix-shell:~/apps/rpi/rpi-open-firmware]$ armv7l-unknown-linux-gnueabihf-gdb
+(gdb) set style enabled off
+(gdb) target remote :3333
+(gdb) x/5i $pc
+=> 0xc03dafd8:  bic     r3, r2, #-16777216      ; 0xff000000
+   0xc03dafdc:  bic     r3, r3, #14680064       ; 0xe00000
+   0xc03dafe0:  cmp     r3, #0
+   0xc03dafe4:  beq     0xc03db048
+   0xc03dafe8:  tst     r2, #255        ; 0xff
+

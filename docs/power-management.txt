@@ -12,3 +12,24 @@ set ISPOW (some kind of electrical isolation)
 set MEMREP (memory repair?)
 wait for MRDONE (mem repair done)
 set ISFUNC (functional isolation)
+
+
+
+code found behind `vcgencmd measure_volts`
+sdram_p: A2W_SMPS_LDO1 >> 18
+sdram_i: A2W_SMPS_LDO0 >> 10
+sdram_c: A2W_SMPS_LDO0 >> 15
+
+those 3 registers are all signed 5 bit ints
+
+&0x1f to select just the reg of interest
+&0x10 to detect negative
+|0xffff_ffe0 to sign extend
+
+to convert to volts, (X * 25 + 1200) * 0.001
+
+each tick of the 5bit int represents 0.025volts of offset, relative to a baseline of 1.2v, max range: 0.8v<->1.575v
+
+core: A2W_SMPS_A_VOLTS
+another 5bit int, sign extend, 0.025 volt increments, 1.2v baseline, but then offset by something in GP
+then convert backwards into a 5bit int, and further translate into the -16<->+8 range, and convert back to voltage??

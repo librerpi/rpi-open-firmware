@@ -1,0 +1,7 @@
+SD_IDL total clocks the sdram has been idle?
+SD_CYC total clocks since last reset
+
+writing 0 to SD_IDL will zero both counts?
+
+both are 28bit ints, that dont overflow
+at 400mhz, it will overflow between 0.5 and 1 seconds, so you must poll every 0.5 seconds at least

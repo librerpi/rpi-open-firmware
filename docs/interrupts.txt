@@ -34,7 +34,7 @@ there are 64 IRQ's within the VC4
 30      arm
 31      dma-vpu
 32      hostport
-33      videoscaler
+33      videoscaler               (HVS)
 34      ccp2tx
 35      sdc
 36      dsi0

@@ -58,3 +58,21 @@ the bit-shift within that register is (gpio % 16) * 2
 
 looks to be AVR style, just a giant block of bits, just like the function select ones
 2 bits per pin, off=0, up=1, down=2, 16 pins per 32bit reg, 4 registers in total?
+
+
+rpi4 SD stuff
+https://github.com/raspberrypi/documentation/issues/1209#issuecomment-513797407
+> The new SDHCI-compliant EMMC2 interface doesn't appear on the GPIOs - it has dedicated pins
+, but to allow booting from SD card without a completely new boot ROM it is possible to map the old ARASAN/EMMC/SDIO interface to those dedicated pins.
+This is controlled by bit 1 of 0x7e2000d0 - 0=EMMC2, 1=legacy EMMC.
+> No, not yet. The only other relevant bit would be the one that enables the RGMII PHY signals onto GPIOs 46+, but you don't want to change that.
+
+bit 0, emmc muxing
+bit 1, rgmii muxing
+
+to use RGMII, configure:
+0x7e2000d0 |= 1; // mux the high-speed signals onto 46-57
+GPIO28-29, ALT5 (RGMII_MDIO and RGMII_MDC)
+GPIO28    pull-down
+GPIO29    pull-up
+GPIO46-57 pull-up

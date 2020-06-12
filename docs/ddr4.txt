@@ -1,0 +1,3 @@
+https://github.com/raspberrypi/firmware/issues/1375
+> There are limits to how quickly the Pi 4 can boot - the SDRAM PHY has quite a lengthy training sequence, several seconds from what I remember.
+
