@@ -59,6 +59,24 @@ void gpio_snapshot(bool gpio_level[64], BCM2708PinmuxSetting functions[64]) {
   gpio->getAllFunctions(functions);
 }
 
+void set_gp_mode(int mash, int source) {
+  uint32_t before = ST_CLO;
+  CM_GP0CTL = CM_PASSWORD | (CM_GP0CTL & CM_GP0CTL_ENAB_CLR); // disable clock
+  while (CM_GP0CTL & CM_GP0CTL_BUSY_SET) {} // wait for it to halt
+  CM_GP0CTL = CM_PASSWORD | (mash << 9) | source;
+  CM_GP0CTL = CM_PASSWORD | (mash << 9) | source | CM_GP0CTL_ENAB_SET;
+  uint32_t after = ST_CLO;
+  printf("switch to %d took %ld\n", source, after - before);
+}
+
+void report_sdram_usage() {
+  uint32_t idle = SD_IDL;
+  uint32_t total = SD_CYC;
+  SD_IDL = 0;
+  float idle_percent = ((float)idle) / ((float)total);
+  printf("sdram usage: %ld %ld, %f\t", idle, total, idle_percent);
+}
+
 void setup_eth_clock(struct OtpInfo *info) {
   int lan_run = 0;
   int ethclk_pin = 0;
@@ -80,7 +98,7 @@ void setup_eth_clock(struct OtpInfo *info) {
 
   pllc_per.configure(2);
 
-  if (1) {
+  if (0) {
     // GP0 for testing on header
     CM_GP0DIV = CM_PASSWORD | 0x28000; // divisor times 0x1000
     CM_GP0CTL = CM_PASSWORD | (2 << 9) | 5;
@@ -113,6 +131,37 @@ void setup_eth_clock(struct OtpInfo *info) {
   // i2c bus exploration
   //gGPIO.setFunction(2, kBCM2708Pinmux_ALT0);
   //gGPIO.setFunction(3, kBCM2708Pinmux_ALT0);
+}
+
+/*void setup_tec_clock() {
+  CM_TECCTL = (CM_TECCTL & CM_TECCTL_ENAB_CLR) | CM_PASSWORD; // disable the TEC clock
+  while (CM_TECCTL & CM_TECCTL_BUSY_SET) {} // wait for it to stop
+  CM_TECCTL = CM_PASSWORD; // clear all config
+  CM_TECDIV = CM_PASSWORD | 0x1000; // set divisor
+  CM_TECCTL = CM_PASSWORD | 1; // set clock source
+  CM_TECCTL = CM_PASSWORD | CM_TECCTL_ENAB_SET | 1; // enable
+}*/
+
+uint32_t get_raw_temp() {
+  return TS_TSENSSTAT;
+}
+
+void print_temp() {
+  uint32_t raw = get_raw_temp();
+  float converted = 412 - (raw & 0x3ff) * 0.538;
+  printf("Temp: %f\t", converted);
+}
+
+void setup_tsens() {
+  CM_TSENSCTL = (CM_TSENSCTL & CM_TSENSCTL_ENAB_CLR) | CM_PASSWORD; // disable TSENS
+  while (CM_TSENSCTL & CM_TSENSCTL_BUSY_SET) {} // wait for it to stop
+  CM_TSENSCTL = CM_PASSWORD; // clear all config
+  CM_TSENSDIV = CM_PASSWORD | 0x5000; // set divisor
+  CM_TSENSCTL = CM_PASSWORD | 1; // set clock source
+  CM_TSENSCTL = CM_PASSWORD | CM_TSENSCTL_ENAB_SET | 1; // enable
+
+  TS_TSENSCTL = 0x4380004;
+  TS_TSENSCTL |= 2;
 }
 
 void peripheral_scan() {

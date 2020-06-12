@@ -62,6 +62,7 @@ in {
   };
   fonts.fontconfig.enable = false;
   security.polkit.enable = false;
+  security.rngd.enable = false;
   services = {
     udisks2.enable = lib.mkForce false;
     openssh.enable = true;

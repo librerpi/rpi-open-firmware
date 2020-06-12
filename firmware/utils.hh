@@ -15,6 +15,11 @@ extern "C" {
   void peripheral_scan();
   void test_things();
   void do_irq_test(void);
+  void setup_tec_clock(void);
+  void setup_tsens(void);
+  void print_temp(void);
+  void set_gp_mode(int mash, int source);
+  void report_sdram_usage(void);
 #ifdef __cplusplus
 };
 #endif

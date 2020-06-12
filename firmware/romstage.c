@@ -123,7 +123,9 @@ int _main(unsigned int cpuid, uint32_t load_address, vc4_saved_state_t* pcb) {
 	sdram_init();
 	puts("SDRAM initialization completed successfully!\n");
 
-        setup_eth_clock(&otpInfo);
+  setup_eth_clock(&otpInfo);
+  //setup_tec_clock();
+  setup_tsens();
 
   ST_C0 = ST_CLO + (100 * 1000 * 1000);
 
