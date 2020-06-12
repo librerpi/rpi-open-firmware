@@ -230,7 +230,7 @@ let
     echo compiling
     dtc $out/rpi3b.dts -o $out/rpi3b.dtb
   '';
-  nixos = (import (sources.nixpkgs + "/nixos") { configuration = ./nixos.nix; });
+  nixos = (import (sources.nixpkgs + "/nixos") { configuration = ./nixos-with-fs.nix; });
   testcycle = pkgs.writeShellScript "testcycle" ''
     set -e
     scp ${vc4.firmware}/bootcode.bin root@router.localnet:/tftproot/open-firmware/bootcode.bin
@@ -291,7 +291,7 @@ in pkgs.lib.fix (self: {
     inherit (nixos) system;
     inherit (nixos.config.system.build) initialRamdisk;
   };
-  test1 = pkgs.callPackage <nixpkgs/nixos/lib/make-system-tarball.nix> {
+  test1 = pkgs.callPackage (pkgs.path + "/nixos/lib/make-system-tarball.nix") {
     contents = [];
     storeContents = [
       { symlink = "/gdb"; object = arm6.gdb; }

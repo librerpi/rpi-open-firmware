@@ -4,19 +4,8 @@
   network.enableRollback = true;
   rpi = {
     imports = [
-      ./nixos.nix
+      ./nixos-with-fs.nix
     ];
     deployment.targetHost = "192.168.2.177";
-    fileSystems = {
-      "/" = {
-        device = "/dev/mmcblk0p2";
-        fsType = "ext4";
-      };
-      "/boot" = {
-        device = "/dev/mmcblk0p1";
-        fsType = "vfat";
-        options = [ "nofail" ];
-      };
-    };
   };
 }
