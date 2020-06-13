@@ -1,0 +1,8 @@
+https://www.raspberrypi.org/forums/viewtopic.php?p=1677250#p1677250
+
+> You can load vc4-fkms-v3d or vc4-kms-v3d on any Pi to give you the DRM/KMS interface for rendering. vc4-fkms-v3d is the default on Pi4.
+> The 3D performance on a Pi0 or 1 is going to be fairly poor as all the setup has to be done by the fairly weak ARM core, so isn't really recommended.
+
+> Only vc4-kms-v3d is Linux driving the hardware directly, the others are using the firmware.
+> vc4-kms-v3d is still a work in progress for the Pi4 as the hardware has significant changes over the previous generations of Pi.
+

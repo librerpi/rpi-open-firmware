@@ -1,0 +1,89 @@
+info from drivers/gpu/drm/vc4/vc4_crtc.c and drivers/gpu/drm/vc4/vc4_regs.h and include/drm/drm_modes.h
+
+> The 2835 has 3 different pixel valves.
+> pv0 in the audio power domain feeds DSI0 or DPI, while pv1 feeds DS1 or SMI.
+> pv2 in the image domain can feed either HDMI or the SDTV controller.
+
+pv0 is at 0x7e206000
+pv1 is at 0x7e207000
+pv2 is at 0x7e807000
+
+PIXELVALVEn_C           base + 0x00
+0     enable
+1     fifo clear
+2:3   clock select, 0=dsi 1=dpi/smi/hdmi 2=vec
+4:5   pixel rep                     pixel_rep - 1
+12    wait h-start
+13    trigger underflow
+14    clear at start
+15:20 fifo full level,              64 - (bytes_per_pixel * 6) for most modes, 64-14 for dsiv18  see vc4_get_fifo_full_level in linux for more details
+21:23 format, 0=24 1=dsiv16 2=dsic16 3=dsiv18 4=dsiv24
+
+PIXELVALVEn_VC          base + 0x04
+bit
+0     video enable
+1     contiuous (always set?)
+2     command (not used by linux)
+3     output is dsi
+4     interlace
+5     odd first (when interlacing, which field is first)
+6:22  odd delay
+
+PIXELVALVEn_VSYNCD_EVEN base + 0x8
+
+if using double-clock mode, pixel_rep = 2
+else pixel_rep = 1
+
+PIXELVALVEn_HORZA       base + 0xc
+0:15  hsync                         total length of H-SYNC * pixel_rep
+16:31 horizontal back porch         the pixel back-portch begins at * pixel_rep
+
+PIXELVALVEn_HORZB       base + 0x10
+0:15  h_active (width)              number of pixels actually displayed * pixel_rep
+16:31 horizoncal front porch        (hsync_start - hdisplay) * pixel_rep
+
+PIXELVALVEn_VERTA       base + 0x14
+0:15  vsync_length                  crtc_vsync_end - crtc_vsync_start
+16:31 vertical back porch           crtc_vtotal - crtc_vsync_end
+
+PIXELVALVEn_VERTB       base + 0x18
+0:15  v_active                      crtc_vdisplay
+16:31 vertical front porch          crtc_vsync_start - crtc_vdisplay
+
+PIXELVALVEn_VERTA_EVEN  base + 0x1c
+same as PIXELVALVEn_VERTA for the even fields
+
+PIXELVALVEn_VERTB_EVEN  base + 0x20
+same as PIXELVALVEn_VERTB for the event fields
+
+the above 2 _EVEN fields only have to be set when interlacing is enabled
+
+PIXELVALVEn_INTEN       base + 0x24
+interrupt enable
+0     hsync interrupt
+1     h-backporch interrupt
+2     h-active interrupt
+3     h-frontporch interrupt
+4     v-sync interrupt
+5     v-backporch interrupt
+6     v-active interrupt
+7     v-frontporch start interrupt, do page-flip here
+8     v-frontporch end interrupt
+9     video idle interrupt
+
+PIXELVALVEn_INTSTAT     base + 0x28
+interrupt status for above
+
+PIXELVALVEn_STAT        base + 0x2c
+
+PIXELVALVEn_DSI_HACT_ACT base + 0x30
+0:15  horizontal active?            hdisplay * pixel_rep
+
+
+example state from an rpi4: https://gist.github.com/cleverca22/65bf044521e508e1adb5c82ef74548cf
+
+a vsync_length of 3, means that vsync is active for 3 scan-lines
+
+vfp, vsync, vbp, vactive are all scan-line counts
+
+DE (GPIO1) is active only for the active screen-area, no porch/sync pulses
