@@ -15,7 +15,6 @@ void safe_putchar(unsigned char c) {
 // count must be a multiple of 16 bytes
 void hexdump_ram(uint32_t realaddr, uint32_t reportaddr, uint32_t count) {
   volatile uint32_t *ram32 = 0;
-  volatile uint8_t *ram8 = 0;
   for (uint32_t i = realaddr, fakeaddr = reportaddr; i < (realaddr + count); i += 16, fakeaddr += 16) {
     uint32_t fragment;
     printf("0x%08lx ", fakeaddr);

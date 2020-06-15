@@ -38,19 +38,6 @@ let
       name = "uart-manager";
       src = ./uart-manager;
     };
-    pll-inspector = self.stdenv.mkDerivation {
-      name = "pll-inspector";
-      unpackPhase = ''
-        mkdir source
-        cp ${./pll-inspector.cpp} source/pll-inspector.cpp
-        sourceRoot=source
-      '';
-      buildPhase = "$CXX pll-inspector.cpp -o pll-inspector -fpermissive";
-      installPhase = ''
-        mkdir -pv $out/bin
-        cp pll-inspector $out/bin/
-      '';
-    };
     utils = self.callPackage ./utils {};
     notc = self.stdenv.mkDerivation {
       name = "notc";
@@ -238,13 +225,11 @@ let
   '';
   filterArmUserlandPackages = input: {
     inherit (input) initrd bcm2835 busybox openssl pll-inspector linux_rpi2 diskImage bootdir utils;
+    #inherit (aarch64) ubootRaspberryPi3_64bit linux_rpi3 bcm2835;
     hs = trimHaskellNixTree input.pkgSet { hs-gpio = true; };
   };
 in pkgs.lib.fix (self: {
   inherit dtbFiles testcycle;
-  aarch64 = {
-    inherit (aarch64) ubootRaspberryPi3_64bit linux_rpi3 bcm2835;
-  };
   arm64 = {
     inherit (arm64) chainloader64 common;
   };
@@ -257,6 +242,7 @@ in pkgs.lib.fix (self: {
   };
   arm6 = filterArmUserlandPackages arm6;
   arm7 = filterArmUserlandPackages arm7;
+  aarch64 = filterArmUserlandPackages aarch64;
   x86_64 = {
     inherit (x86_64) test-script uart-manager;
     haskell-nix = {

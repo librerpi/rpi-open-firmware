@@ -3,5 +3,5 @@
 stdenv.mkDerivation {
   name = "utils";
   buildInputs = [ common raspberrypi-tools ];
-  src = ./.;
+  src = stdenv.lib.cleanSource ./.;
 }

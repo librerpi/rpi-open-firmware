@@ -4,9 +4,13 @@ info from drivers/gpu/drm/vc4/vc4_crtc.c and drivers/gpu/drm/vc4/vc4_regs.h and 
 > pv0 in the audio power domain feeds DSI0 or DPI, while pv1 feeds DS1 or SMI.
 > pv2 in the image domain can feed either HDMI or the SDTV controller.
 
-pv0 is at 0x7e206000
-pv1 is at 0x7e207000
-pv2 is at 0x7e807000
+pv0 is at 0x7e206000, audio domain, DSI0/DPI
+pv1 is at 0x7e207000, audio domain?, DSI1/SMI
+pv2 is at 0x7e807000, image domain, HDMI/SDTV
+rpi4 only:
+pv3 is at 0x7e20a000, HDMI0?
+pv4 is at 0x7e216000, HDMI1?
+pv5 is at 0x7ec12000
 
 PIXELVALVEn_C           base + 0x00
 0     enable
@@ -43,12 +47,12 @@ PIXELVALVEn_HORZB       base + 0x10
 16:31 horizoncal front porch        (hsync_start - hdisplay) * pixel_rep
 
 PIXELVALVEn_VERTA       base + 0x14
-0:15  vsync_length                  crtc_vsync_end - crtc_vsync_start
-16:31 vertical back porch           crtc_vtotal - crtc_vsync_end
+0:15  vsync_length                  scanlines in vsync
+16:31 vertical back porch           scanlines in v back porch
 
 PIXELVALVEn_VERTB       base + 0x18
-0:15  v_active                      crtc_vdisplay
-16:31 vertical front porch          crtc_vsync_start - crtc_vdisplay
+0:15  v_active                      scanlines in the displayed field
+16:31 vertical front porch          scanlines in the v front porch
 
 PIXELVALVEn_VERTA_EVEN  base + 0x1c
 same as PIXELVALVEn_VERTA for the even fields
@@ -87,3 +91,71 @@ a vsync_length of 3, means that vsync is active for 3 scan-lines
 vfp, vsync, vbp, vactive are all scan-line counts
 
 DE (GPIO1) is active only for the active screen-area, no porch/sync pulses
+
+
+
+example states:
+
+an rpi4 with only DPI enabled:
+PV0 drives the DPI
+PV3/4 are configured for 320x480 for an unknown purpose
+all others are 0x0
+
+an rpi4 with only HDMI0 enabled
+PV3 raw dump:
+0x7e20a000 01 40 17 07 03 00 00 00  00 00 00 00 38 00 7c 00  |.@..........8.|.|
+0x7e20a010 80 02 18 00 03 00 26 00  00 04 01 00 00 00 00 00  |......&.........|
+0x7e20a020 00 00 00 00 00 00 00 00  00 00 00 00 44 04 00 00  |............D...|
+0x7e20a030 00 00 00 00 20 00 00 00  01 00 00 00 00 00 02 00  |.... ...........|
+PV3, 640x1024 (wrong, its running at 1280x1024, width is double what dump tool claims)
+PV4, 320x480
+all others are 0x0
+
+rpi4, hdmi0 at 640x480
+PV3 raw dump:
+0x7e20a000 01 40 17 07 03 00 00 00  00 00 00 00 30 00 18 00  |.@..........0...|
+0x7e20a010 40 01 08 00 02 00 21 00  e0 01 0a 00 00 00 00 00  |@.....!.........|
+0x7e20a020 00 00 00 00 00 00 00 00  00 00 00 00 48 04 00 00  |............A...|
+0x7e20a030 00 00 00 00 20 00 00 00  01 00 00 00 00 00 02 00  |.... ...........|
+claims 320x480, still off
+
+rpi3, hdmi at state 0x6 [DVI DMT (35) RGB full 5:4], 1280x1024 @ 60.00Hz, progressive
+PV2 raw dump:
+0x7e807000 05 70 17 00 03 00 00 00  00 00 00 00 70 00 f8 00  |.p..........p...|
+0x7e807010 00 05 30 00 03 00 26 00  00 04 01 00 00 00 00 00  |..0...&.........|
+0x7e807020 00 00 00 00 00 00 00 00  00 00 00 00 44 04 00 00  |............D...|
+0x7e807030 00 05 00 00 76 78 69 70  76 78 69 70 76 78 69 70  |....vxipvxipvxip|
+claims 1280x1024, which is correct
+total scanline length: 1688
+total scanlines: 1066
+total clocks per frame: 1799408
+
+rpi3, state 0x40000 [NTSC 4:3], 720x480 @ 60.00Hz, interlaced
+PV2 raw dump:
+0x7e807000 09 70 17 00 33 00 00 00  ae 01 00 00 40 00 3c 00  |.p..3.......@.<.|
+0x7e807010 d0 02 0e 00 03 00 10 00  f0 00 03 00 03 00 10 00  |................|
+0x7e807020 f0 00 04 00 00 00 00 00  00 00 00 00 20 06 00 00  |............ ...|
+0x7e807030 d0 02 00 00 76 78 69 70  76 78 69 70 76 78 69 70  |....vxipvxipvxip|
+720x240
+total scanline length: 858
+total scanlines: 262
+total clocks per frame: 224796
+
+rpi3, state 0x80000 [PAL 4:3], 720x576 @ 50.00Hz, interlaced
+PV2 raw dump:
+0x7e807000 09 70 17 00 53 6c 00 00  00 00 00 00 40 00 3c 00  |.p..Sl......@.<.|
+0x7e807010 d0 02 14 00 03 00 14 00  20 01 02 00 03 00 13 00  |........ .......|
+0x7e807020 20 01 02 00 00 00 00 00  00 00 00 00 44 06 00 00  | ...........D...|
+0x7e807030 d0 02 00 00 76 78 69 70  76 78 69 70 76 78 69 70  |....vxipvxipvxip|
+720 x  288
+total scanline length: 864
+total scanlines: 313
+total clocks per frame: 270432
+
+
+when in DPI mode, the clock comes via CM_DPI(CTL|DIV)
+
+the rpi4 will use XOSC for clocks below ~50mhz, and PLLD_PER for clocks above ~50mhz, beyond 750mhz it just gives up and doesnt enable
+PLLD typically runs at 3ghz, and PLLD_PER is /4, so 750mhz
+
+but the GPIO are only rated for 75mhz (at least on the rpi0-3 line)
