@@ -56,8 +56,8 @@ LINKFLAGS = -nostdlib -march=$(ARCH) -Wl,--build-id=none -T linker.lds -ltlsf -l
 FPUFLAGS=-mfpu=vfp -mfloat-abi=softfp
 COMMON_FLAGS = -c -nostdlib -nostartfiles -ffreestanding -march=$(ARCH) -I../ -I./ -I./drivers/libfdt/ -mtune=arm1176jzf-s ${FPUFLAGS} -ffunction-sections -fdata-sections
 
-CFLAGS = $(COMMON_FLAGS) -std=c11 -g -O
-CXXFLAGS = $(COMMON_FLAGS) -std=c++11 -fno-exceptions -fno-rtti -g
+CFLAGS = $(COMMON_FLAGS) -std=c11 -g -O -DBAREMETAL
+CXXFLAGS = $(COMMON_FLAGS) -std=c++11 -fno-exceptions -fno-rtti -g -DBAREMETAL
 ASFLAGS = $(COMMON_FLAGS) -x assembler-with-cpp
 
 HEADERS := \
