@@ -4,13 +4,24 @@ info from drivers/gpu/drm/vc4/vc4_crtc.c and drivers/gpu/drm/vc4/vc4_regs.h and 
 > pv0 in the audio power domain feeds DSI0 or DPI, while pv1 feeds DS1 or SMI.
 > pv2 in the image domain can feed either HDMI or the SDTV controller.
 
-pv0 is at 0x7e206000, audio domain, DSI0/DPI
-pv1 is at 0x7e207000, audio domain?, DSI1/SMI
-pv2 is at 0x7e807000, image domain, HDMI/SDTV
-rpi4 only:
-pv3 is at 0x7e20a000, HDMI0?
-pv4 is at 0x7e216000, HDMI1?
-pv5 is at 0x7ec12000
+shared:
+pv0 audio domain, DSI0/DPI
+pv1 audio domain?, DSI1/SMI
+
+VC4: pv2 is HDMI/SDTV
+
+VC6:
+pv2 HDMI0
+pv3 VEC
+pv4 HDMI1
+
+            VC4   VC6
+0x7e206000  pv0   pv0
+0x7e207000  pv1   pv1
+0x7e20a000        pv2?
+0x7e216000        pv4
+0x7e807000  pv2
+0x7ec12000        pv3
 
 PIXELVALVEn_C           base + 0x00
 0     enable
@@ -159,3 +170,6 @@ the rpi4 will use XOSC for clocks below ~50mhz, and PLLD_PER for clocks above ~5
 PLLD typically runs at 3ghz, and PLLD_PER is /4, so 750mhz
 
 but the GPIO are only rated for 75mhz (at least on the rpi0-3 line)
+
+(rpi3) SCALER_DISPLIST1 controls the HDMI port
+(rpi4) list 0/1/2 are all blank
