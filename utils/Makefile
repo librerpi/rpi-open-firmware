@@ -1,4 +1,4 @@
-CFLAGS := -g `pkg-config --cflags libdrm`
+CFLAGS := -g `${PKG_CONFIG} --cflags libdrm`
 CXXFLAGS := ${CFLAGS}
 
 ramdumper: ramdumper.cc

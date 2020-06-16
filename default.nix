@@ -225,7 +225,7 @@ let
     exec ${x86_64.uart-manager}/bin/uart-manager
   '';
   filterArmUserlandPackages = input: {
-    inherit (input) initrd bcm2835 busybox openssl linux_rpi2 diskImage bootdir utils nix;
+    inherit (input) initrd bcm2835 busybox openssl linux_rpi2 diskImage bootdir utils nix raspberrypi-tools;
     #inherit (aarch64) ubootRaspberryPi3_64bit linux_rpi3 bcm2835;
     hs = trimHaskellNixTree input.pkgSet { hs-gpio = true; };
   };
