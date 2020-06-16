@@ -21,7 +21,6 @@ in {
   ];
   environment = {
     systemPackages = [
-      self.arm7.pll-inspector
       self.arm7.hs.hs-gpio.cexes.hs-gpio
       pkgs.i2c-tools
       pkgs.screen
