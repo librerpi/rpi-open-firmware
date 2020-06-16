@@ -33,7 +33,7 @@ struct pixel_valve {
 
 void dump_pv(void *mmiobase, uint32_t offset, int pvnr) {
   printf("\nPV%d raw dump:\n", pvnr);
-  uint32_t pvaddr = reinterpret_cast<uint32_t>(mmiobase) + offset;
+  void *pvaddr = reinterpret_cast<void*>(mmiobase) + offset;
   hexdump_ram(pvaddr, 0x7e000000 + offset, 0x80);
   struct pixel_valve pv;
   volatile pixel_valve *rawpv = reinterpret_cast<volatile pixel_valve *>(pvaddr);
@@ -115,7 +115,7 @@ void dump_pv(void *mmiobase, uint32_t offset, int pvnr) {
   float fDivisior = 0;
   float pixel_clock;
   int input_clock = 0;
-  char *input_name = "";
+  const char *input_name = "";
   switch (pvnr) {
   case 0:
     iDivisor = (CM_DPIDIV >> CM_DPIDIV_DIV_LSB) & CM_DPIDIV_DIV_SET;
@@ -156,16 +156,67 @@ void print_clock(volatile void *base, uint32_t offset, const char *name) {
   }
 }
 
+void dump_hvs(void *mmiobase, int nr, uint32_t listStart, int vc) {
+  printf("SCALER_DISPLIST%d: 0x%x\n", nr, listStart);
+  //if (listStart == 0) return;
+  volatile uint32_t *list = reinterpret_cast<volatile uint32_t*>(mmiobase + 0x402000);
+  for (int i=listStart; i<(listStart + 16); i++) {
+    printf("%x: 0x%x\n", i, list[i]);
+    if (list[i] & (1<<30)) {
+      printf("  valid\n");
+      printf("  format: %d\n", list[i] & 0xf);
+      printf("  pixel order: %d\n", (list[i] >> 13) & 0x3);
+      printf("  words: %d\n", (list[i] >> 24) & 0xf);
+      if (list[i] & (1<<4)) {
+        printf("  unity\n");
+        printf("  word0: 0x%x\n", list[i+1]);
+        printf("    x: %d y: %d\n", list[i+1] & 0xfff, (list[i+1] >> 12) & 0xfff);
+        printf("  word2: 0x%x\n", list[i+2]);
+        printf("    width: %d height: %d\n", list[i+2] & 0xffff, (list[i+2] >> 16) & 0xfff);
+        printf("  word3: 0x%x\n", list[i+3]);
+        printf("  pointer word: 0x%x\n", list[i+4]);
+        printf("  pointer context word: 0x%x\n", list[i+5]);
+        printf("  pitch word: 0x%x\n", list[i+6]);
+        printf("  end?: 0x%x\n", list[i+7]);
+        if (list[i+7] & (1<<31)) {
+          puts("END");
+          break;
+        } else {
+          i += 6;
+        }
+      }
+    }
+  }
+}
+
 int main(int argc, char **argv) {
   struct peripherals handle;
   open_peripherals(handle);
-  void *rawaddr = handle.peripherals_start;
-  dump_pv(rawaddr, 0x206000, 0);
+  void *mmiobase = handle.peripherals_start;
+  dump_pv(mmiobase, 0x206000, 0);
   //print_clock(rawaddr, 0x101068, "DPI");
-  //dump_pv(rawaddr, 0x207000, 1);
-  //dump_pv(rawaddr, 0x807000, 2);
-  //dump_pv(rawaddr, 0x20a000, 3);
-  //dump_pv(rawaddr, 0x216000, 4);
-  //dump_pv(rawaddr, 0xc12000, 5);
+  puts("\nVec:");
+  print_clock(mmiobase, 0x1010f8, "VEC");
+  if (handle.vc == 4) {
+    hexdump_ram(mmiobase + 0x806000, 0x7e806000, 0x300);
+  } else {
+    hexdump_ram(mmiobase + 0xc13000, 0x7ec13000, 0x300);
+  }
+  dump_pv(mmiobase, 0x207000, 1);
+  if (handle.vc == 4) {
+    dump_pv(mmiobase, 0x807000, 2);
+  } else if (handle.vc == 6) {
+    dump_pv(mmiobase, 0x20a000, 2);
+    dump_pv(mmiobase, 0xc12000, 3);
+    dump_pv(mmiobase, 0x216000, 4);
+  }
   //hexdump_ram(((uint32_t)rawaddr) + 0x200000, 0x7e200000, 0x200);
+  hexdump_ram(mmiobase + 0x400000, 0x7e400000, 0xd0);
+  puts("");
+  hexdump_ram(mmiobase + 0x402000, 0x7e402000, 0x100);
+  dump_hvs(mmiobase, 0, SCALER_DISPLIST0, handle.vc);
+  dump_hvs(mmiobase, 1, SCALER_DISPLIST1, handle.vc);
+  dump_hvs(mmiobase, 2, SCALER_DISPLIST2, handle.vc);
+  hexdump_ram(mmiobase + 0x402000, 0x7e402000, 0x100);
+  hexdump_ram(mmiobase + 0x404000, 0x7e404000, 0x100);
 }

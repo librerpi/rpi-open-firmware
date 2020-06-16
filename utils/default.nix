@@ -1,7 +1,9 @@
-{ stdenv, common, raspberrypi-tools }:
+{ stdenv, common, raspberrypi-tools, libdrm, pkgconfig }:
 
 stdenv.mkDerivation {
   name = "utils";
-  buildInputs = [ common raspberrypi-tools ];
+  nativeBuildInputs = [ pkgconfig ];
+  buildInputs = [ common raspberrypi-tools libdrm ];
   src = stdenv.lib.cleanSource ./.;
+  dontStrip = true;
 }

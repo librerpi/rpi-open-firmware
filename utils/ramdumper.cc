@@ -26,12 +26,12 @@ int main(int argc, char **argv) {
     perror("unable to open /dev/mem");
     return 2;
   }
-  uint32_t *rawaddr = (uint32_t*)mmap(NULL, length, PROT_READ, MAP_SHARED, fd, addr);
+  volatile void *rawaddr = (uint32_t*)mmap(NULL, length, PROT_READ, MAP_SHARED, fd, addr);
   if (rawaddr == MAP_FAILED) {
     perror("unable to mmap");
     return 3;
   }
   printf("starting at 0x%x (%dMB)\n", addr, addr/1024/1024);
-  hexdump_ram((uint32_t)rawaddr, addr, length);
+  hexdump_ram(rawaddr, addr, length);
   return 0;
 }

@@ -13,13 +13,13 @@ void safe_putchar(unsigned char c) {
 // realaddr must be 16 aligned
 // reads from realaddr, but claims to be from reportaddr, to allow mmap usage
 // count must be a multiple of 16 bytes
-void hexdump_ram(uint32_t realaddr, uint32_t reportaddr, uint32_t count) {
-  volatile uint32_t *ram32 = 0;
-  for (uint32_t i = realaddr, fakeaddr = reportaddr; i < (realaddr + count); i += 16, fakeaddr += 16) {
+void hexdump_ram(volatile void *realaddr, uint32_t reportaddr, uint32_t count) {
+  volatile uint32_t *buffer_start = reinterpret_cast<volatile uint32_t*>(realaddr);
+  for (uint32_t i = 0, fakeaddr = reportaddr; i < count; i += 16, fakeaddr += 16) {
     uint32_t fragment;
     printf("0x%08lx ", fakeaddr);
     for (int j=0; j<4; j++) {
-      fragment = ram32[(i/4)+j];
+      fragment = buffer_start[(i+j)/4];
       uint8_t a,b,c,d;
       a = fragment & 0xff;
       b = (fragment >> 8) & 0xff;
@@ -30,7 +30,7 @@ void hexdump_ram(uint32_t realaddr, uint32_t reportaddr, uint32_t count) {
     }
     printf(" |");
     for (int j=0; j<4; j++) {
-      fragment = ram32[(i/4)+j];
+      fragment = buffer_start[(i+j)/4];
       uint8_t a,b,c,d;
       a = fragment & 0xff;
       b = (fragment >> 8) & 0xff;
