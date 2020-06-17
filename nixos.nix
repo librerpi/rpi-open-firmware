@@ -34,6 +34,11 @@ in {
   };
   nixpkgs = {
     crossSystem.system = "armv7l-linux";
+    overlays = [
+      (self: super: {
+        libgpgerror = self.callPackage "${sources.nixpkgs-old}/pkgs/development/libraries/libgpg-error/default.nix" {};
+      })
+    ];
   };
   networking = {
     useDHCP = false;
