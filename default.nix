@@ -48,6 +48,7 @@ let
       dontStrip = true;
     };
     libdrm = super.libdrm.override { withValgrind = false; };
+    libgpgerror = self.callPackage "${sources.nixpkgs-old}/pkgs/development/libraries/libgpg-error/default.nix" {};
     chainloader = arm.stdenv.mkDerivation {
       name = "chainloader";
       src = lib.cleanSource ./arm_chainloader;
@@ -225,7 +226,7 @@ let
     exec ${x86_64.uart-manager}/bin/uart-manager
   '';
   filterArmUserlandPackages = input: {
-    inherit (input) initrd bcm2835 busybox openssl linux_rpi2 diskImage bootdir utils nix raspberrypi-tools;
+    inherit (input) initrd bcm2835 busybox openssl linux_rpi2 diskImage bootdir utils nix raspberrypi-tools systemd;
     #inherit (aarch64) ubootRaspberryPi3_64bit linux_rpi3 bcm2835;
     hs = trimHaskellNixTree input.pkgSet { hs-gpio = true; };
   };
