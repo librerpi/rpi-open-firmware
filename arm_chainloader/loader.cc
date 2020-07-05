@@ -96,7 +96,7 @@ struct LoaderImpl {
 			buffer[len] = 0;
 		}
 
-		logf("%s: reading %d bytes to 0x%X (allocated=%d) ...\n", path, len, (unsigned int)dest, should_alloc);
+		logf("%s: reading %d bytes to 0x%X ~%dmb (allocated=%d) ...\n", path, len, (unsigned int)dest, ((unsigned int)dest)/1024/1024, should_alloc);
 
 		f_read(&fp, dest, len, &len);
 		f_close(&fp);

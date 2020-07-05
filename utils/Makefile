@@ -16,7 +16,7 @@ pll-inspector: pll-inspector.o map_peripherals.o
 	${CC} -o $@ $^ -lbcm_host -lcommon
 
 kms-test: kms-test.o
-	${CXX} -o $@ $^ -ldrm
+	${CXX} -o $@ $^ -ldrm -lm
 
 install: ramdumper pv_dumper pll-inspector kms-test
 	mkdir -pv ${out}/bin

@@ -14,11 +14,12 @@ wait for MRDONE (mem repair done)
 set ISFUNC (functional isolation)
 
 
+https://www.raspberrypi.org/documentation/raspbian/applications/vcgencmd.md
 
 code found behind `vcgencmd measure_volts`
-sdram_p: A2W_SMPS_LDO1 >> 18
-sdram_i: A2W_SMPS_LDO0 >> 10
-sdram_c: A2W_SMPS_LDO0 >> 15
+sdram phy  sdram_p: A2W_SMPS_LDO1 >> 18
+sdram io   sdram_i: A2W_SMPS_LDO0 >> 10
+sdram core sdram_c: A2W_SMPS_LDO0 >> 15
 
 those 3 registers are all signed 5 bit ints
 

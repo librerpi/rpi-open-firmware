@@ -360,7 +360,7 @@ struct BCM2708SDHost : BlockDevice {
 		drain_fifo();
 
 		/* enter READ mode */
-		send_raw(MMC_READ_BLOCK_MULTIPLE | SH_CMD_READ_CMD_SET, sector);
+		send_raw(MMC_READ_BLOCK_SINGLE | SH_CMD_READ_CMD_SET, sector);
 
 		int i;
 		uint32_t hsts_err = 0;
@@ -429,6 +429,11 @@ struct BCM2708SDHost : BlockDevice {
 		char pnm[8];
 		uint32_t block_length;
 		uint32_t clock_div = 0;
+                uint8_t mid;
+                uint16_t oid;
+                uint8_t revision;
+                uint32_t serial;
+                uint16_t date;
 
 		send_no_resp(MMC_GO_IDLE_STATE);
 
@@ -443,9 +448,19 @@ struct BCM2708SDHost : BlockDevice {
 		}
 
 		SD_CID_PNM_CPY(cid, pnm);
+                mid = SD_CID_MID(cid);
+                oid = SD_CID_OID(cid);
+                revision = SD_CID_REV(cid);
+                serial = SD_CID_PSN(cid);
+                date = SD_CID_MDT(cid);
 
 		logf("Detected SD card:\n");
+                printf("    Date: 0x%x\n", date);
+                printf("    Serial: 0x%x\n", serial);
+                printf("    Revision: 0x%x\n", revision);
 		printf("    Product : %s\n", pnm);
+                printf("    OID: 0x%x\n", oid);
+                printf("    MID: 0x%x\n", mid);
 
 		if (SD_CSD_CSDVER(csd) == SD_CSD_CSDVER_2_0) {
 			printf("    CSD     : Ver 2.0\n");

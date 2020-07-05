@@ -7,6 +7,7 @@
 #include <string.h>
 #include <sys/mman.h>
 #include <unistd.h>
+#include <math.h>
 
 #include <xf86drm.h>
 #include <xf86drmMode.h>
@@ -147,7 +148,7 @@ dpi_timings=50 0 0 1 0 2000 0 0 1 0 0 0 0 30 0 5000000 6
 dtoverlay=dpi24
 enable_dpi_lcd=1
  */
-void emitData(void *buf, const char *msg, uint32_t width, uint32_t height, uint32_t pitch) {
+void emitUartData(void *buf, const char *msg, uint32_t width, uint32_t height, uint32_t pitch) {
   int len = strlen(msg);
   for (int y=0; y < height; y++) {
     for (int x=0; x < width; x++) {
@@ -171,15 +172,27 @@ void emitData(void *buf, const char *msg, uint32_t width, uint32_t height, uint3
   printf("%d x %d\n", width, height);
 }
 
+void emitSineData(void *buf, uint32_t width, uint32_t height, uint32_t pitch) {
+  for (int y=0; y < height; y++) {
+    for (int x=0; x < width; x++) {
+      uint8_t *pixel = reinterpret_cast<uint8_t*>(buf + (y * pitch) + (x * 3));
+      double dx = x;
+      pixel[0] = (sin((dx / 10) * 3.14) * 0x80) + 0x80;
+      pixel[1] = 0;
+      pixel[2] = 0;
+    }
+  }
+}
+
 int main(int argc, char **argv) {
   int fd = open("/dev/dri/card1", O_RDWR);
   uint32_t crtc_id, connector_id;
-#if 1
+#if 0
   // pi4 DPI
   crtc_id = 52;
   connector_id = 54;
 #endif
-#if 0
+#if 1
   // pi4 hdmi0
   crtc_id = 81;
   connector_id = 83;
@@ -196,7 +209,8 @@ int main(int argc, char **argv) {
   printDrmModes(fd);
   uint32_t width,height,pitch;
   void *buf = setupFrameBuffer(fd, crtc_id, connector_id, &width, &height, &pitch);
-  emitData(buf,"Uart test data", width, height, pitch);
-  sleep(10);
+  //emitUartData(buf,"Uart test data", width, height, pitch);
+  emitSineData(buf, width, height, pitch);
+  sleep(100);
   return 0;
 }

@@ -189,6 +189,26 @@ void dump_hvs(void *mmiobase, int nr, uint32_t listStart, int vc) {
   }
 }
 
+void print_dpi_state(void *mmiobase) {
+  // refer to /drivers/gpu/drm/vc4/vc4_dpi.c
+  uint32_t c = DPI_C;
+  printf("DPI_C: 0x%x\n", c);
+  if (c & BV(0)) puts("  enabled");
+
+  if (c & BV(1)) puts("  output enable disabled");
+  if (c & BV(2)) puts("  vsync disabled");
+  if (c & BV(3)) puts("  hsync disabled");
+
+  if (c & BV(4)) puts("  output enable negate");
+  if (c & BV(5)) puts("  vsync negate");
+  if (c & BV(6)) puts("  hsync negate");
+
+  if (c & BV(7)) puts("  output enable invert");
+  if (c & BV(8)) puts("  vsync invert");
+  if (c & BV(9)) puts("  hsync invert");
+  if (c & BV(10)) puts("  pixel clk invert");
+}
+
 int main(int argc, char **argv) {
   struct peripherals handle;
   open_peripherals(handle);
@@ -219,4 +239,5 @@ int main(int argc, char **argv) {
   dump_hvs(mmiobase, 2, SCALER_DISPLIST2, handle.vc);
   hexdump_ram(mmiobase + 0x402000, 0x7e402000, 0x100);
   hexdump_ram(mmiobase + 0x404000, 0x7e404000, 0x100);
+  print_dpi_state(mmiobase);
 }

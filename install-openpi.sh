@@ -1,4 +1,4 @@
-#! @shell@
+#! @crossShell@
 # meant to be used as part of nixos, not ran manually
 
 ln -svf $1/init /init
