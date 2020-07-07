@@ -104,6 +104,7 @@ int _main(unsigned int cpuid, uint32_t load_address, vc4_saved_state_t* pcb) {
   switch_vpu_to_pllc();
 
   printf("CM_UARTCTL is 0x%08lx\nCM_UARTDIV is 0x%08lx\n", CM_UARTCTL, CM_UARTDIV);
+  printf("PLLC.CORE0 %ld\n", pllc_core0());
   if (pcb) print_vpu_state(pcb);
 
   setup_irq_handlers();

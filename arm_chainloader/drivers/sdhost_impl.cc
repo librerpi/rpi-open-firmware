@@ -80,7 +80,7 @@ struct BCM2708SDHost : BlockDevice {
 	uint32_t cid[4];
 	uint32_t csd[4];
 
-	uint32_t capacity_bytes;
+	uint64_t capacity_bytes;
 
 	uint32_t r[4];
 
@@ -341,7 +341,8 @@ struct BCM2708SDHost : BlockDevice {
     }
   }
 
-	virtual bool read_block(uint32_t sector, uint32_t* buf) override {
+	virtual bool read_block(uint32_t sector, uint32_t* buf, uint32_t count) override {
+    int chunks = 128 * count;
 		if (!card_ready)
 			panic("card not ready");
 
@@ -360,7 +361,11 @@ struct BCM2708SDHost : BlockDevice {
 		drain_fifo();
 
 		/* enter READ mode */
-		send_raw(MMC_READ_BLOCK_SINGLE | SH_CMD_READ_CMD_SET, sector);
+    if (count == 1) {
+      send_raw(MMC_READ_BLOCK_SINGLE | SH_CMD_READ_CMD_SET, sector);
+    } else {
+      send_raw(MMC_READ_BLOCK_MULTIPLE | SH_CMD_READ_CMD_SET, sector);
+    }
 
 		int i;
 		uint32_t hsts_err = 0;
@@ -372,7 +377,7 @@ struct BCM2708SDHost : BlockDevice {
 #endif
 
 		/* drain useful data from FIFO */
-		for (i = 0; i < 128; i++) {
+		for (i = 0; i < chunks; i++) {
 			/* wait for FIFO */
 			if (!wait_for_fifo_data()) {
 				break;
@@ -380,7 +385,7 @@ struct BCM2708SDHost : BlockDevice {
 
 			uint32_t hsts_err = SH_HSTS & SDHSTS_ERROR_MASK;
 			if (hsts_err) {
-				logf("ERROR: transfer error on FIFO word %d: 0x%lx\n", i, SH_HSTS);
+				logf("ERROR: transfer error on FIFO word %d(sector %ld): 0x%lx edm: 0x%lx\n", i, sector, SH_HSTS, SH_EDM);
 				break;
 			}
 
@@ -409,7 +414,7 @@ struct BCM2708SDHost : BlockDevice {
 
 #ifdef DUMP_READ
 		if (buf)
-			logf("Completed read for %d\n", sector);
+			logf("Completed read for %ld\n", sector);
 #endif
 		return true;
 	}
@@ -456,7 +461,7 @@ struct BCM2708SDHost : BlockDevice {
 
 		logf("Detected SD card:\n");
                 printf("    Date: 0x%x\n", date);
-                printf("    Serial: 0x%x\n", serial);
+                printf("    Serial: 0x%lx\n", serial);
                 printf("    Revision: 0x%x\n", revision);
 		printf("    Product : %s\n", pnm);
                 printf("    OID: 0x%x\n", oid);
@@ -470,7 +475,7 @@ struct BCM2708SDHost : BlockDevice {
 			block_length = 1 << SD_CSD_V2_BL_LEN;
 
 			/* work out the capacity of the card in bytes */
-			capacity_bytes = (SD_CSD_V2_CAPACITY(csd) * block_length);
+			capacity_bytes = ((uint64_t)SD_CSD_V2_CAPACITY(csd) * block_length);
 
 			clock_div = 5;
 		} else if (SD_CSD_CSDVER(csd) == SD_CSD_CSDVER_1_0) {
@@ -481,7 +486,7 @@ struct BCM2708SDHost : BlockDevice {
 			block_length = 1 << SD_CSD_READ_BL_LEN(csd);
 
 			/* work out the capacity of the card in bytes */
-			capacity_bytes = (SD_CSD_CAPACITY(csd) * block_length);
+			capacity_bytes = ((uint64_t)SD_CSD_CAPACITY(csd) * block_length);
 
 			clock_div = 10;
 		} else {
@@ -511,7 +516,7 @@ struct BCM2708SDHost : BlockDevice {
 
 		block_size = 512;
 
-		logf("Card initialization complete: %s %ldMB SD%s Card\n", pnm, capacity_bytes >> 20, is_high_capacity ? "HC" : "");
+		logf("Card initialization complete: %s %ldMB SD%s Card\n", pnm, (uint32_t)(capacity_bytes >> 20), is_high_capacity ? "HC" : "");
 
 		/*
 		 * this makes some dangerous assumptions that the all csd2 cards are sdio cards
@@ -554,7 +559,7 @@ struct BCM2708SDHost : BlockDevice {
 			 * looks like a silicon bug to me or a quirk of csd2, who knows
 			 */
 			for (int i = 0; i < 3; i++) {
-				if (!read_block(0, nullptr)) {
+				if (!read_block(0, nullptr, 1)) {
 					panic("fifo flush cycle %d failed", i);
 				}
 			}

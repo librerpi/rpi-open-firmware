@@ -21,15 +21,15 @@ struct BlockDevice {
 	unsigned int block_size;
 
 	template <typename T>
-	inline bool read_block(uint32_t sector, T* dest_buffer) {
-		return read_block(sector, reinterpret_cast<uint32_t*>(dest_buffer));
+	inline bool read_block(uint32_t sector, T* dest_buffer, uint32_t count) {
+		return read_block(sector, reinterpret_cast<uint32_t*>(dest_buffer), count);
 	}
 
 	inline unsigned int get_block_size() {
 		return block_size;
 	}
 
-	virtual bool read_block(uint32_t sector, uint32_t* buf) = 0;
+	virtual bool read_block(uint32_t sector, uint32_t* buf, uint32_t count) = 0;
 
 	/* called to stop the block device */
 	virtual void stop() {}

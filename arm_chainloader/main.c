@@ -81,7 +81,7 @@ void c_entry(uint32_t r0) {
     bzero(&__bss_start, &__bss_end - &__bss_start);
     udelay(30000); // the first few prints get cut off if this delay is lower
     heap_init();
-    printf("r0 is %x\n", r0);
+    printf("r0 is %lx\n", r0);
     main();
   }
 }

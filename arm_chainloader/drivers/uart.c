@@ -6,6 +6,6 @@
 
 void uart_putc(unsigned int ch)
 {
-     while(mmio_read32(UART_FR) & 0x20);
-     mmio_write32(UART_DR, ch);
+  while(mmio_read32(UART_FR) & 0x20);
+  mmio_write32(UART_DR, ch);
 }

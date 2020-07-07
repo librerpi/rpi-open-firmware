@@ -20,6 +20,8 @@ MBR based disk interface modelling primary partitions as separate disks.
 #include <stdint.h>
 #include <chainloader.h>
 #include <stdio.h>
+#include <string.h>
+#include <hexdump.h>
 
 #include "block_device.hpp"
 
@@ -93,8 +95,8 @@ struct MbrImpl {
 	}
 
 	template <typename T>
-	inline bool read_block(uint8_t volume, uint32_t sector, T* dest_buffer) {
-		return read_block(volume, sector, reinterpret_cast<uint32_t*>(dest_buffer));
+	inline bool read_block(uint8_t volume, uint32_t sector, T* dest_buffer, uint32_t count) {
+		return read_block(volume, sector, reinterpret_cast<uint32_t*>(dest_buffer), count);
 	}
 
 	inline unsigned int get_block_size() {
@@ -107,7 +109,7 @@ struct MbrImpl {
 		return mbr->mbr_part[volume].part_typ;
 	}
 
-	bool read_block(uint8_t volume, uint32_t sector, uint32_t* buf) {
+	bool read_block(uint8_t volume, uint32_t sector, uint32_t* buf, uint32_t count) {
 		if (volume > 3)
 			return false;
 
@@ -116,14 +118,14 @@ struct MbrImpl {
 		if (p.part_typ == 0)
 			return false;
 
-		return mmc->read_block(p.part_start + sector, buf);
+		return mmc->read_block(p.part_start + sector, buf, count);
 	}
 
   void read_mbr() {
     if (!mbr) panic("mbr pointer was null?!");
     logf("Reading master boot record ...\n");
 
-    if (!mmc->read_block(0, mbr)) {
+    if (!mmc->read_block(0, mbr, 1)) {
       panic("unable to read master boot record from the SD card");
     }
 
@@ -186,12 +188,22 @@ DSTATUS disk_status (BYTE pdrv) {
 }
 
 DRESULT disk_read (BYTE pdrv, BYTE* buff, DWORD sector, UINT count) {
-	while (count--) {
-		g_MbrDisk.read_block(pdrv, sector, buff);
-		sector++;
-		buff += g_MbrDisk.get_block_size();
-	}
-	return (DRESULT)0;
+  BYTE *origbuff = buff;
+  UINT origcount = count;
+  DWORD origsector = sector;
+  bool success = true;
+
+  memset(buff, 0xfe, count*512);
+
+  success = g_MbrDisk.read_block(pdrv, sector, buff, count);
+  if (!success) {
+    printf("error reading part#%d %ld+%d sectors to 0x%lx\n", pdrv, sector, count, (uint32_t)buff);
+    hexdump_ram(origbuff, origsector*512, 512*origcount);
+    printf("read error\n");
+    return (DRESULT)1;
+  }
+
+  return (DRESULT)0;
 }
 
 DRESULT disk_ioctl (BYTE pdrv, BYTE cmd, void* buff) {
