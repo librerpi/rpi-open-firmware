@@ -247,9 +247,9 @@ in pkgs.lib.fix (self: {
   aarch64 = filterArmUserlandPackages aarch64;
   x86_64 = {
     inherit (x86_64) test-script uart-manager;
-    haskell-nix = {
-      inherit (x86_64.haskell-nix) nix-tools;
-    };
+    #haskell-nix = {
+    #  inherit (x86_64.haskell-nix) nix-tools;
+    #};
   };
   # make $makeFlags menuconfig
   # time make $makeFlags zImage -j8
