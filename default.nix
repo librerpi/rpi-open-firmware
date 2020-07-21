@@ -28,6 +28,9 @@ let
       name = "tlsf";
       src = lib.cleanSource ./tlsf;
     };
+    bash-completion = super.bash-completion.overrideAttrs (drv: {
+      doCheck = false;
+    });
     #linux_rpi2 = super.linux_rpi2.overrideAttrs (drv: {
       #nativeBuildInputs = drv.nativeBuildInputs ++ (with self; [ ncurses pkgconfig ]);
     #});
