@@ -4,15 +4,18 @@
 let
   sources = import ./nix/sources.nix;
   haskellNix = import sources."haskell.nix" {};
-  pkgs = import sources.nixpkgs haskellNix.nixpkgsArgs;
+  pkgs = import sources.nixpkgs {
+    inherit (haskellNix.nixpkgsArgs) system config;
+    overlays = haskellNix.nixpkgsArgs.overlays ++ [ overlay ];
+  };
   lib = pkgs.lib;
-  vc4 = pkgs.pkgsCross.vc4.extend overlay;
-  arm = pkgs.pkgsCross.arm-embedded.extend overlay;
-  arm7 = pkgs.pkgsCross.armv7l-hf-multiplatform.extend overlay;
-  arm6 = pkgs.pkgsCross.raspberryPi.extend overlay;
-  aarch64 = pkgs.pkgsCross.aarch64-multiplatform.extend overlay;
-  arm64 = pkgs.pkgsCross.aarch64-embedded.extend overlay;
-  x86_64 = pkgs.extend overlay;
+  vc4 = pkgs.pkgsCross.vc4;
+  arm = pkgs.pkgsCross.arm-embedded;
+  arm7 = pkgs.pkgsCross.armv7l-hf-multiplatform;
+  arm6 = pkgs.pkgsCross.raspberryPi;
+  aarch64 = pkgs.pkgsCross.aarch64-multiplatform;
+  arm64 = pkgs.pkgsCross.aarch64-embedded;
+  x86_64 = pkgs;
   trimHaskellNixTree = input: filter:
   let
     f1 = k: v: {
