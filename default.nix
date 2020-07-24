@@ -203,6 +203,7 @@ let
           sdImage = {
             firmwareSize = 128;
             populateRootCommands = ''
+              touch files/dummy.txt
             '';
             populateFirmwareCommands = ''
               for file in rpi2.dtb rpi3.dtb bootcode.bin; do
