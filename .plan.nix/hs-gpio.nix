@@ -61,7 +61,6 @@ in { system, compiler, flags, pkgs, hsPkgs, pkgconfPkgs, ... }:
             (hsPkgs."base" or (buildDepError "base"))
             (hsPkgs."brick" or (buildDepError "brick"))
             (hsPkgs."HPi" or (buildDepError "HPi"))
-            (hsPkgs."shared-memory" or (buildDepError "shared-memory"))
             (hsPkgs."unix" or (buildDepError "unix"))
             (hsPkgs."formatting" or (buildDepError "formatting"))
             (hsPkgs."vty" or (buildDepError "vty"))

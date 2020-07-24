@@ -39,6 +39,20 @@ let
     # nt/bin/plan-to-nix --output . --plan-json dist-newstyle/cache/plan.json --cabal-project cabal.project
     pkgSet = self.haskell-nix.mkCabalProjectPkgSet {
       plan-pkgs = import ./pkgs.nix;
+      modules = [
+        {
+          nonReinstallablePkgs = [
+            "rts" "ghc-heap" "ghc-prim" "integer-gmp" "integer-simple" "base"
+            "deepseq" "array" "ghc-boot-th" "pretty" "template-haskell"
+            "ghcjs-prim" "ghcjs-th"
+            "ghc-boot"
+            "ghc" "array" "binary" "bytestring" "containers"
+            "filepath" "ghc-boot" "ghc-compact" "ghc-prim"
+            "hpc"
+            "mtl" "parsec" "text" "transformers"
+          ];
+        }
+      ];
     };
     uart-manager = self.stdenv.mkDerivation {
       name = "uart-manager";
