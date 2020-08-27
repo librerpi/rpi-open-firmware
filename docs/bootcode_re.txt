@@ -1,0 +1,111 @@
+config forms an array of 32bit ints
+
+uint type (0 signed/1 unsigned/2 string)
+char* to name
+void* to destination
+uint length?
+?? 0 if option not set?
+
+FREEZE_VERSION being non-zero, will force ENABLE_SELF_UPDATE=0
+
+if BOOT_ORDER is zero, default to 0xf21
+
+
+config array at 80017dec
+bootloader_update   unsigned
+boot_load_flags     unsigned
+bootcode_delay      unsigned
+gpu_mem             unsigned
+gpu_mem_1024        unsigned
+gpu_mem_512         unsigned
+gpu_mem_256         unsigned
+require_total_mem   unsigned
+total_mem           unsigned
+start_x             unsigned
+start_debug         unsigned
+uart_2ndstage       unsigned
+fixup_file          string 13
+start_file          string 13
+sdram_freq          unsigned
+mfg_test            unsigned
+
+config array at 80017fc8
+DHCP_OPTION97       unsigned              y   defaults to "RPi4" as uint32_t
+XHCI_DEBUG          unsigned              y
+NETCONSOLE          string      64        y
+ENABLE_SELF_UPDATE  unsigned
+BOOT_UART           unsigned              y
+WAKE_ON_GPIO        unsigned              y
+POWER_OFF_ON_HALT   unsigned              y
+NET_BOOT_MAX_RETRIES signed               y
+SD_BOOT_MAX_RETRIES signed                y
+USB_DEV_BOOT_MAX_RETRIES signed           
+USB_DEV_FILE_TIMEOUT signed
+USB_MSD_BOOT_MAX_RETRIES signed
+USB_MSD_DISCOVER_TIMEOUT  signed          y
+USB_MSD_LUN_TIMEOUT signed                y
+USB_MSD_EXCLUDE_VID_PID string 40         y
+DHCP_TIMEOUT        unsigned              y
+DHCP_REQ_TIMEOUT    unsigned              y
+TFTP_FILE_TIMEOUT   unsigned
+TFTP_IP             string      16        y
+PXE_OPTION43        unsigned    40        y
+BOOT_ORDER          unsigned              y
+MAX_RESTARTS        signed                y
+TFTP_PREFIX         unsigned              y
+TFTP_PREFIX_STR     string      128       y
+MAC_ADDRESS         string      32        
+DISABLE_HDMI        unsigned              y
+CLIENT_IP           string      16        y
+SUBNET              string      16        y
+GATEWAY             string      16        y
+FREEZE_VERSION      unsigned              y
+
+long  short
+0     4         start4.elf not found
+0     9         require_total_mem not met
+2     4         related to bootloader_upgrade
+4     4         start4.elf not compatible with board
+
+bootloader_upgrade will default to 1 if unset
+bootloader_upgrade is forced 0 if ENABLE_SELF_UPDATE=0
+
+
+
+2019-12-03:
+has a function to scan the entire SPI and generate an array containing magic/name/start/length
+checks .text.bootloader_state
+`struct bootloader_state` is 0x164 bytes long
+
+2020-05-15:
+has a function to scan the SPI on-demand, searching for a file with a given name
+checks .text.bootloader_state
+checks .text.firmware_rev
+`struct bootloader_state` is 0x1b8 bytes long
+
+
+.text.bootloader_state
+a section in the .elf file, gets populated if it contains BSTA
+if (state[0] == 'BSTA') state[1] = 0x40000;
+0x40000 is the address of the bootloader state made by start_elf just before entering the elf
+
+upon entry to start.elf:
+* 0x20000 has 0x400 bytes of nulls to wipe something
+* 0x40000 contains the full `struct bootloader_state`
+
+struct bootloader_state {
+  char[4] tag;
+  uint32_t size2;
+  uint32_t size; // including this header
+  char[] payload;
+}
+known tags:
+tag  size2        size
+BSTE 0x164/0x1b8  0xc       , no payload
+BVER 0x6c         0x6c      , revision, type, date, time, unknown, serial, revision-related
+BSTS 0x18         0x18      , unknown payload
+BSTN 0xc0/0xc4    0xc0/0xc4 , macend, macstart, mymac, serial_string, tftp_ip, prefix_thing
+BSTM 0x14         0x0/0x14  , sometimes the last field
+BUSB 0x50         0x0       , sometimes the last field
+
+a size of 0 seems to indicate end of list?
