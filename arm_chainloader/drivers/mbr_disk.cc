@@ -136,7 +136,8 @@ struct MbrImpl {
     logf("MBR contents:\n");
 
     for (int i = 0; i < 4; i++) {
-      MbrPartition& p = mbr->mbr_part[i];
+      MbrPartition p;
+      memcpy(&p, &mbr->mbr_part[i], sizeof(struct MbrPartition));
       printf("    %d: %s at:%ld size:%ld\n", i, mbr_fs_to_string(p.part_typ), p.part_start, p.part_size);
     }
   }

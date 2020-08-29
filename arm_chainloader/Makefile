@@ -54,10 +54,11 @@ AS = $(CC)
 OBJCOPY = $(CROSS_COMPILE)objcopy
 LINKFLAGS = -nostdlib -march=$(ARCH) -Wl,--build-id=none -T linker.lds -ltlsf -lgcc -lcommon -lnotc -Wl,--gc-sections -ltlsf
 FPUFLAGS=-mfpu=vfp -mfloat-abi=softfp
-COMMON_FLAGS = -c -nostdlib -nostartfiles -ffreestanding -march=$(ARCH) -I../ -I./ -I./drivers/libfdt/ -mtune=arm1176jzf-s ${FPUFLAGS} -ffunction-sections -fdata-sections
+COMMON_FLAGS = -c -nostdlib -nostartfiles -ffreestanding -march=$(ARCH) -I../ -I./ -I./drivers/libfdt/ -mtune=arm1176jzf-s ${FPUFLAGS} -ffunction-sections -fdata-sections -DBAREMETAL
 
-CFLAGS = $(COMMON_FLAGS) -std=c11 -g -O -DBAREMETAL
-CXXFLAGS = $(COMMON_FLAGS) -std=c++11 -fno-exceptions -fno-rtti -g -DBAREMETAL
+COMMON_FLAGS2 = -g -O3
+CFLAGS = $(COMMON_FLAGS) $(COMMON_FLAGS2) -std=c11
+CXXFLAGS = $(COMMON_FLAGS) $(COMMON_FLAGS2) -std=c++11 -fno-exceptions -fno-rtti
 ASFLAGS = $(COMMON_FLAGS) -x assembler-with-cpp
 
 HEADERS := \

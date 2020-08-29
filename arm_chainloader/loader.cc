@@ -24,6 +24,7 @@ Second stage bootloader.
 #include <libfdt.h>
 #include <memory_map.h>
 #include <hardware.h>
+#include <crc32.h>
 
 #include <string.h>
 #include <stdio.h>
@@ -43,6 +44,12 @@ typedef void (*linux_t)(uint32_t, uint32_t, void*);
 
 struct mem_entry {
   uint32_t address;
+  uint32_t size;
+};
+
+struct ranges {
+  uint32_t child;
+  uint32_t parent;
   uint32_t size;
 };
 
@@ -105,7 +112,7 @@ struct LoaderImpl {
                 uint32_t elapsed = stop - start;
 
                 uint32_t bytes_per_second = (double)len / ((double)(elapsed) / 1000 / 1000);
-                printf("%d kbyte copied at a rate of %ld kbytes/second\n", len/1024, bytes_per_second/1024);
+                printf("%d kbyte copied at a rate of %ld kbytes/second, CRC32: 0x%x\n", len/1024, bytes_per_second/1024, 0); //rc_crc32(0, (const char*)dest, len));
 
 		return len;
 	}
@@ -130,10 +137,9 @@ struct LoaderImpl {
     hex32(g_FirmwareData.serial, serial_number);
     // /serial-number is an ascii string containing the serial#
     res = fdt_setprop(v_fdt, 0, "serial-number", serial_number, 9);
-    // /system/linux,serial is an 8byte raw serial#
 
-    int node = fdt_path_offset(v_fdt, "ethernet0");
-    if (node < 0) {
+    int ethernet0 = fdt_path_offset(v_fdt, "ethernet0");
+    if (ethernet0 < 0) {
       panic("cant find ethernet0");
     } else {
       uint32_t serial = g_FirmwareData.serial;
@@ -143,40 +149,54 @@ struct LoaderImpl {
                       , (uint8_t)((serial >> 16) & 0xff)
                       , (uint8_t)((serial >> 8) & 0xff)
                       , (uint8_t)(serial & 0xff) };
-      res = fdt_setprop(v_fdt, node, "local-mac-address", mac, 6);
+      res = fdt_setprop(v_fdt, ethernet0, "local-mac-address", mac, 6);
     }
 
-    node = fdt_path_offset(v_fdt, "/system");
-    if (node < 0) {
+    int system = fdt_path_offset(v_fdt, "/system");
+    if (system < 0) {
       panic("cant find /system");
     } else {
+      // /system/linux,serial is an 8byte raw serial#
+      // /system/linux,revision is a raw 32bit revision, directly from OTP
       uint32_t revision = htonl(g_FirmwareData.revision);
-      res = fdt_setprop(v_fdt, node, "linux,revision", &revision, 4);
+      res = fdt_setprop(v_fdt, system, "linux,revision", &revision, 4);
     }
 
-    node = fdt_path_offset(v_fdt, "/chosen");
-    if (node < 0) panic("no chosen node in fdt");
-
-    /* pass in command line args */
-    res = fdt_setprop(v_fdt, node, "bootargs", cmdline, strlen((char*) cmdline) + 1);
-    // chosen.txt describes linux,initrd-start and linux,initrd-end within the chosen node
-    uint32_t value = htonl((uint32_t)initrd_start);
-    res = fdt_setprop(v_fdt, node, "linux,initrd-start", &value, 4);
-    uint32_t initrd_end = htonl((uint32_t)(initrd_start + initrd_size));
-    res = fdt_setprop(v_fdt, node, "linux,initrd-end", &initrd_end, 4);
+    int chosen = fdt_path_offset(v_fdt, "/chosen");
+    if (chosen < 0) panic("no chosen node in fdt");
+    else {
+      /* pass in command line args */
+      res = fdt_setprop(v_fdt, chosen, "bootargs", cmdline, strlen((char*) cmdline) + 1);
+      // chosen.txt describes linux,initrd-start and linux,initrd-end within the chosen node
+      uint32_t value = htonl((uint32_t)initrd_start);
+      res = fdt_setprop(v_fdt, chosen, "linux,initrd-start", &value, 4);
+      uint32_t initrd_end = htonl((uint32_t)(initrd_start + initrd_size));
+      res = fdt_setprop(v_fdt, chosen, "linux,initrd-end", &initrd_end, 4);
+    }
 
     /* pass in a memory map, skipping first meg for bootcode */
     int memory = fdt_path_offset(v_fdt, "/memory");
-    if(memory < 0) panic("no memory node in fdt");
+    if (memory < 0) panic("no memory node in fdt");
+    else {
+      /* start the memory map at 1M/16 and grow continuous for 256M
+       * TODO: does this disrupt I/O? */
 
-    /* start the memory map at 1M/16 and grow continuous for 256M
-     * TODO: does this disrupt I/O? */
-
-    char dtype[] = "memory";
-    struct mem_entry memmap[] = {
-      { .address = htonl(1024 * 128), .size = htonl(((256*3) * 1024 * 1024) - (1024 * 128)) }
+      struct mem_entry memmap[] = {
+        { .address = htonl(1024 * 128), .size = htonl(((256) * 1024 * 1024) - (1024 * 128)) },
+        { .address = htonl((256*3) * 1024 * 1024), .size = htonl(16*1024*1024) }
+      };
+      res = fdt_setprop(v_fdt, memory, "reg", (void*) memmap, sizeof(memmap));
     };
-    res = fdt_setprop(v_fdt, memory, "reg", (void*) memmap, sizeof(memmap));
+
+    int soc = fdt_path_offset(v_fdt, "/soc");
+    if (soc < 0) panic("no /soc node in fdt");
+    else {
+      struct ranges ranges[] = {
+        { .child = htonl(VC4_PERIPH_BASE), .parent = htonl(ARM_PERIPH_BASE), .size = htonl(16 * 1024 * 1024) },
+        { .child = htonl(0x40000000), .parent = htonl(0x40000000), .size = htonl(0x1000) }
+      };
+      fdt_setprop(v_fdt, soc, "ranges", (void*)ranges, sizeof(ranges));
+    };
 
     logf("(valid) fdt loaded at 0x%p\n", fdt);
 

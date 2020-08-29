@@ -26,7 +26,7 @@ extern "C" {
 #endif
 
 #define VC4_PERIPH_BASE 0x7E000000
-#define ARM_PERIPH_BASE 0x20000000
+#define ARM_PERIPH_BASE 0x3F000000
 
 #define VC4_TO_ARM_PERIPH(addr) ((addr - VC4_PERIPH_BASE) + ARM_PERIPH_BASE)
 
