@@ -76,3 +76,8 @@ GPIO28-29, ALT5 (RGMII_MDIO and RGMII_MDC)
 GPIO28    pull-down
 GPIO29    pull-up
 GPIO46-57 pull-up
+
+
+https://www.raspberrypi.org/forums/viewtopic.php?p=1694100#p1694100
+> By default GPIOs 0-8 pull up, whilst 9-27 pull down. No, those defaults can't be changed.
+

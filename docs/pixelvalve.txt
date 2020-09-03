@@ -15,13 +15,22 @@ pv2 HDMI0
 pv3 VEC
 pv4 HDMI1
 
-            VC4   VC6
-0x7e206000  pv0   pv0
-0x7e207000  pv1   pv1
-0x7e20a000        pv2?
-0x7e216000        pv4
-0x7e807000  pv2
-0x7ec12000        pv3
+            VC4           VC6
+0x7e206000  pv0(DSI0/DPI) pv0(DSI0/DPI)
+0x7e207000  pv1(DSI1/SMI) pv1(DSI1/SMI)
+0x7e20a000                pv2(hdmi0)
+0x7e216000                pv4(hdmi1)
+0x7e807000  pv2(HDMI/VEC)
+0x7ec12000                pv3(vec)
+
+
+VC6 HVS->PV routing
+    HVS0  HVS1  HVS2
+PV0 X
+PV1 X     X     X
+PV2 X     X     X
+PV3       X
+PV4 X     X     X
 
 PIXELVALVEn_C           base + 0x00
 0     enable
@@ -173,3 +182,26 @@ but the GPIO are only rated for 75mhz (at least on the rpi0-3 line)
 
 (rpi3) SCALER_DISPLIST1 controls the HDMI port
 (rpi4) list 0/1/2 are all blank
+
+
+VC4?
+https://www.raspberrypi.org/forums/viewtopic.php?f=91&t=94424&start=200
+Looking up the potential options from last time
+https://github.com/raspberrypi/firmware ... -455556619
+DSI0+DSI1+HDMI
+DPI+DSI1+HDMI
+DSI0+DSI1+SDTV
+DPI+DSI1+SDTV
+
+There are three pixel valves.
+Pixelvalve0 can be used by DSI0 (which is 2 data lane DSI) or DPI.
+Pixelvalve1 can be used by DSI1 (which is 4 data lane DSI) or SMI.
+Pixelvalve2 can be used by HDMI (which is 4 data lane DSI) or SDTV.
+
+https://www.raspberrypi.org/forums/viewtopic.php?p=1712201#p1712201
+VC6
+PV0 DSI0/DPI
+PV1 DSI1/SMI
+PV2 HDMI0
+PV3 VEC
+PV4 HDMI1

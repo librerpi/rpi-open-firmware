@@ -14,7 +14,7 @@ the vaddr of every DT_LOAD must be above 32mb
 when filesize is less then memsize, the extra space is zero'd
 
 0xc002_0000 length 0x400 gets zero'd before passing control
-something of length 0x1b8 gets copied to 0xc004_0000
+something of length 0x1b8 gets copied to 0xc004_0000, its the `struct bootloader_state`
 
 return address will be pointing to a bkpr opcode
 

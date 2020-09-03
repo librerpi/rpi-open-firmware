@@ -17,12 +17,14 @@ Second stage bootloader.
 
 =============================================================================*/
 
-#include <drivers/fatfs/ff.h>
-#include <chainloader.h>
-#include <drivers/mailbox.hpp>
-#include <drivers/block_device.hpp>
+#include "chainloader.h"
+#include "memory_map.h"
+#include "mmu.h"
+#include "drivers/fatfs/ff.h"
+#include "drivers/mailbox.hpp"
+#include "drivers/block_device.hpp"
+
 #include <libfdt.h>
-#include <memory_map.h>
 #include <hardware.h>
 #include <crc32.h>
 
@@ -38,7 +40,7 @@ FATFS g_BootVolumeFs;
 #define KERNEL_LOAD_ADDRESS 0x2000000 // 32mb from start
 #define INITRD_LOAD_ADDRESS 0x4000000 // 64mb from start
 
-extern "C" void disable_cache();
+extern "C" void disable_icache();
 
 typedef void (*linux_t)(uint32_t, uint32_t, void*);
 
@@ -285,15 +287,11 @@ struct LoaderImpl {
     /* once the fdt contains the cmdline, it is not needed */
     delete[] cmdline;
 
-    /* flush the cache */
-    logf("Flushing....\n");
-    for (uint8_t* i = zImage; i < zImage + ksize; i += 32) {
-      __asm__ __volatile__ ("mcr p15,0,%0,c7,c10,1" : : "r" (i) : "memory");
-    }
-
     /* the eMMC card in particular needs to be reset */
     teardown_hardware();
-    disable_cache();
+    mmu_off();
+    logf("mmu off\n");
+    disable_icache();
 
     /* fire away -- this should never return */
     logf("Jumping to the Linux kernel...\n");

@@ -32,7 +32,9 @@ SECTIONS
 	.bss : {
 		_edata = .;
 		__bss_start = .;
+                *(.bss.page_table)
 		*(.bss)
+		*(.bss.*)
                 __bss_end = .;
 	}
 

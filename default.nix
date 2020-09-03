@@ -77,8 +77,8 @@ let
       installPhase = ''
         #$OBJDUMP -t build/arm_chainloader.bin.elf | sort -rk4
         mkdir -p $out/nix-support
-        cp build/arm_chainloader.bin{,.elf} build/chainloader.map $out/
-        $OBJDUMP -S build/arm_chainloader.bin.elf > $out/chainloader.S
+        cp build/arm_chainloader.{bin,elf,map} $out/
+        $OBJDUMP -S build/arm_chainloader.elf > $out/chainloader.S
         cat <<EOF > $out/nix-support/hydra-metrics
         arm_chainloader.bin $(stat --printf=%s $out/arm_chainloader.bin) bytes
         EOF
@@ -101,6 +101,12 @@ let
         mkdir -p arm_chainloader
         rm arm_chainloader/build || true
         ln -s ${arm.chainloader} arm_chainloader/build
+      '';
+      shellHook = ''
+        rm -v ${toString ./firmware}/arm_chainloader.o || true
+        mkdir -vp ${toString ./firmware}/arm_chainloader
+        rm -v ${toString ./firmware}/arm_chainloader/build || true
+        ln -sv ${arm.chainloader} ${toString ./firmware}/arm_chainloader/build
       '';
       enableParallelBuilding = true;
       dontPatchELF = true;
@@ -201,6 +207,7 @@ let
           ];
           users.users.root.initialPassword = "password";
           sdImage = {
+            compressImage = false;
             firmwareSize = 128;
             populateRootCommands = ''
               touch files/dummy.txt

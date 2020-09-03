@@ -1,4 +1,6 @@
-#include <chainloader.h>
+#include "chainloader.h"
+#include "mmu.h"
+
 #include <hardware.h>
 #include <tlsf/tlsf.h>
 
@@ -16,7 +18,7 @@ void asm_drop_secure();
 void asm_enable_fpu();
 void asm_set_ACTLR();
 void set_CPUECTLR();
-void enable_cache();
+void enable_icache();
 uint32_t arm_lowlevel_setup();
 
 #define logf(fmt, ...) { print_timestamp(); printf("[BRINGUP:%s]: " fmt, __FUNCTION__, ##__VA_ARGS__); }
@@ -59,6 +61,23 @@ static const char* get_execution_mode_name() {
 	}
 }
 
+static int ramSizeInMb() {
+  switch (g_FirmwareData.sdram_size) {
+  case kRamSize1GB:
+    return 1024;
+  case kRamSize512MB:
+    return 512;
+  case kRamSize256MB:
+    return 256;
+  case kRamSize128MB:
+    return 128;
+  case kRamSize2GB:
+    return 2048;
+  case kRamSize4GB:
+    return 4096;
+  }
+}
+
 void c_entry(uint32_t r0) {
   /* wait for peripheral access */
   while(ARM_ID != ARM_IDVAL);
@@ -82,6 +101,7 @@ void c_entry(uint32_t r0) {
     udelay(30000); // the first few prints get cut off if this delay is lower
     heap_init();
     printf("r0 is %lx\n", r0);
+    init_page_tables(ramSizeInMb());
     main();
   }
 }
@@ -101,6 +121,7 @@ uint32_t arm_lowlevel_setup() {
   case 0x410FC075: // rpi2
     need_timer = true;
     unlock_coproc = true;
+    enable_fpu = true;
     enable_smp = true;
     break;
   case 0x410FD034: // Cortex A53 rpi3
@@ -130,7 +151,7 @@ uint32_t arm_lowlevel_setup() {
     set_CPUECTLR();
   }
   asm_drop_secure();
-  enable_cache();
+  enable_icache();
   uint32_t mpidr;
   __asm__ __volatile__("mrc p15, 0, %0, c0, c0, 5":"=r"(mpidr));
   return mpidr & 0xf;
@@ -138,44 +159,39 @@ uint32_t arm_lowlevel_setup() {
 
 void main() {
 
-	logf("Started on ARM, continuing boot from here ...\n");
+  logf("Started on ARM, continuing boot from here ...\n");
 
-	logf("Firmware data: SDRAM_SIZE=%lu, VPU_CPUID=0x%lX\n",
-	     g_FirmwareData.sdram_size,
-	     g_FirmwareData.vpu_cpuid);
+  logf("Firmware data: SDRAM_SIZE=%u(%lu), VPU_CPUID=0x%lX\n",
+       ramSizeInMb(),
+       g_FirmwareData.sdram_size,
+       g_FirmwareData.vpu_cpuid);
 
-        uint32_t arm_cpuid;
-        // read MIDR reg
-        __asm__("mrc p15, 0, %0, c0, c0, 0" : "=r"(arm_cpuid));
-        // from https://github.com/dwelch67/raspberrypi/blob/master/boards/cpuid/cpuid.c
-        switch (arm_cpuid) {
-        case 0x410FB767:
-          logf("rpi 1/0\n");
-          break;
-        case 0x410FC075:
-          logf("rpi 2\n");
-          break;
-        case 0x410FD034:
-          logf("%lx cortex A53, rpi 3\n", arm_cpuid);
-          break;
-        // 410FD083 is cortex A72, rpi4
-        default:
-          logf("unknown rpi model, cpuid is 0x%lx\n", arm_cpuid);
-        }
+  uint32_t arm_cpuid;
+  // read MIDR reg
+  __asm__("mrc p15, 0, %0, c0, c0, 0" : "=r"(arm_cpuid));
+  // from https://github.com/dwelch67/raspberrypi/blob/master/boards/cpuid/cpuid.c
+  switch (arm_cpuid) {
+  case 0x410FB767:
+    logf("rpi 1/0\n");
+    break;
+  case 0x410FC075:
+    logf("rpi 2\n");
+    break;
+  case 0x410FD034:
+    logf("%lx cortex A53, rpi 3\n", arm_cpuid);
+    break;
+  // 410FD083 is cortex A72, rpi4
+  default:
+    logf("unknown rpi model, cpuid is 0x%lx\n", arm_cpuid);
+  }
+  print_cache_tree();
 
-	logf("Execution mode: %s\n", get_execution_mode_name());
-        uint32_t cpsr = arm_get_cpsr();
-        logf("CPSR: %lx\n", cpsr);
+  logf("Execution mode: %s\n", get_execution_mode_name());
+  uint32_t cpsr = arm_get_cpsr();
+  logf("CPSR: %lx\n", cpsr);
 
-#if 0
-        double foo = 1.1;
-        double bar = 2.2;
-        double baz = foo * bar;
-        printf("%x\n", baz);
-#endif
+  /* c++ runtime */
+  __cxx_init();
 
-	/* c++ runtime */
-	__cxx_init();
-
-	panic("Nothing else to do!");
+  panic("Nothing else to do!");
 }

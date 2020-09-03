@@ -152,19 +152,17 @@ set_CPUECTLR:
   mcrr p15, 1, r0, r1, c15  @ CPU Extended Control Register
   bx lr
 
-.global enable_cache
-enable_cache:
+.global enable_icache
+enable_icache:
   mrc p15, 0, r0, c1, c0, 0 // SCTLR -> r0
   orr r0, r0, #(1<<12)      // r0 |= 1<<12 icache
-  //orr r0, r0, #(1<<2)       // r0 |= 1<<2  dcache
   mcr p15, 0, r0, c1, c0, 0 // r0 -> SCTLR
   bx lr
 
-.global disable_cache
-disable_cache:
+.global disable_icache
+disable_icache:
   mrc p15, 0, r0, c1, c0, 0 // SCTLR -> r0
   bic r0, r0, #(1<<12)      // clear bit 12 icache
-  //bic r0, r0, #(1<<2)       // clear bit 2 dcache
   mcr p15, 0, r0, c1, c0, 0 // r0 -> SCTLR
   bx lr
 
