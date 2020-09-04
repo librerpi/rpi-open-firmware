@@ -95,6 +95,12 @@ void c_entry(uint32_t r0) {
   case 3:
     putchar('4');
     break;
+  default:
+  {
+    uint32_t mpidr;
+    puts("unknown corenr, halting");
+    break;
+  }
   }
   if (corenr == 0) {
     bzero(&__bss_start, &__bss_end - &__bss_start);
@@ -107,16 +113,22 @@ void c_entry(uint32_t r0) {
 }
 
 uint32_t arm_lowlevel_setup() {
-  uint32_t arm_cpuid;
+  uint32_t midr;
+  uint32_t mpidr;
   bool need_timer = false;
   bool unlock_coproc = false;
   bool enable_fpu = false;
   bool unlock_l2 = false;
   bool enable_smp = false;
-  // read MIDR reg
-  __asm__("mrc p15, 0, %0, c0, c0, 0" : "=r"(arm_cpuid));
-  switch (arm_cpuid) {
+  __asm__ __volatile__("mrc p15, 0, %0, c0, c0, 0" : "=r"(midr));
+  __asm__ __volatile__("mrc p15, 0, %0, c0, c0, 5" : "=r"(mpidr));
+  uint32_t corenr = mpidr & 0xf;
+  switch (midr) {
   case 0x410FB767: // armv6? rpi 0/1
+    printf("MIDR: 0x%lx\nMPIDR: 0x%lx\n", midr, mpidr);
+    corenr = 0;
+    enable_fpu = true;
+    asm_set_ACTLR(1<<5);
     break;
   case 0x410FC075: // rpi2
     need_timer = true;
@@ -152,9 +164,7 @@ uint32_t arm_lowlevel_setup() {
   }
   asm_drop_secure();
   enable_icache();
-  uint32_t mpidr;
-  __asm__ __volatile__("mrc p15, 0, %0, c0, c0, 5":"=r"(mpidr));
-  return mpidr & 0xf;
+  return corenr;
 }
 
 void main() {
@@ -175,7 +185,7 @@ void main() {
     logf("rpi 1/0\n");
     break;
   case 0x410FC075:
-    logf("rpi 2\n");
+    logf("rpi 2\n"); // cortex-A7?
     break;
   case 0x410FD034:
     logf("%lx cortex A53, rpi 3\n", arm_cpuid);

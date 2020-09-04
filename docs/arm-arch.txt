@@ -1,0 +1,21 @@
+taken from https://www.valvers.com/open-software/raspberry-pi/bare-metal-programming-in-c-part-1/
+
+pi1: -mfpu=vfp -march=armv6zk -mtune=arm1176jzf-s
+pi2: -mfpu=neon-vfpv4 -march=armv7-a -mtune=cortex-a7
+pi3: -mfpu=crypto-neon-fp-armv8 -march=armv8-a+crc -mcpu=cortex-a53
+pi4: -mfpu=crypto-neon-fp-armv8 -march=armv8-a+crc -mcpu=cortex-a72
+
+gathered from pi's i own:
+
+pi0/pi1:
+MIDR: 0x410FB767
+armv6 cache type: 0x1d152152
+L1i: words: 2, assoc: 2, size: 5, size2: 0
+L1d: words: 2, assoc: 2, size: 5, size2: 0
+S: 1
+CType: 14
+8 words per line
+4 way associative
+16kb each
+
+

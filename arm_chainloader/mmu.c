@@ -5,8 +5,9 @@
 #include <stdbool.h>
 
 #define logf(fmt, ...) { print_timestamp(); printf("[MMU:%s]: " fmt, __FUNCTION__, ##__VA_ARGS__); }
+void arm6_mmu_off();
 void arm7_dcache_off();
-void arm_mmu_off();
+void arm7_mmu_off();
 
 uint32_t __attribute__ ((aligned (16384))) level1[4096] __attribute__ ((section(".bss.page_table")));
 
@@ -48,8 +49,14 @@ void init_page_tables(uint32_t ram_size) {
 }
 
 void mmu_off(void) {
-  arm7_dcache_off();
-  arm_mmu_off();
+  uint32_t midr;
+  __asm__ __volatile__("mrc p15, 0, %0, c0, c0, 0" : "=r"(midr));
+  if (midr == 0x410FB767) { // pi0/pi1, arm11, armv6
+    arm6_mmu_off();
+  } else {
+    arm7_dcache_off();
+    arm7_mmu_off();
+  }
   logf("MMU now off\n");
 }
 
@@ -73,9 +80,28 @@ static void print_shape(const char *name, uint32_t shape) {
         name, ((sets+1) * (associativity+1) * (line_size*4)) / 1024, shape, wt, wb, ra, wa, sets, associativity, lines, line_size * 4);
 }
 
+static void print_armv6_shape(const char *name, uint16_t shape) {
+  int words = shape & 0x3;
+  int associativity = (shape >> 3) & 0x7;
+  int size = (shape >> 6) & 0x7;
+  int size2 = (shape >> 11) & 0x1;
+  printf("%s: words: %d, assoc: %d, size: %d, size2: %d\n", name, words, associativity, size, size2);
+}
+
 void print_cache_tree(void) {
-  printf("name\tsize\tencoding\tWT\tWB\tRA\tWA\tSets\tAssoc\tLineSize\n");
-  print_shape("L1d", get_cache_shape(1, false));
-  print_shape("L1i", get_cache_shape(1, true));
-  print_shape("L2", get_cache_shape(2, false));
+  uint32_t midr;
+  __asm__ __volatile__("mrc p15, 0, %0, c0, c0, 0" : "=r"(midr));
+  if (midr == 0x410FB767) { // pi0/pi1, arm11, armv6
+    uint32_t cache;
+    __asm__ __volatile__("mrc p15, 0, %0, c0, c0, 1" : "=r"(cache));
+    printf("armv6 cache type: 0x%lx\n", cache);
+    print_armv6_shape("L1i", cache & 0xfff);
+    print_armv6_shape("L1d", (cache >> 12) & 0xfff);
+    printf("S: %ld\nCType: %ld\n", (cache >> 24) & 0x1, (cache >> 25) & 0xf);
+  } else {
+    printf("name\tsize\tencoding\tWT\tWB\tRA\tWA\tSets\tAssoc\tLineSize\n");
+    print_shape("L1d", get_cache_shape(1, false));
+    print_shape("L1i", get_cache_shape(1, true));
+    print_shape("L2", get_cache_shape(2, false));
+  }
 }

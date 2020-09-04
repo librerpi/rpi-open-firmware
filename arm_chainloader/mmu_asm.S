@@ -47,11 +47,34 @@ Finished:
   dsb
   pop {r4, r5, r7, r9, r10, r11, pc}
 
-.global arm_mmu_off
-arm_mmu_off:
+.global arm6_dcache_off
+arm6_dcache_off:
+  mov r0, #0
+  mcr p15, 0, r0, c7, c10, 0    // flush entire cache
+
+  // dcache off
+  mrc p15, 0, r0, c1, c0, 0
+  bic r0, r0, #(1<<2)       // clear bit 2 dcache
+  mcr p15, 0, r0, c1, c0, 0 // r0 -> SCTLR
+
+  mov r0, #0
+  mcr p15, 0, r0, c7, c10, 4  // dsb
+  bx lr
+
+.global arm7_mmu_off
+arm7_mmu_off:
   mrc p15, 0, r0, c1, c0, 0
   bic r0, r0, #(1<<1)       // clear bit 1 mmu
   mcr p15, 0, r0, c1, c0, 0 // r0 -> SCTLR
   dsb
   isb
+  bx lr
+
+.global arm6_mmu_off
+arm6_mmu_off:
+  mrc p15, 0, r0, c1, c0, 0
+  bic r0, r0, #(1<<1)       // clear bit 1 mmu
+  mcr p15, 0, r0, c1, c0, 0 // r0 -> SCTLR
+  mov r0, #0
+  mcr p15, 0, r0, c7, c10, 4  // dsb
   bx lr

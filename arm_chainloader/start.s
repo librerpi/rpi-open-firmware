@@ -54,68 +54,68 @@ g_FirmwareData:
   # note, this will trash the stack of the main thread
   # it will also trash the stack of all other modes
   # therefore, any interupt at all is currently fatal
-	mov sp, #(MEM_STACK_END)
-        sub lr, #\offset
-	stmea sp, {r0-lr}^
-	str lr, [sp, #60]
-	mrs r0, spsr
-	str r0, [sp, #64]
-	mov r0, sp
+  mov sp, #(MEM_STACK_END)
+  sub lr, #\offset
+  stmea sp, {r0-lr}^
+  str lr, [sp, #60]
+  mrs r0, spsr
+  str r0, [sp, #64]
+  mov r0, sp
 .endm
 
 # based on https://github.com/mrvn/moose/blob/master/kernel/entry.S
 .macro NewSaveRegisters, offset
-        sub lr, #\offset
-	stmea sp, {r0-lr}^
-	str lr, [sp, #60]
-	mrs r0, spsr
-	str r0, [sp, #64]
-	mov r0, sp
+  sub lr, #\offset
+  stmea sp, {r0-lr}^
+  str lr, [sp, #60]
+  mrs r0, spsr
+  str r0, [sp, #64]
+  mov r0, sp
 .endm
 
 _fleh_undef:
-	SaveRegisters 4
-	b sleh_undef
+  SaveRegisters 4
+  b sleh_undef
 
 _fleh_prefabt:
-	SaveRegisters 4
-	b sleh_prefabt
+  SaveRegisters 4
+  b sleh_prefabt
 
 _fleh_dataabt:
-	SaveRegisters 8
-	b sleh_dataabt
+  SaveRegisters 8
+  b sleh_dataabt
 
 _fleh_addrexc:
-	SaveRegisters 0
-	b sleh_addrexc
+  SaveRegisters 0
+  b sleh_addrexc
 
 _fleh_irq:
-	// TODO, dont bother saving the FIQ swapped regs
-	SaveRegisters 4
-	b sleh_irq
+  // TODO, dont bother saving the FIQ swapped regs
+  SaveRegisters 4
+  b sleh_irq
 
 _fleh_fiq:
-	NewSaveRegisters 4
-	b sleh_fiq
+  NewSaveRegisters 4
+  b sleh_fiq
 
 _secure_monitor:
-	mrc p15, 0, r0, c1, c1, 0 // SCR -> r0
-	//bic	r0, r0, #0x4a /* clear IRQ, EA, nET */
-	orr r0, r0, #1 /* set NS */
-	mcr p15, 0, r0, c1, c1, 0 // r0 -> SCR, now with NS set
+  mrc p15, 0, r0, c1, c1, 0 // SCR -> r0
+  //bic	r0, r0, #0x4a       /* clear IRQ, EA, nET */
+  orr r0, r0, #1            /* set NS */
+  mcr p15, 0, r0, c1, c1, 0 // r0 -> SCR, now with NS set
 
-	//mov r0, #((1 << 7) | (1 << 8) | (1 << 6)) /* mask IRQ, AA and FIQ */
-	//orr r0, r0, #0x1a /* switch to hypervisor mode */
-	//msr spsr_cxfs, r0
+  //mov r0, #((1 << 7) | (1 << 8) | (1 << 6)) /* mask IRQ, AA and FIQ */
+  //orr r0, r0, #0x1a       /* switch to hypervisor mode */
+  //msr spsr_cxfs, r0
 
-	movs pc, lr
+  movs pc, lr
 
 .macro SetModeSp, mode, newsp
-        mov r1, r0
-        bic r1, r1, #(ARM32_MODE_MASK) // clear all mode bits
-        orr r1, r1, #(\mode) // set a mode
-        msr cpsr, r1 // enter the mode
-        ldr sp, =\newsp
+  mov r1, r0
+  bic r1, r1, #(ARM32_MODE_MASK) // clear all mode bits
+  orr r1, r1, #(\mode)      // set a mode
+  msr cpsr, r1              // enter the mode
+  ldr sp, =\newsp
 .endm
 
 .global asm_enable_fpu
@@ -178,36 +178,36 @@ try:
   bx lr
 
 _common_start:
-        mrs r0, cpsr
+  mrs r0, cpsr
 
-        SetModeSp ARM32_IRQ, _irq_stack_top
-        SetModeSp ARM32_SVC, _svc_stack_top
+  SetModeSp ARM32_IRQ, _irq_stack_top
+  SetModeSp ARM32_SVC, _svc_stack_top
 
-        msr cpsr, r0 // revert to previous mode
-	/*
-	 * read MIDR, see if this is an ARMv6 system, if it is, just
-	 * assume single core (BCM2708) and not bother doing SMP stuff.
-	 */
-	mrc p15, 0, r0, c0, c0, 0 // MIDR -> r0
-	lsr r0, #16
-	and r0, #0xF
-	cmp r0, #0x7 // check if MIDR ends in 0x7__
-	beq L_finish_init
+  msr cpsr, r0 // revert to previous mode
+  /*
+   * read MIDR, see if this is an ARMv6 system, if it is, just
+   * assume single core (BCM2708) and not bother doing SMP stuff.
+   */
+  mrc p15, 0, r0, c0, c0, 0 // MIDR -> r0
+  lsr r0, #16
+  and r0, #0xF
+  cmp r0, #0x7              // check if MIDR ends in 0x7__
+  beq L_finish_init
 
 L_armv7_or_higher:
-	/*
-	 * okay, we're an ARMv7 or an ARMv8.
-	 */
+  /*
+   * okay, we're an ARMv7 or an ARMv8.
+   */
 
-	mrc p15, 0, r0, c0, c0, 5	// read MPIDR
-	and r3, r0, #0xc0000000		// multiprocessing extensions and
-	teq r3, #0x80000000			// not part of a uniprocessor system?
-	bne L_setup_monitor		 	// no, assume UP
+  mrc p15, 0, r0, c0, c0, 5   // read MPIDR
+  and r3, r0, #0xc0000000     // multiprocessing extensions and
+  teq r3, #0x80000000         // not part of a uniprocessor system?
+  bne L_setup_monitor         // no, assume UP
 
-        mrc p15, 0, r0, c0, c0, 5	// read MPIDR
-	ands r0, r0, #0x03			// CPU 0?
-        //cmp r0, #2
-	//bne L_deadloop				// if not, spin.
+  mrc p15, 0, r0, c0, c0, 5   // read MPIDR
+  ands r0, r0, #0x03          // CPU 0?
+  //cmp r0, #2
+  //bne L_deadloop            // if not, spin.
 
   cmp r0, #3
   ldrls r0, [pc, r0, lsl #2]
@@ -220,27 +220,27 @@ after_table:
   mov sp, r0
 
 L_setup_monitor:
-	//adr	r1, _start
-	//mcr	p15, 0, r1, c12, c0, 1 /* MVBAR */
-	//mcr p15, 0, r1, c7, c5, 4 /* ISB (ARMv6 compatible way) */
+  //adr	r1, _start
+  //mcr	p15, 0, r1, c12, c0, 1 /* MVBAR */
+  //mcr p15, 0, r1, c7, c5, 4 /* ISB (ARMv6 compatible way) */
 
 
-	//smc 0
+  //smc 0
 
 L_finish_init:
-	/* enable instruction cache */
-	//mrc p15, 0, r0, c1, c0, 0   // SCTLR -> r0
-	//orr r0, r0, #(1<<12)        // r0 |= 1<<12 i-cache enable
-	//mcr p15, 0, r0, c1, c0, 0   // r0 -> SCTLR
+  /* enable instruction cache */
+  //mrc p15, 0, r0, c1, c0, 0   // SCTLR -> r0
+  //orr r0, r0, #(1<<12)        // r0 |= 1<<12 i-cache enable
+  //mcr p15, 0, r0, c1, c0, 0   // r0 -> SCTLR
 
-  bl c_entry
-  b .
+bl c_entry
+b .
 
 L_deadloop:
-        mov r0, #0x43
-        //bl uart_putc
-        // TODO, break out of loop when signaled by linux
-	cpsie if
-	wfi
-	b L_deadloop
+  mov r0, #0x43
+  //bl uart_putc
+  // TODO, break out of loop when signaled by linux
+  cpsie if
+  wfi
+  b L_deadloop
 L_wordtable:

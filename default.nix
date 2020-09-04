@@ -185,6 +185,7 @@ let
         dtc temp2 -o $2
         rm temp temp2
       }
+      builddtb ${./rpi1.dts} rpi1.dtb
       builddtb ${./rpi2.dts} rpi2.dtb
       builddtb ${./rpi3.dts} rpi3.dtb
       ${if kernelOverride == null then ''
