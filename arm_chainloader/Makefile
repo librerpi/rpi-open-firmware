@@ -52,7 +52,7 @@ FPUFLAGS=-mfpu=vfp -mfloat-abi=softfp
 COMMON_FLAGS = -c -nostdlib -nostartfiles -ffreestanding -march=$(ARCH) -I../ -I./ -I./drivers/libfdt/ -mtune=arm1176jzf-s ${FPUFLAGS} -ffunction-sections -fdata-sections -DBAREMETAL -fno-common
 
 COMMON_FLAGS2 = -g -O3
-CFLAGS = $(COMMON_FLAGS) $(COMMON_FLAGS2) -std=c11
+CFLAGS = $(COMMON_FLAGS) $(COMMON_FLAGS2) -std=c11 -Wdeclaration-after-statement
 CXXFLAGS = $(COMMON_FLAGS) $(COMMON_FLAGS2) -std=c++11 -fno-exceptions -fno-rtti
 ASFLAGS = $(COMMON_FLAGS) -x assembler-with-cpp
 
@@ -81,8 +81,8 @@ build/mmu_asm.o: mmu_asm.S
 #
 build/%.o: %.c
 	$(CREATE_SUBDIR)
-	@echo $(WARN_COLOR)CC  $(NO_COLOR) $@ #-mthumb
-	@$(CC) $(CFLAGS) $< -o $@ #-mthumb
+	@echo $(WARN_COLOR)CC  $(NO_COLOR) $@
+	@$(CC) $(CFLAGS) $< -o $@
 
 build/%.o: %.cc $(HEADERS)
 	$(CREATE_SUBDIR)

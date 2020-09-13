@@ -109,3 +109,9 @@ BSTM 0x14         0x0/0x14  , sometimes the last field
 BUSB 0x50         0x0       , sometimes the last field
 
 a size of 0 seems to indicate end of list?
+
+
+
+on VC4:
+0xc010_0000 (1mb into ram) appears to be the temp buffer the ELF is held at during loading
+

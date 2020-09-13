@@ -13,11 +13,11 @@
 #define FLAG_BUSY (1 << 31)
 
 struct BCM2708UsbPhy : IODevice {
-	IODriverConstructor(BCM2708UsbPhy);
+  IODriverConstructor(BCM2708UsbPhy);
 
-	void wait() {
-		while(USB_GMDIOCSR & FLAG_BUSY);
-	}
+  void wait() {
+    while(USB_GMDIOCSR & FLAG_BUSY);
+  }
 
 	void write_bare(int reg, uint16_t value, int type) {
 		reg &= 0x1F;
@@ -44,72 +44,76 @@ struct BCM2708UsbPhy : IODevice {
 		write_bare(reg, value, 0x50020000);
 	}
 
-	virtual void start() override {
-		IODriverLog("starting ...");
+  virtual void start() override {
+    IODriverLog("starting ...");
 
-		/* enable clock */
-		A2W_XOSC_CTRL |= A2W_PASSWORD | A2W_XOSC_CTRL_USBEN_SET;
-		while(!(A2W_XOSC_CTRL & A2W_XOSC_CTRL_USBOK_SET));
+    /* enable clock */
+    A2W_XOSC_CTRL |= A2W_PASSWORD | A2W_XOSC_CTRL_USBEN_SET;
+    while(!(A2W_XOSC_CTRL & A2W_XOSC_CTRL_USBOK_SET));
 
-		CM_TDCLKEN |= CM_PASSWORD | CM_TDCLKEN_USBDFT_SET;
+    CM_TDCLKEN |= CM_PASSWORD | CM_TDCLKEN_USBDFT_SET;
 
-		/* the LAN_RUN pin is GPIO6 according to the schematic */
-		/* edit: it's different between models.
-		 * see https://github.com/raspberrypi/firmware/blob/master/extra/dt-blob.dts#L711
-		 * e.g. on the RPi 2B it's pin 31
-		 */
+    /* the LAN_RUN pin is GPIO6 according to the schematic */
+    /* edit: it's different between models.
+     * see https://github.com/raspberrypi/firmware/blob/master/extra/dt-blob.dts#L711
+     * e.g. on the RPi 2B it's pin 31
+     */
 
+    gGPIO.setFunction(31, kBCM2708PinmuxOut);
 
-                BCM2708Gpio *gpio = static_cast<BCM2708Gpio*>(IODevice::findByTag(GPIO_TAG));
-                gpio->setFunction(31, kBCM2708PinmuxOut);
+    int devmode = 0;
 
-		udelay(300);
-		GP_CLR0 = (1 << 31);
-		udelay(300);
-		GP_SET0 = (1 << 31);
-		udelay(300);
+    udelay(300);
+    GP_CLR0 = (1 << 31);
+    udelay(300);
+    GP_SET0 = (1 << 31);
+    udelay(300);
 
-		IODriverLog("LAN reset");
+    IODriverLog("LAN reset");
 
-		USB_GMDIOCSR = (1 << 18);
+    USB_GMDIOCSR = (1 << 18);
 
-		usb_write(0x15, 272 /* devmode ? 4369 : 272*/);
-		usb_write(0x19, 0x4);
-		usb_write(0x18, 0x10);
-		usb_write(0x1D, 0x4);
-		usb_write(0x17, 5682);
+    usb_write(0x15, devmode ? 4369 : 272);
+    usb_write(0x19, 0x4);
+    usb_write(0x18, devmode ? 0x342 : 0x10);
+    usb_write(0x1D, 0x4);
+    usb_write(0x17, 5682);
 
-		while((usb_read(0x1B) & (1 << 7)) != 0);
+    while((usb_read(0x1B) & (1 << 7)) != 0);
 
-		USB_GVBUSDRV &= ~(1 << 7);
+    USB_GVBUSDRV &= ~(1 << 7);
 
-		usb_write(0x1E, 0x8000);
+    usb_write(0x1E, 0x8000);
 
-		usb_write(0x1D, 0x5000);
-		usb_write(0x19, 0xC004);
-		usb_write(0x20, 0x1C2F);
-		usb_write(0x22, 0x0100);
-		usb_write(0x24, 0x0010);
-		usb_write(0x19, 0x0004);
+    usb_write(0x1D, 0x5000);
+    usb_write(0x19, 0xC004);
+    usb_write(0x20, 0x1C2F);
+    usb_write(0x22, 0x0100);
+    usb_write(0x24, 0x0010);
+    usb_write(0x19, 0x0004);
 
-		USB_GVBUSDRV = USB_GVBUSDRV & 0xFFF0FFFF | 0xD0000;
-		udelay(300);
-		mmio_write32(0x7E980400 + 3084, 0x20402700);
-		udelay(300);
-		mmio_write32(0x7E980400, 1);
-		udelay(300);
-		mmio_write32(0x7E980404, 0xBB80);
-		udelay(300);
+    USB_GVBUSDRV = USB_GVBUSDRV & 0xFFF0FFFF | 0xD0000;
+    udelay(300);
+    if (devmode) {
+      USB_GUSBCFG = 0x40402700;
+    } else {
+      mmio_write32(0x7E980400 + 3084, 0x20402700); // USB_HCFG + something
+      udelay(300);
+      mmio_write32(0x7E980400, 1);  // USB_HCFG
+      udelay(300);
+      mmio_write32(0x7E980404, 0xBB80); // USB_HFIR
+      udelay(300);
+    }
 
-		IODriverLog("started");
+    IODriverLog("started");
 
-		IODevice::start();
-	}
+    IODevice::start();
+  }
 
-	virtual void init() override {
-		setName("BCM2708UsbPhy");
-		setTag('USBP');
-	}
+  virtual void init() override {
+    setName("BCM2708UsbPhy");
+    setTag('USBP');
+  }
 };
 
 IODriverCreateSingletonInstance(BCM2708UsbPhy);

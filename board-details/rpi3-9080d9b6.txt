@@ -23,3 +23,9 @@ OTP66: 0x00009daa
 
 
 rpi 3b rev 2 1gig, embest
+
+MIDR: 0x410fd034
+name    size    encoding        WT      WB      RA      WA      Sets    Assoc   LineSize
+L1d     32 KB   0x700fe01a      0       1       1       1       0x7f    0x3     0x2(64 bytes)
+L1i     32 KB   0x201fe00a      0       0       1       0       0xff    0x1     0x2(64 bytes)
+L2      512 KB  0x703fe07a      0       1       1       1       0x1ff   0xf     0x2(64 bytes)

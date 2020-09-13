@@ -19,3 +19,8 @@ OTP66: 0x00000000
 
 
 rpi 2 b rev 1 1gig, embest
+
+name    size    encoding        WT      WB      RA      WA      Sets    Assoc   LineSize
+L1d     32 KB   0x700fe01a      0       1       1       1       0x7f    0x3     0x2(64 bytes)
+L1i     32 KB   0x203fe009      0       0       1       0       0x1ff   0x1     0x1(32 bytes)
+L2      512 KB  0x707fe03a      0       1       1       1       0x3ff   0x7     0x2(64 bytes)

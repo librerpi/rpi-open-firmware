@@ -22,7 +22,6 @@ const char *function_names[] = {
 static __thread int foo;
 
 void dump_all_gpio() {
-  BCM2708Gpio *gpio = static_cast<BCM2708Gpio*>(IODevice::findByTag(GPIO_TAG));
   bool gpio_level[64];
   BCM2708PinmuxSetting functions[64];
   gpio_snapshot(gpio_level, functions);
@@ -49,14 +48,13 @@ void gpio_print_snapshot(const bool gpio_level[64], const BCM2708PinmuxSetting f
 }
 
 void gpio_snapshot(bool gpio_level[64], BCM2708PinmuxSetting functions[64]) {
-  BCM2708Gpio *gpio = static_cast<BCM2708Gpio*>(IODevice::findByTag(GPIO_TAG));
   for (uint8_t bank = 0; bank <2; bank++) {
-    uint32_t state = gpio->getBank(bank);
+    uint32_t state = gGPIO.getBank(bank);
     for (uint8_t pin = 0; pin < 32; pin++) {
       gpio_level[(bank * 32) + pin] = state & (1 << pin);
     };
   }
-  gpio->getAllFunctions(functions);
+  gGPIO.getAllFunctions(functions);
 }
 
 void set_gp_mode(int mash, int source) {

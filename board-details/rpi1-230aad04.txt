@@ -14,3 +14,11 @@ OTP66: 0x00000000
 
 
 rpi 1 b, rev 2, 512mb, sony uk
+
+
+MIDR: 0x410fb767
+armv6 cache type: 0x1d152152
+L1i: words: 2, assoc: 2, size: 5, size2: 0
+L1d: words: 2, assoc: 2, size: 5, size2: 0
+S: 1
+CType: 14

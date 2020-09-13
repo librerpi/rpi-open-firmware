@@ -1,3 +1,4 @@
+#include "hardware.h"
 
 const char* size_to_string[] = {
   "1GB",

@@ -50,7 +50,7 @@ extern "C" void fatal_exception(arm_saved_state_t* regs, const char* fmt, ...)
 }
 
 extern "C" void sleh_undef(arm_saved_state_t* regs) {
-	fatal_exception(regs, "Undefined instruction");
+  fatal_exception(regs, "Undefined instruction");
 }
 
 extern "C" void sleh_prefabt(arm_saved_state_t* regs) {

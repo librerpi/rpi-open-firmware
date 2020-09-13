@@ -31,6 +31,8 @@ Second stage bootloader.
 #include <string.h>
 #include <stdio.h>
 
+#include "drivers/fatfs/diskio.h"
+
 #define logf(fmt, ...) print_timestamp(); printf("[LDR:%s]: " fmt, __FUNCTION__, ##__VA_ARGS__);
 
 FATFS g_BootVolumeFs;
@@ -58,7 +60,7 @@ struct ranges {
 static_assert((MEM_USABLE_START+0x800000) < KERNEL_LOAD_ADDRESS,
               "memory layout would not allow for kernel to be loaded at KERNEL_LOAD_ADDRESS, please check memory_map.h");
 
-uint32_t htonl(uint32_t hostlong) {
+static uint32_t htonl(uint32_t hostlong) {
   return ((hostlong & 0x000000ff) << 24) |
          ((hostlong & 0x0000ff00) << 8) |
          ((hostlong & 0x00ff0000) >> 8) |
@@ -79,45 +81,104 @@ void hex32(uint32_t input, char *output) {
 }
 
 struct LoaderImpl {
-	inline bool file_exists(const char* path) {
-		return f_stat(path, NULL) == FR_OK;
-	}
+  LoaderImpl() {
+    find_and_mount();
+    auto kernel = load_kernel();
+    size_t initrd_size;
+    auto initrd = load_initrd(&initrd_size);
 
-	size_t read_file(const char* path, uint8_t*& dest, bool should_alloc = true) {
-		/* ensure file exists first */
-		if(!file_exists(path))
-			panic("attempted to read %s, but it does not exist", path);
-                uint32_t start = ST_CLO;
+    /* read the command-line null-terminated */
+    uint8_t *cmdline;
+    size_t cmdlen = read_file("cmdline.txt", cmdline);
 
-		/* read entire file into buffer */
-		FIL fp;
-		f_open(&fp, path, FA_READ);
+    logf("kernel cmdline: %s\n", cmdline);
 
-		unsigned int len = f_size(&fp);
+    const char *dtb_name = detect_model_dtb();
 
-		if(should_alloc) {
-			/*
-			 * since this can be used for strings, there's no harm in reserving an
-			 * extra byte for the null terminator and appending it.
-			 */
-			uint8_t* buffer = new uint8_t[len + 1];
-			dest = buffer;
-			buffer[len] = 0;
-		}
+      /* load flat device tree */
+    uint8_t* fdt = load_fdt(dtb_name, (char*)cmdline, initrd, initrd_size);
 
-		logf("%s: reading %d bytes to 0x%X ~%dmb (allocated=%d) ...\n", path, len, (unsigned int)dest, ((unsigned int)dest)/1024/1024, should_alloc);
+    /* once the fdt contains the cmdline, it is not needed */
+    delete[] cmdline;
 
-		f_read(&fp, dest, len, &len);
-		f_close(&fp);
+    /* the eMMC card in particular needs to be reset */
+    teardown_hardware();
+    mmu_off();
+    disable_icache();
 
-                uint32_t stop = ST_CLO;
-                uint32_t elapsed = stop - start;
+    run_linux(kernel, fdt);
+  }
+  inline void find_and_mount() {
+    logf("Mounting boot partitiion ...\n");
+    FRESULT r = f_mount(&g_BootVolumeFs, ROOT_VOLUME_PREFIX, 1);
+    if (r != FR_OK) {
+      panic("failed to mount boot partition, error: %d", (int)r);
+    }
+    logf("Boot partition mounted!\n");
+  }
 
-                uint32_t bytes_per_second = (double)len / ((double)(elapsed) / 1000 / 1000);
-                printf("%d kbyte copied at a rate of %ld kbytes/second, CRC32: 0x%x\n", len/1024, bytes_per_second/1024, 0); //rc_crc32(0, (const char*)dest, len));
+  linux_t load_kernel() {
+    /* read the kernel as a function pointer at fixed address */
+    uint8_t* zImage = reinterpret_cast<uint8_t*>(KERNEL_LOAD_ADDRESS);
+    linux_t kernel = reinterpret_cast<linux_t>(zImage);
 
-		return len;
-	}
+    size_t ksize = read_file("zImage", zImage, false);
+    logf("zImage loaded at 0x%X\n", (unsigned int)kernel);
+    return kernel;
+  }
+
+  uint8_t *load_initrd(size_t *size) {
+    uint8_t *initrd = reinterpret_cast<uint8_t*>(INITRD_LOAD_ADDRESS);
+    *size = read_file("initrd", initrd, false);
+    return initrd;
+  }
+
+  inline void __attribute__((noreturn)) run_linux(linux_t kernel, uint8_t *fdt) {
+    panic("testing");
+    /* fire away -- this should never return */
+
+    logf("Jumping to the Linux kernel...\n");
+    kernel(0, ~0, fdt);
+  }
+
+  bool file_exists(const char* path) {
+    return f_stat(path, NULL) == FR_OK;
+  }
+
+  size_t read_file(const char* path, uint8_t*& dest, bool should_alloc = true) {
+    uint32_t start = ST_CLO;
+    /* ensure file exists first */
+    if(!file_exists(path)) panic("attempted to read %s, but it does not exist", path);
+
+    /* read entire file into buffer */
+    FIL fp;
+    f_open(&fp, path, FA_READ);
+
+    unsigned int len = f_size(&fp);
+
+    if(should_alloc) {
+      /*
+       * since this can be used for strings, there's no harm in reserving an
+       * extra byte for the null terminator and appending it.
+       */
+      uint8_t* buffer = new uint8_t[len + 1];
+      dest = buffer;
+      buffer[len] = 0;
+    }
+
+    logf("%s: reading %d bytes to 0x%X ~%dmb...\n", path, len, (unsigned int)dest, ((unsigned int)dest)/1024/1024);
+
+    f_read(&fp, dest, len, &len);
+    f_close(&fp);
+
+    uint32_t stop = ST_CLO;
+    uint32_t elapsed = stop - start;
+
+    uint32_t bytes_per_second = (double)len / ((double)(elapsed) / 1000 / 1000);
+    printf("%d kbyte copied at a rate of %ld kbytes/second, CRC32: 0x%x\n", len/1024, bytes_per_second/1024, 0); //rc_crc32(0, (const char*)dest, len));
+
+    return len;
+  }
 
   uint8_t* load_fdt(const char* filename, const char* cmdline, uint8_t *initrd_start, size_t initrd_size) {
     /* read device tree blob */
@@ -235,68 +296,6 @@ struct LoaderImpl {
     }
   }
 
-	LoaderImpl() {
-		logf("Mounting boot partitiion ...\n");
-		FRESULT r = f_mount(&g_BootVolumeFs, ROOT_VOLUME_PREFIX, 1);
-		if (r != FR_OK) {
-			panic("failed to mount boot partition, error: %d", (int)r);
-		}
-		logf("Boot partition mounted!\n");
-
-
-		/* read the kernel as a function pointer at fixed address */
-		uint8_t* zImage = reinterpret_cast<uint8_t*>(KERNEL_LOAD_ADDRESS);
-		linux_t kernel = reinterpret_cast<linux_t>(zImage);
-
-		size_t ksize = read_file("zImage", zImage, false);
-		logf("zImage loaded at 0x%X\n", (unsigned int)kernel);
-
-    uint8_t *initrd = reinterpret_cast<uint8_t*>(INITRD_LOAD_ADDRESS);
-#if 0
-    uint32_t *initrd32 = reinterpret_cast<uint32_t*>(INITRD_LOAD_ADDRESS);
-    for (int i=0; i < (1024 * 1024 * 16); i++) {
-      initrd32[i] = i;
-    }
-    logf("pattern loaded\n");
-    udelay(1000 * 1000 * 600);
-    logf("checking pattern\n");
-    for (int i=0; i < (1024 * 1024 * 16); i++) {
-      if (initrd32[i] != i) {
-        printf("mismatch at 0x%x, 0x%lx\n", i, initrd32[i]);
-        panic("memory error");
-      }
-    }
-    logf("memtest done\n");
-    panic("stopping");
-#endif
-    size_t initrd_size = read_file("initrd", initrd, false);
-
-    /* read the command-line null-terminated */
-    uint8_t *cmdline;
-    size_t cmdlen = read_file("cmdline.txt", cmdline);
-
-    logf("kernel cmdline: %s\n", cmdline);
-
-    const char *dtb_name = detect_model_dtb();
-
-    logf("using %s\n", dtb_name);
-
-      /* load flat device tree */
-    uint8_t* fdt = load_fdt(dtb_name, (char*)cmdline, initrd, initrd_size);
-
-    /* once the fdt contains the cmdline, it is not needed */
-    delete[] cmdline;
-
-    /* the eMMC card in particular needs to be reset */
-    teardown_hardware();
-    mmu_off();
-    logf("mmu off\n");
-    disable_icache();
-
-    /* fire away -- this should never return */
-    logf("Jumping to the Linux kernel...\n");
-    kernel(0, ~0, fdt);
-  }
 };
 
 static LoaderImpl STATIC_APP g_Loader {};

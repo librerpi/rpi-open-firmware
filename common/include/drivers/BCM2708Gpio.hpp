@@ -23,16 +23,13 @@ enum BCM2708PinmuxSetting {
 };
 
 #ifdef __cplusplus
-struct BCM2708Gpio : IODevice {
-	IODriverConstructor(BCM2708Gpio);
-
-	void setFunction(uint8_t pin, BCM2708PinmuxSetting function);
-        void getAllFunctions(BCM2708PinmuxSetting *functions);
-        void clearPin(uint8_t pin);
-        void setPin(uint8_t pin);
-        bool getPin(uint8_t pin);
-        uint32_t getBank(uint8_t bank);
-	virtual void init();
+struct BCM2708Gpio {
+  void setFunction(uint8_t pin, BCM2708PinmuxSetting function);
+  void getAllFunctions(BCM2708PinmuxSetting *functions);
+  void clearPin(uint8_t pin);
+  void setPin(uint8_t pin);
+  bool getPin(uint8_t pin);
+  uint32_t getBank(uint8_t bank);
 };
 
 extern BCM2708Gpio gGPIO;

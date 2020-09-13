@@ -1,3 +1,4 @@
 https://www.raspberrypi.org/forums/viewtopic.php?f=63&t=72070
+https://www.raspberrypi.org/forums/viewtopic.php?f=31&t=12530&start=25
 
 allows direct control of the LED's on the ethernet port

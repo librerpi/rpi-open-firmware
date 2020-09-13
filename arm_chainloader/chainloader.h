@@ -36,9 +36,15 @@ static inline void __attribute__((noreturn)) _hang_cpu() {
     ((uintmax_t)1 << (uintmax_t)((__n) & (NBBY * sizeof(uintmax_t) - 1))))
 
 static inline uint32_t arm_get_cpsr() {
-	uint32_t r;
-	__asm__ volatile("mrs %0, cpsr\n" : "=r" (r) :: "memory");
-	return r;
+  uint32_t r;
+  __asm__ volatile("mrs %0, cpsr\n" : "=r" (r) :: "memory");
+  return r;
+}
+
+static inline uint32_t arm_get_midr() {
+  uint32_t r;
+  __asm__("mrc p15, 0, %0, c0, c0, 0" : "=r"(r));
+  return r;
 }
 
 #ifdef __cplusplus

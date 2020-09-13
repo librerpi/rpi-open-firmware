@@ -158,99 +158,96 @@ struct BCM2708SDHost : BlockDevice {
     return send_raw((command & SH_CMD_COMMAND_SET) | SH_CMD_LONG_RESPONSE_SET, arg);
   }
 
-	bool __attribute__((noinline)) send_no_resp(uint32_t command, uint32_t arg = 0) {
-		return send_raw((command & SH_CMD_COMMAND_SET) | SH_CMD_NO_RESPONSE_SET, arg);
-	}
+  bool __attribute__((noinline)) send_no_resp(uint32_t command, uint32_t arg = 0) {
+    return send_raw((command & SH_CMD_COMMAND_SET) | SH_CMD_NO_RESPONSE_SET, arg);
+  }
 
   void configure_pinmux() {
-    BCM2708Gpio *gpio = static_cast<BCM2708Gpio*>(IODevice::findByTag(GPIO_TAG));
-    gpio->setFunction(48, kBCM2708Pinmux_ALT0);
-    gpio->setFunction(49, kBCM2708Pinmux_ALT0);
-    gpio->setFunction(50, kBCM2708Pinmux_ALT0);
-    gpio->setFunction(51, kBCM2708Pinmux_ALT0);
-    gpio->setFunction(52, kBCM2708Pinmux_ALT0);
-    gpio->setFunction(53, kBCM2708Pinmux_ALT0);
+    BCM2708Gpio *gpio = &gGPIO;
+    for (int i=48; i<54; i++) {
+      gpio->setFunction(i, kBCM2708Pinmux_ALT0);
+    }
 
-		logf("waiting for pinmux pull update ...\n");
+    logf("waiting for pinmux pull update ...\n");
 
-		GP_PUD = 2;
-		mfence();
-		udelay(500);
-		GP_PUD = 0;
+    GP_PUD = 2;
+    mfence();
+    udelay(500);
+    GP_PUD = 0;
 
-		logf("waiting for pinmux clock update ...\n");
+    logf("waiting for pinmux clock update ...\n");
 
-		/* are these in bank 1 or 2? ah who gives a fuck ... */
-                // TODO, this changes EVERY SINGLE PIN to pullup, not just the ones we care about
-		GP_PUDCLK1 = GP_PUDCLK1_PUDCLKn32_SET;
-		GP_PUDCLK2 = GP_PUDCLK2_PUDCLKn64_SET;
-		udelay(500);
+    /* are these in bank 1 or 2? ah who gives a fuck ... */
+    // TODO, this changes EVERY SINGLE PIN to pullup, not just the ones we care about
+    GP_PUDCLK1 = GP_PUDCLK1_PUDCLKn32_SET;
+    GP_PUDCLK2 = GP_PUDCLK2_PUDCLKn64_SET;
+    udelay(500);
 
-		logf("ok ...\n");
-		GP_PUDCLK1 = 0;
-		GP_PUDCLK2 = 0;
+    logf("ok ...\n");
+    GP_PUDCLK1 = 0;
+    GP_PUDCLK2 = 0;
 
-		logf("pinmux configured for aux0\n");
-	}
+    logf("pinmux configured for aux0\n");
+  }
 
-	void reset() {
-		logf("resetting controller ...\n");
-		set_power(false);
+  void reset() {
+    logf("resetting controller ...\n");
+    set_power(false);
 
-		SH_CMD = 0;
-		SH_ARG = 0;
-		SH_TOUT = 0xF00000;
-		SH_CDIV = 0;
-		SH_HSTS = 0x7f8;
-		SH_HCFG = 0;
-		SH_HBCT = 0;
-		SH_HBLC = 0;
+    SH_CMD = 0;
+    SH_ARG = 0;
+    SH_TOUT = 0xF00000;
+    SH_CDIV = 0;
+    SH_HSTS = 0x7f8;
+    SH_HCFG = 0;
+    SH_HBCT = 0;
+    SH_HBLC = 0;
 
-		uint32_t temp = SH_EDM;
+    uint32_t temp = SH_EDM;
 
-		temp &= ~((SDEDM_THRESHOLD_MASK<<SDEDM_READ_THRESHOLD_SHIFT) |
-		          (SDEDM_THRESHOLD_MASK<<SDEDM_WRITE_THRESHOLD_SHIFT));
-		temp |= (SAFE_READ_THRESHOLD << SDEDM_READ_THRESHOLD_SHIFT) |
-		        (SAFE_WRITE_THRESHOLD << SDEDM_WRITE_THRESHOLD_SHIFT);
+    temp &= ~((SDEDM_THRESHOLD_MASK<<SDEDM_READ_THRESHOLD_SHIFT) |
+              (SDEDM_THRESHOLD_MASK<<SDEDM_WRITE_THRESHOLD_SHIFT));
+    temp |= (SAFE_READ_THRESHOLD << SDEDM_READ_THRESHOLD_SHIFT) |
+            (SAFE_WRITE_THRESHOLD << SDEDM_WRITE_THRESHOLD_SHIFT);
 
-		SH_EDM = temp;
-		udelay(300);
+    SH_EDM = temp;
+    udelay(300);
 
-		set_power(true);
+    set_power(true);
 
-		udelay(300);
-		mfence();
-	}
+    udelay(300);
+    mfence();
+  }
 
-	inline void get_response() {
-		r[0] = SH_RSP0;
-		r[1] = SH_RSP1;
-		r[2] = SH_RSP2;
-		r[3] = SH_RSP3;
-	}
+  inline void get_response() {
+    r[0] = SH_RSP0;
+    r[1] = SH_RSP1;
+    r[2] = SH_RSP2;
+    r[3] = SH_RSP3;
+  }
 
-	bool __attribute__((noinline)) wait_and_get_response() {
-		if (!wait())
-			return false;
+  bool __attribute__((noinline)) wait_and_get_response() {
+    if (!wait())
+      return false;
 
-		get_response();
+    get_response();
 
-		//printf("Cmd: 0x%x Resp: %08x %08x %08x %08x\n", current_cmd, r[0], r[1], r[2], r[3]);
+    //printf("Cmd: 0x%x Resp: %08x %08x %08x %08x\n", current_cmd, r[0], r[1], r[2], r[3]);
 
-		if (SH_CMD & SH_CMD_FAIL_FLAG_SET) {
-			if (SH_HSTS & SDHSTS_ERROR_MASK) {
-				logf("ERROR: sdhost status: 0x%lx\n", SH_HSTS);
-				return false;
-			}
-			logf("ERROR: unknown error, SH_CMD=0x%lx\n", SH_CMD);
-			return false;
-		}
+    if (SH_CMD & SH_CMD_FAIL_FLAG_SET) {
+      if (SH_HSTS & SDHSTS_ERROR_MASK) {
+        logf("ERROR: sdhost status: 0x%lx\n", SH_HSTS);
+        return false;
+      }
+      logf("ERROR: unknown error, SH_CMD=0x%lx\n", SH_CMD);
+      return false;
+    }
 
 
-		return true;
-	}
+    return true;
+  }
 
-  bool __attribute__((noinline)) query_voltage_and_type() {
+  bool query_voltage_and_type() {
     uint32_t t;
 
     /* identify */
@@ -291,12 +288,12 @@ struct BCM2708SDHost : BlockDevice {
 
   }
 
-	inline void copy_136_to(uint32_t* dest) {
-		dest[0] = r[0];
-		dest[1] = r[1];
-		dest[2] = r[2];
-		dest[3] = r[3];
-	}
+  inline void copy_136_to(uint32_t* dest) {
+    dest[0] = r[0];
+    dest[1] = r[1];
+    dest[2] = r[2];
+    dest[3] = r[3];
+  }
 
   bool identify_card() {
     logf("identifying card ...\n");
@@ -469,17 +466,16 @@ printf("\n");
   }
 
 
+  bool select_card() {
+    send(MMC_SELECT_CARD, MMC_ARG_RCA(rca));
 
-	bool select_card() {
-		send(MMC_SELECT_CARD, MMC_ARG_RCA(rca));
+    if (!wait())
+      return false;
 
-		if (!wait())
-			return false;
+    return true;
+  }
 
-		return true;
-	}
-
-  bool init_card() {
+  bool __attribute__ ((always_inline)) init_card() {
     char pnm[8];
     uint32_t block_length;
     uint32_t clock_div = 0;
@@ -537,7 +533,7 @@ printf("\n");
             /* work out the capacity of the card in bytes */
             capacity_bytes = ((uint64_t)SD_CSD_CAPACITY(csd) * block_length);
 
-            clock_div = 10;
+            clock_div = 5;
     } else {
             printf("ERROR: Unknown CSD version 0x%x!\n", SD_CSD_CSDVER(csd));
             return false;
@@ -577,87 +573,104 @@ printf("\n");
             SH_CDIV = clock_div - 2;
     }
 
+#if 0
+    send(MMC_APP_CMD); /* 55 */
+    wait();
+    send(SD_APP_SET_BUS_WIDTH, 2);
+
+    if (!wait_and_get_response()) {
+      puts("failed to set bus width");
+    } else {
+      //SH_HCFG |= SH_HCFG_WIDE_EXT_BUS_SET;
+    }
+#endif
+
     return true;
   }
 
-	void restart_controller() {
-		is_sdhc = false;
+  void restart_controller() {
+    is_sdhc = false;
 
-		logf("hcfg 0x%lX, cdiv 0x%lX, edm 0x%lX, hsts 0x%lX\n",
-		     SH_HCFG,
-		     SH_CDIV,
-		     SH_EDM,
-		     SH_HSTS);
+    logf("hcfg 0x%lX, cdiv 0x%lX, edm 0x%lX, hsts 0x%lX\n",
+         SH_HCFG,
+         SH_CDIV,
+         SH_EDM,
+         SH_HSTS);
 
-		logf("Restarting the eMMC controller ...\n");
+    logf("Restarting the eMMC controller ...\n");
 
-		configure_pinmux();
-		reset();
+    configure_pinmux();
+    reset();
 
-		SH_HCFG &= ~SH_HCFG_WIDE_EXT_BUS_SET;
-		SH_HCFG = SH_HCFG_SLOW_CARD_SET | SH_HCFG_WIDE_INT_BUS_SET;
-		SH_CDIV = kIdentSafeClockRate;
+    SH_HCFG &= ~SH_HCFG_WIDE_EXT_BUS_SET;
+    SH_HCFG = SH_HCFG_SLOW_CARD_SET | SH_HCFG_WIDE_INT_BUS_SET;
+    SH_CDIV = kIdentSafeClockRate;
 
-		udelay(300);
-		mfence();
+    udelay(300);
+    mfence();
 
-		if (init_card()) {
-			card_ready = true;
+    if (init_card()) {
+            card_ready = true;
 
-			/*
-			 * looks like a silicon bug to me or a quirk of csd2, who knows
-			 */
-			for (int i = 0; i < 3; i++) {
-				if (!read_block(0, nullptr, 1)) {
-					panic("fifo flush cycle %d failed", i);
-				}
-			}
-		} else {
-			panic("failed to reinitialize the eMMC controller");
-		}
-	}
+            /*
+             * looks like a silicon bug to me or a quirk of csd2, who knows
+             */
+            for (int i = 0; i < 3; i++) {
+                    if (!read_block(0, nullptr, 1)) {
+                            panic("fifo flush cycle %d failed", i);
+                    }
+            }
+    } else {
+            panic("failed to reinitialize the eMMC controller");
+    }
+  }
 
-	virtual void stop() override {
-		if (card_ready) {
-			logf("flushing fifo ...\n");
-			drain_fifo_nowait();
+  virtual void stop() override {
+    if (card_ready) {
+            logf("flushing fifo ...\n");
+            drain_fifo_nowait();
 
-			logf("asking card to enter idle state ...\n");
-			SH_CDIV = kIdentSafeClockRate;
-			udelay(150);
+            logf("asking card to enter idle state ...\n");
+            SH_CDIV = kIdentSafeClockRate;
+            udelay(150);
 
-			send_no_resp(MMC_GO_IDLE_STATE);
-			udelay(500);
-		}
+            send_no_resp(MMC_GO_IDLE_STATE);
+            udelay(500);
+    }
 
-		logf("stopping sdhost controller driver ...\n");
+    logf("stopping sdhost controller driver ...\n");
 
-		SH_CMD = 0;
-		SH_ARG = 0;
-		SH_TOUT = 0xA00000;
-		SH_CDIV = 0x1FB;
+    SH_CMD = 0;
+    SH_ARG = 0;
+    SH_TOUT = 0xA00000;
+    SH_CDIV = 0x1FB;
 
-		logf("powering down controller ...\n");
-		SH_VDD = 0;
-		SH_HCFG = 0;
-		SH_HBCT = 0x400;
-		SH_HBLC = 0;
-		SH_HSTS = 0x7F8;
+    logf("powering down controller ...\n");
+    SH_VDD = 0;
+    SH_HCFG = 0;
+    SH_HBCT = 0x400;
+    SH_HBLC = 0;
+    SH_HSTS = 0x7F8;
 
-		logf("resetting state machine ...\n");
+    logf("resetting state machine ...\n");
 
-		SH_CMD = 0;
-		SH_ARG = 0;
-	}
+    SH_CMD = 0;
+    SH_ARG = 0;
+  }
 
-	BCM2708SDHost() {
-		restart_controller();
-		logf("eMMC driver sucessfully started!\n");
-	}
+  BCM2708SDHost() {
+    restart_controller();
+    logf("eMMC driver sucessfully started!\n");
+  }
 };
 
-BCM2708SDHost STATIC_DRIVER g_SDHostDriver {};
+BCM2708SDHost *g_SDHostDriver;
+
+void sdhost_init() {
+  g_SDHostDriver = new BCM2708SDHost();
+}
 
 BlockDevice* get_sdhost_device() {
-	return &g_SDHostDriver;
+  if (!g_SDHostDriver) panic("sdhost not initialized yet");
+  return g_SDHostDriver;
 }

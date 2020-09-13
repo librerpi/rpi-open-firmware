@@ -8,6 +8,8 @@ pi4: -mfpu=crypto-neon-fp-armv8 -march=armv8-a+crc -mcpu=cortex-a72
 gathered from pi's i own:
 
 pi0/pi1:
+SoC serial# 0x230aad04
+HW revision: 0x0000000e
 MIDR: 0x410FB767
 armv6 cache type: 0x1d152152
 L1i: words: 2, assoc: 2, size: 5, size2: 0
@@ -18,4 +20,32 @@ CType: 14
 4 way associative
 16kb each
 
+pi2:
+SoC serial# 0x1077df95
+HW revision: 0x00a21041
+  Type: 4
+  Rev: 1
+  Proc: 1
+  Manufacturer: 2
+  Ram: 2
+MIDR: 0x410FC075
+name    size    encoding        WT      WB      RA      WA      Sets    Assoc   LineSize
+L1d     32 KB   0x700fe01a      0       1       1       1       0x7f    0x3     0x2(64 bytes)
+L1i     32 KB   0x203fe009      0       0       1       0       0x1ff   0x1     0x1(32 bytes)
+L2      512 KB  0x707fe03a      0       1       1       1       0x3ff   0x7     0x2(64 bytes)
+
+
+pi3:
+SoC serial# 0x9080d9b6
+HW revision: 0x00a22082
+  Type: 8
+  Rev: 2
+  Proc: 2
+  Manufacturer: 2
+  Ram: 2
+MIDR: 0x410fd034
+name    size    encoding        WT      WB      RA      WA      Sets    Assoc   LineSize
+L1d     32 KB   0x700fe01a      0       1       1       1       0x7f    0x3     0x2(64 bytes)
+L1i     32 KB   0x201fe00a      0       0       1       0       0xff    0x1     0x2(64 bytes)
+L2      512 KB  0x703fe07a      0       1       1       1       0x1ff   0xf     0x2(64 bytes)
 

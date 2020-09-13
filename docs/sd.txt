@@ -1,0 +1,6 @@
+pi2 wont boot with larger clusters
+larger clusters give better read performance
+mkdosfs -s 32 /dev/mmcblk0p1
+
+[root@system76:~]# cat /sys/kernel/debug/mmc0/ios
+view the SD bus state on linux

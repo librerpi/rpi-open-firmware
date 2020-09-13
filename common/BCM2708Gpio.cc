@@ -48,8 +48,4 @@ uint32_t BCM2708Gpio::getBank(uint8_t bank) {
   return level[bank];
 }
 
-void BCM2708Gpio::init() {
-	setTag(GPIO_TAG);
-}
-
 BCM2708Gpio gGPIO {};

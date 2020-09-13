@@ -24,6 +24,8 @@ MBR based disk interface modelling primary partitions as separate disks.
 #include <hexdump.h>
 
 #include "block_device.hpp"
+#include "hardware.h"
+#include "drivers/mbr_disk.h"
 
 #define logf(fmt, ...) printf("[MBRDISK:%s]: " fmt, __FUNCTION__, ##__VA_ARGS__);
 
@@ -68,40 +70,40 @@ static_assert(sizeof(Mbr) >= 512, "What the fuck");
 #define MBR_NTFS 0x07
 
 static const char* mbr_fs_to_string(int fs) {
-	switch (fs) {
-	case MBR_FAT32:
-		return "FAT32";
-	case MBR_FAT32_INT13:
-		return "FAT32-INT13";
-	case MBR_FAT16_INT13:
-		return "FAT16-INT13";
-	case MBR_FAT16:
-		return "FAT16";
-	case MBR_LINUX:
-		return "Linux (ext2/ext3)";
-	case MBR_NTFS:
-		return "NTFS";
-	default:
-		return "<Unknown>";
-	}
+  switch (fs) {
+  case MBR_FAT32:
+          return "FAT32";
+  case MBR_FAT32_INT13:
+          return "FAT32-INT13";
+  case MBR_FAT16_INT13:
+          return "FAT16-INT13";
+  case MBR_FAT16:
+          return "FAT16";
+  case MBR_LINUX:
+          return "Linux (ext2/ext3)";
+  case MBR_NTFS:
+          return "NTFS";
+  default:
+          return "<Unknown>";
+  }
 }
 
 struct MbrImpl {
-	Mbr* mbr;
-	BlockDevice* mmc;
+  Mbr* mbr;
+  BlockDevice* mmc;
 
-	inline bool validate_signature() {
-		return reinterpret_cast<uint16_t>(mbr->mbr_sig) == MBR_SIG;
-	}
+  inline bool validate_signature() {
+    return reinterpret_cast<uint16_t>(mbr->mbr_sig) == MBR_SIG;
+  }
 
-	template <typename T>
-	inline bool read_block(uint8_t volume, uint32_t sector, T* dest_buffer, uint32_t count) {
-		return read_block(volume, sector, reinterpret_cast<uint32_t*>(dest_buffer), count);
-	}
+  template <typename T>
+  inline bool read_block(uint8_t volume, uint32_t sector, T* dest_buffer, uint32_t count) {
+    return read_block(volume, sector, reinterpret_cast<uint32_t*>(dest_buffer), count);
+  }
 
-	inline unsigned int get_block_size() {
-		return mmc->block_size;
-	}
+  inline unsigned int get_block_size() {
+    return mmc->block_size;
+  }
 
 	inline int get_partition_type(uint8_t volume) {
 		if (volume > 3)
@@ -154,7 +156,11 @@ struct MbrImpl {
   }
 };
 
-MbrImpl STATIC_FILESYSTEM g_MbrDisk {};
+MbrImpl *g_MbrDisk;
+
+void init_mbr_disk() {
+  g_MbrDisk = new MbrImpl();
+}
 
 /*****************************************************************************
  * Wrappers for FatFS.
@@ -170,7 +176,7 @@ DSTATUS disk_initialize (BYTE pdrv) {
 		return static_cast<DRESULT>(0);
 	}
 
-	BYTE pt = g_MbrDisk.get_partition_type(pdrv);
+	BYTE pt = g_MbrDisk->get_partition_type(pdrv);
 	switch (pt) {
 	case MBR_FAT32_INT13:
 	case MBR_FAT16_INT13:
@@ -193,10 +199,11 @@ DRESULT disk_read (BYTE pdrv, BYTE* buff, DWORD sector, UINT count) {
   UINT origcount = count;
   DWORD origsector = sector;
   bool success = true;
+  //uint32_t start = ST_CLO;
 
   memset(buff, 0xfe, count*512);
 
-  success = g_MbrDisk.read_block(pdrv, sector, buff, count);
+  success = g_MbrDisk->read_block(pdrv, sector, buff, count);
   if (!success) {
     printf("error reading part#%d %ld+%d sectors to 0x%lx\n", pdrv, sector, count, (uint32_t)buff);
     hexdump_ram(origbuff, origsector*512, 512*origcount);
@@ -204,24 +211,27 @@ DRESULT disk_read (BYTE pdrv, BYTE* buff, DWORD sector, UINT count) {
     return (DRESULT)1;
   }
 
+  //uint32_t stop = ST_CLO;
+  //if ((stop - start) > 1300) printf("read of sector %ld(%d) took %ld usec\n", sector, count, stop-start);
+
   return (DRESULT)0;
 }
 
 DRESULT disk_ioctl (BYTE pdrv, BYTE cmd, void* buff) {
-	switch (cmd) {
-	case CTRL_SYNC:
-		return (DRESULT)0;
-	case GET_SECTOR_SIZE:
-		*(WORD*)buff = g_MbrDisk.get_block_size();
-		return (DRESULT)0;
+  switch (cmd) {
+  case CTRL_SYNC:
+    return (DRESULT)0;
+  case GET_SECTOR_SIZE:
+    *(WORD*)buff = g_MbrDisk->get_block_size();
+    return (DRESULT)0;
 
-	case GET_SECTOR_COUNT:
-		*(WORD*)buff = 0;
-		return (DRESULT)0;
+  case GET_SECTOR_COUNT:
+    *(WORD*)buff = 0;
+    return (DRESULT)0;
 
-	case GET_BLOCK_SIZE:
-		*(WORD*)buff = 1;
-		return (DRESULT)0;
-	}
-	return RES_PARERR;
+  case GET_BLOCK_SIZE:
+    *(WORD*)buff = 1;
+    return (DRESULT)0;
+  }
+  return RES_PARERR;
 }

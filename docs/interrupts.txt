@@ -21,7 +21,7 @@ there are 64 IRQ's within the VC4
 17      dma1
 18      dma2
 19      dma3
-20      dma3
+20      dma4
 21      dma5
 22      dma6
 23      dma7
@@ -58,7 +58,7 @@ there are 64 IRQ's within the VC4
 54      spi_int
 55      i2s_pcm_int
 56      sdio
-57      uart_int
+57      uart_int (PL011?)
 58      slimbus
 59      vec
 60      cpf
