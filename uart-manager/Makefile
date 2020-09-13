@@ -1,3 +1,5 @@
+LDFLAGS += -lpthread
+
 uart-manager: uart-manager.cpp
 
 install: uart-manager
