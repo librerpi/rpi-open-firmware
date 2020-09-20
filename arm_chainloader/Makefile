@@ -24,7 +24,6 @@ SRCS = \
 	mmu.c \
 	main.c
 
-
 # rpi1 and up
 ARCH = armv6zk
 
@@ -36,65 +35,67 @@ OK_COLOR=""
 ERROR_COLOR=""
 WARN_COLOR=""
 
-.PHONY: default all clean create_build_directory device
+.PHONY: default all clean
 
 default: build/arm_chainloader.bin
 
 OBJ := $(addprefix build/, $(addsuffix .o, $(basename $(SRCS))))
 
-CROSS_COMPILE ?= arm-none-eabi-
-CC = $(CROSS_COMPILE)gcc
-CXX = $(CROSS_COMPILE)gcc
-AS = $(CC)
-OBJCOPY = $(CROSS_COMPILE)objcopy
-LINKFLAGS = -nostdlib -march=$(ARCH) -Wl,--build-id=none -T linker.lds -ltlsf -lgcc -lcommon -lnotc -Wl,--gc-sections -ltlsf
-FPUFLAGS=-mfpu=vfp -mfloat-abi=softfp
-COMMON_FLAGS = -c -nostdlib -nostartfiles -ffreestanding -march=$(ARCH) -I../ -I./ -I./drivers/libfdt/ -mtune=arm1176jzf-s ${FPUFLAGS} -ffunction-sections -fdata-sections -DBAREMETAL -fno-common
+include $(OBJ:.o=.d)
 
-COMMON_FLAGS2 = -g -O3
+LINKFLAGS = -nostdlib -march=$(ARCH) -Wl,--build-id=none -T linker.lds -ltlsf -lgcc -lcommon -lnotc -lstdc++ -Wl,--gc-sections -ltlsf
+FPUFLAGS=-mfpu=vfp -mfloat-abi=softfp
+
+# applied to as, gcc and g++
+COMMON_FLAGS = -c -ffreestanding -march=$(ARCH) -I../ -I./ -I./drivers/libfdt/ -mtune=arm1176jzf-s ${FPUFLAGS} -ffunction-sections -fdata-sections -DBAREMETAL -fno-common
+
+# applied to gcc and g++
+COMMON_FLAGS2 = -nostdlib -nostartfiles -g -O3
 CFLAGS = $(COMMON_FLAGS) $(COMMON_FLAGS2) -std=c11 -Wdeclaration-after-statement
 CXXFLAGS = $(COMMON_FLAGS) $(COMMON_FLAGS2) -std=c++11 -fno-exceptions -fno-rtti
 ASFLAGS = $(COMMON_FLAGS) -x assembler-with-cpp
-
-HEADERS := \
-	$(shell find . -type f -name '*.h') \
-	$(shell find . -type f -name '*.hpp')
-
-create_build_directory:
-	@mkdir -p build
 
 CREATE_SUBDIR = \
 	@DIR="$(dir $@)"; \
 	if [ ! -d $$DIR ]; then mkdir -p $$DIR; fi
 
-build/start.o: start.s memory_map.h arm-defs.h
-build/main.o: main.c chainloader.h mmu.h
-build/loader.o: loader.cc chainloader.h memory_map.h mmu.h drivers/fatfs/ff.h drivers/mailbox.hpp drivers/block_device.hpp
-build/trap.o: trap.cc
-build/chainloader.o: chainloader.c
 build/mmu_asm.o: mmu_asm.S
 	@echo $(WARN_COLOR)CC  $(NO_COLOR) $@ #-mthumb
 	@$(CC) $(CFLAGS) $< -o $@ -march=armv7-a -mtune=cortex-a7
 
+# generate the dep files
+build/%.d: %.s
+	$(CREATE_SUBDIR)
+	@echo CC -M $< -o $@
+	@$(CC) $(ASFLAGS) -MM -o $@ $<
+	@sed 's,\($*\)\.o[ :]*,build/\1.o $@ : ,g' -i $@
+build/%.d: %.c
+	$(CREATE_SUBDIR)
+	@echo CC -M $< -o $@
+	@$(CC) $(CFLAGS) -MM -o $@ $<
+	@sed 's,\($*\)\.o[ :]*,build/\1.o $@ : ,g' -i $@
+build/%.d: %.cc
+	$(CREATE_SUBDIR)
+	@echo CXX -M $< -o $@
+	@$(CXX) $(CXXFLAGS) -MM -o $@ $<
+	@sed 's,\($*\)\.o[ :]*,build/\1.o $@ : ,g' -i $@
 #
 # rules to build c/asm files.
 #
 build/%.o: %.c
 	$(CREATE_SUBDIR)
 	@echo $(WARN_COLOR)CC  $(NO_COLOR) $@
-	@$(CC) $(CFLAGS) $< -o $@
+	$(CC) $(CFLAGS) $< -o $@
 
-build/%.o: %.cc $(HEADERS)
+build/%.o: %.cc
 	$(CREATE_SUBDIR)
 	@echo $(WARN_COLOR)CXX $(NO_COLOR) $@ #-mthumb
-	@$(CXX) $(CXXFLAGS) $< -o $@ #-mthumb
+	$(CXX) $(CXXFLAGS) $< -o $@ #-mthumb
 
 build/%.o: %.s
 	$(CREATE_SUBDIR)
 	@echo $(WARN_COLOR)AS  $(NO_COLOR) $@
-	@$(AS) $(ASFLAGS) $< -o $@
-
-.PRECIOUS: $(OBJ)
+	@$(CC) $(ASFLAGS) $< -o $@
 
 build/arm_chainloader.bin: build/arm_chainloader.elf
 	@echo $(WARN_COLOR)OBJ$(NO_COLOR) $@
@@ -102,7 +103,7 @@ build/arm_chainloader.bin: build/arm_chainloader.elf
 
 build/arm_chainloader.elf: $(OBJ)
 	@echo $(WARN_COLOR)LD  $(NO_COLOR) $@
-	@$(CC) $(OBJ) $(LINKFLAGS) -o $@ -Wl,-Map=build/arm_chainloader.map
+	$(CC) $(OBJ) $(LINKFLAGS) -o $@ -Wl,-Map=build/arm_chainloader.map
 
 clean:
 	@echo $(ERROR_COLOR)CLEAN$(NO_COLOR)
