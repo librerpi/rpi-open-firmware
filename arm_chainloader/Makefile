@@ -1,6 +1,6 @@
 SRCS = \
 	start.s \
-	mmu_asm.S \
+	mmu_asm.s \
 	lib_armv6/arm_bcopy.s \
 	lib_armv6/arm_bzero.s \
 	lib_armv6/arm_locore.s \
@@ -59,7 +59,7 @@ CREATE_SUBDIR = \
 	@DIR="$(dir $@)"; \
 	if [ ! -d $$DIR ]; then mkdir -p $$DIR; fi
 
-build/mmu_asm.o: mmu_asm.S
+build/mmu_asm.o: mmu_asm.s
 	@echo $(WARN_COLOR)CC  $(NO_COLOR) $@ #-mthumb
 	@$(CC) $(CFLAGS) $< -o $@ -march=armv7-a -mtune=cortex-a7
 
