@@ -14,12 +14,9 @@ SRCS = \
 	pl011.c \
 	pll_read.c \
 	interrupt.c \
-	traps.S \
+	traps.s \
 	otp.c \
 	otp_asm.S \
-	partialButterfly32_half.S \
-	dct32.c \
-	sample4.c \
 	BCM2708PlatformStartup.cc
 
 .PHONY: default all clean device
@@ -75,7 +72,7 @@ build/%.o: %.cc
 
 build/%.o: %.s
 	$(CREATE_SUBDIR)
-	@echo AS $@
+	@echo CC $@
 	@$(CC) $(ASFLAGS) $< -o $@
 
 arm_chainloader.o: arm_chainloader/build/arm_chainloader.bin
@@ -88,7 +85,7 @@ build/arm_chainloader.d:
 startelf4.o: startelf4.S
 	$(CC) startelf4.S -o startelf4.o -c
 
-start4.elf: startelf4.o startelf.o pll_read.o traps.o trap.o hang_cpu.o arm_monitor.o panic.o interrupt.o utils.o utils4.o drivers/BCM2708ClockDomains.o pl011.o BCM2708PlatformStartup.o drivers/BCM2708PowerManagement.o drivers/BCM2708ArmControl.o arm_chainloader.o otp.o otp_asm.o
+start4.elf: startelf4.o startelf.o pll_read.o build/traps.o trap.o hang_cpu.o arm_monitor.o panic.o interrupt.o utils.o utils4.o drivers/BCM2708ClockDomains.o pl011.o BCM2708PlatformStartup.o drivers/BCM2708PowerManagement.o drivers/BCM2708ArmControl.o arm_chainloader.o otp.o build/otp_asm.o
 	$(CC) -o $@ $^ start.ld -nostdlib -lcommon
 
 build/bootcode.elf: $(OBJ)
