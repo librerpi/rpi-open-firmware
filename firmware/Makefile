@@ -16,7 +16,7 @@ SRCS = \
 	interrupt.c \
 	traps.s \
 	otp.c \
-	otp_asm.S \
+	otp_asm.s \
 	BCM2708PlatformStartup.cc
 
 .PHONY: default all clean device
