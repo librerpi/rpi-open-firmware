@@ -3,3 +3,8 @@ https://www.raspberrypi.org/forums/viewtopic.php?f=38&t=281606
 > You should be able to plug in two 4K displays (or 2x1080p or whatever) and it shoud just work.
 > The only difference is that the first port (1) is capable of 4kp60 whereas port 2 can only do 4kp30. If using both you are limited to 30 on both.
 
+
+https://www.raspberrypi.org/forums/viewtopic.php?p=1728940#p1728940
+> HDMI < 2.0 maxes out at 300MHz, and this is described in one part of the EDID.
+> HDMI >= 2.0 have to support scrambling as a spread spectrum EMC-reduction step, and that is described in the HF-VSDB (HDMI Forum Vendor Specific Data Block) of the EDID.
+
