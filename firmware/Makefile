@@ -1,5 +1,5 @@
 SRCS = \
-	start.s \
+	start.S \
 	romstage.c \
 	sdram.c \
 	arm_monitor.cc \
@@ -14,9 +14,9 @@ SRCS = \
 	pl011.c \
 	pll_read.c \
 	interrupt.c \
-	traps.s \
+	traps.S \
 	otp.c \
-	otp_asm.s \
+	otp_asm.S \
 	BCM2708PlatformStartup.cc
 
 .PHONY: default all clean device
@@ -70,7 +70,7 @@ build/%.o: %.cc
 	@echo CXX $@
 	@$(CXX) $(CXXFLAGS) $< -o $@
 
-build/%.o: %.s
+build/%.o: %.S
 	$(CREATE_SUBDIR)
 	@echo CC $@
 	@$(CC) $(ASFLAGS) $< -o $@
