@@ -23,7 +23,7 @@ extern "C" {
 int puts (const char* str);
 int printf (const char* fmt, ...) __attribute__ ((format (printf, 1, 2)));
 void put_dump (const void* buff, unsigned long addr, int len, int width);
-void uart_putc(unsigned int ch);
+void uart_putc(char ch);
 
 
 int vprintf (
