@@ -1,0 +1,77 @@
+https://paste.flashrom.org/view.php?id=3253
+vl805_setregval/vl805_getregval
+
+pci register 0x43
+pci register 0x78, address
+pci register 0x7c, data
+pci register 0x7d
+pci register 0x7e
+pci register 0x7c
+
+to read/write a 32bit val in the vl805 address space, set address, then read/write the data field
+
+vl805 address space:
+0x30004     used during spi init
+0x3000c     related to vl805hub loading
+0x4000c     used during spi init
+0x40020     used during spi init
+0x400d0     spi data out
+0x400e0     spi data in
+0x400f0     spi transaction
+0x400f8     used during spi init
+0x400fc     spi chip enable
+0x51000     related to vl805hub loading
+0x51004     related to vl805hub loading
+0x52000     start of load buffer
+
+
+vl805hub.bin load procedure:
+for every byte (starting at the first), replicate the byte to fill a 32bit field, then write the vl805 addr & 32bit field to addr&data, into the load buffer
+set 0x51000 = 0x4c, 0x51004 = 0x80
+delay 4000 ms?
+read each byte back, an verify it is as expected
+0x51000 = 0x48
+0x51004 = 0
+delay 4000
+0x30000 = physical_addr_of_vl805mcu.bin >> 6
+addr = 0x30004, 0x7c=1
+addr=0x30004, 0x7d=0
+0x3000c = 0x500
+addr=0x30008, 0x7e=0x1800
+addr=0x30008, 0x7c=1
+0x43 = 0
+
+it looks like vl805hub.bin is loaded into target ram one byte at a time
+then the physical address of vl805mcu.bin is put into a special location
+then some weird handshake happens, and the vl805 likely DMA's its own firmware from dram->internal-sram
+
+
+definitely 8051
+
+vl805hub.bin and vl805mcu.bin got introduced along with the 55aaf33f compressed blobs
+they must first be decompressed with https://git.venev.name/hristo/rpi-eeprom-compress/
+
+
+https://github.com/raspberrypi/firmware/issues/1402
+> Let me make sure I understand this. The vl805 doesn't have its own dedicated memory to execute firmware from (or not enough memory to hold all of it), so after initialisation it will continue to fetch blocks of instructions from the 8GB RAM which is shared by the arm cores and gpu. So, even if the firmware was loaded at power up time (as I guess it must be, to allow booting from USB drives), it has to be loaded again (or pointers to it have to be relocated?) after the OS has set up its own arrangement of PCI bus addressing. Yes?
+
+
+https://www.raspberrypi.org/forums/viewtopic.php?p=1689541#p1689541
+> USB is provided via an external VLI controller, connected over a single PCI Express Gen 2 lane, and providing a total of 4Gbps of bandwidth, shared between the four ports.
+
+
+https://forums.developer.nvidia.com/t/pcie-to-4-usb-ports-use-vl805-chipset-on-jetson-nano-custom-carrier-board/143085/5
+DS_VLI_VL805_093.zip
+
+
+2020-11-09 05:41:29 < cyrozap> clever: Yeah, I'm looking at those now. I actually still think it's an 8051, since both binwalk (using cpu_rec) and at51 (https://github.com/8051Enthusiast/at51) both identified the first few 8kB or so as 8051 code, and the rest just looks like data. And despite being an 8-bit micro with a 16-bit bus for accessing "external data", many 8051 implementations use an SFR byte as a "page select", so you can
+2020-11-09 05:41:35 < cyrozap> effectively have 24 address bits, which is generally "good enough" for most 8051 applications.
+2020-11-09 05:42:15 < cyrozap> But to disassemble, you'll want to relocate the file so address zero is at file offset 0x80, since that's where the code starts.
+2020-11-09 05:42:33 < clever> ah, so drop the first 0x80 bytes?
+2020-11-09 05:42:39 < clever> when importing the eeprom?
+2020-11-09 05:42:44 < clever> probably a header of some kind?
+2020-11-09 05:43:42 < cyrozap> Yeah, it looks really similar (though not the same) as the header they use for their USB 3.x hub chips: https://github.com/cyrozap/usb-hub-re/blob/aee44ff7f0891252e20b87a0ec6cdc676d73bc44/vl81x/vl81x_fw.ksy
+2020-11-09 05:45:53 < clever> that 0x80 offset makes it look slightly better
+2020-11-09 05:52:38 < cyrozap> Yup, definitely 8051 code. Looks like there's only about 12kB of it. It's using the Reset and External Interrupt 0 vectors.
+2020-11-09 05:53:00 < clever> thats the 2 jumps at offset 0 and 3?
+
