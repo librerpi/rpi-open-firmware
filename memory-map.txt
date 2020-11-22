@@ -10,13 +10,20 @@ https://paulwratt.github.io/rpi-internal-registers-online/index.html
 0x1A00_0000 -> 0x1A0F_FFFF                              vc_run APB Bridge?
 
 0x6000_0000                                             mask rom
+0x6000_8000             rpi1                            sram and GP
+0x6000_8047             rpi1                            core0 stack in rom
+0x6000_873b             rpi1                            core1 stack in rom
 0x6001_0738                                             core0 stack pointer, at start of mask rom for rpi4
+0x7d50_8000             rpi4                            PCI-E
+0x7d58_0000             rpi4                            GENET
 0x7dc2_0000             rpi4                            used by 2020-05-15 bootcode.bin in combination with 7e001
 0x7e00_0000 -> 0x3fff_ffff (992mb to 1024mb, 32mb long) IO peripherals (only exists in the 4-alias)
 0x7e00_0000                                             MS_BASE from multicore_sync.h
 0x7e00_1000                                             CCP2TX_BASE
+
 0x7e00_2000                                             IC0_BASE (irq control for vc4 core 0)
 0x7e00_2800                                             IC1_BASE (irq control for vc4 core 1)
+
 0x7e00_3000                                             ST_BASE from timer.h
 0x7e00_4000                                             TXP_BASE
 0x7e00_5000                                             JP_BASE (jpeg)
@@ -41,7 +48,7 @@ https://paulwratt.github.io/rpi-internal-registers-online/index.html
 0x7e20_5800   i2c4
 0x7e20_5a00   i2c5
 0x7e20_5c00   i2c6
-0x7320_5e00   i2c7
+0x7e20_5e00   i2c7
 0x7e20_6000                                   "pixv"
 0x7e20_7000                                   "pixv"
 0x7e20_8000                                   ".dpi"
@@ -49,9 +56,15 @@ https://paulwratt.github.io/rpi-internal-registers-online/index.html
 0x7e20_c000                                   "pwm0"
 0x7e20_d000                                   "perm"
 0x7e20_f000                                   "otp0"    OTP_BASE
+
 0x7e21_0000                                   "slim"
 0x7e21_1000                                   " cpg"
 0x7e21_3000                                   "AVSP"
+0x7e21_4000                                             BSC/i2c slave/spi master
+0x7e21_5040                                             mini uart
+0x7e21_5080                                             mini spi0
+0x7e21_50c0                                             mini spi1 (aka spi2)
+
 0x7e24_0000                                   "ave8"
 ...                                           "ave8"
 0x7e27_f000                                   "ave8"
@@ -70,6 +83,7 @@ https://paulwratt.github.io/rpi-internal-registers-online/index.html
 0x7ee0_2100                                             D0CACHE_BASE from hardware_vc4.h
 0x7ee0_5000                                             DMA15_BASE
 0x7ee0_8000                                             APERF1_BASE from axi_performance1.h
+
 0x7e80_0000 -> 0x7E81_FFFF                              peri_image APB Bridge?
 0x7e80_0000                                   "ucam"
 0x7e80_1000                                   "ucam"
@@ -81,6 +95,7 @@ https://paulwratt.github.io/rpi-internal-registers-online/index.html
 0x7e80_8000                                   "hdmi"
 0x7e80_9000                                   "hdcp"
 0x7e80_a000                                   "arbr"
+
 0x7e90_[0-7]000                               "dbus"
 0x7e91_[0-7]000                               "ave0"
 0x7f00_0000                                             H264_BASE
