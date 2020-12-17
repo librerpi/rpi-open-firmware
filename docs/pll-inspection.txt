@@ -18,11 +18,11 @@ all math is done on a fixed-point of 20 to avoid floats
 
 bcm2835_pll_choose_ndiv_and_fdiv (from linux) computes ndiv and pdiv based on input_clock and desired output_clock
 
-      min-rate  max-rate
-PLLA  600mhz    2.4ghz
-PLLC  600mhz    3ghz
-PLLD  600mhz    2.4ghz
-PLLH  600mhz    3ghz
+      min-rate  max-rate    pre-div bit(ANA1)
+PLLA  600mhz    2.4ghz      14
+PLLC  600mhz    3ghz        14
+PLLD  600mhz    2.4ghz      14
+PLLH  600mhz    3ghz        11
 
 bcm2835_pll_set_rate:
 if the desired clock is over 1.75ghz, halve it, and set use_fb_prediv=true
@@ -67,3 +67,11 @@ so PLLD is running at 2,000,000,024hz
 PLLD_PER then has an ndiv of 4, so it runs at 500mhz
 
 GPCLK1 has a divisor of 20, and a source of PLLD, so it uses PLLD_PER, and generates a 25mhz signal
+
+
+when changing a the freq, the ANA bits have to be masked and set as follows
+all but PLLH:
+ana0, set all to 0
+ana1, KI(21:19) = 2, KP(18:15) = 8, other bits remain as-is
+ana2, leave unchanged
+ana3, KA(9:7) = 2, other bits as-is

@@ -1,0 +1,19 @@
+https://www.raspberrypi.org/forums/viewtopic.php?p=1731546#p1731546
+> Nope, vce is part of the control around the video codecs.
+
+7f10_0000 vce data ram
+7f11_0000 vce program ram
+7f12_0000 vce core registers??
+7f14_0000 vce control registers?
+
+
+2020-10-21 23:46:45 < clever> ive discovered that the raspberry pi also has a VCE peripheral, and its also known to use openmax, so i'm trying to see how similar the VCE's are
+2020-10-21 23:47:59 < agd5f_> clever, not likely exactly the same.  Our hardware team designed the VCE hardware
+2020-10-21 23:48:34 < agd5f_> but general in the sense that there are only so many ways to do an H.264 encoder
+
+
+https://www.raspberrypi.org/forums/viewtopic.php?f=98&t=292730&p=1780435#p1780435
+> VideoCore describes a large number of multimedia blocks: ISP, JPEG (encode and decode), CSI2 receiver, display pipeline (Hardware Video Scalar, Pixel Valves, HDMI, DSI, DPI, and analogue TV encoders), V3D, video encode/decode accelerator, and Vector Processing Unit (VPU) to name a few.
+> H264 encode actually uses a number of sub-blocks: Motion Estimation, Prediction, Quantisation, and entropy coding (CABAC or CAVLC).
+> The VCE is a small processor to assist the video codec hardware blocks.
+

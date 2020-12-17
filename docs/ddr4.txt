@@ -1,3 +1,10 @@
 https://github.com/raspberrypi/firmware/issues/1375
 > There are limits to how quickly the Pi 4 can boot - the SDRAM PHY has quite a lengthy training sequence, several seconds from what I remember.
 
+
+0x7dc2_0000, ddr4 mmio base?
+0x7dc2_4000, ddr4 offset used in memsys loading
+0x7dc2_6010, ddr4, named it mmio4
+0x7dc2_6100, ddr4 offset used in memsys loading, i named it mmio3
+  a 6 * 32bit thing gets copied into mmio3?
+  and then a function is ran?

@@ -12,4 +12,6 @@ rpi3:
 rpi4:
 0x4000160  mentioned in bootcode 2020-05-15
 0x4000161  mentioned in bootcode 2020-05-15, potentially has 2 different mask roms
+0x4000161  found on a B0T pi4b
 0x4000162  bootcode-2020-05-15 checks for this cpuid, if present, .text.firmware_rev[0] bit 0 must be set
+0x4000162  found on a C0 pi400

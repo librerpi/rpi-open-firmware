@@ -4,11 +4,13 @@
 
 #define BCM2835_FSEL_ALT0 4
 
+#define BCM2835_CLOCK_VPU           20
 #define BCM2835_CLOCK_V3D           21
 #define BCM2835_CLOCK_ISP           22
 #define BCM2835_CLOCK_H264          23
 #define BCM2835_CLOCK_TSENS         27
 #define BCM2835_CLOCK_PERI_IMAGE    29
+#define BCM2835_CLOCK_DPI           44
 
 
 /memreserve/ 0x00000000 0x00001000;
@@ -297,6 +299,27 @@
       //pinctrl-0 = <&i2c0_bus0>;
       clock-frequency = <100000>;
     };
+    pixelvalve@7e206000 {
+      compatible = "brcm,bcm2835-pixelvalve0";
+      reg = <0x7e206000 0x100>;
+      interrupts = <2 13>; /* pwa0 */
+    };
+
+    pixelvalve@7e207000 {
+      compatible = "brcm,bcm2835-pixelvalve1";
+      reg = <0x7e207000 0x100>;
+      interrupts = <2 14>; /* pwa1 */
+    };
+    dpi: dpi@7e208000 {
+      compatible = "brcm,bcm2835-dpi";
+      reg = <0x7e208000 0x8c>;
+      clocks = <&clocks BCM2835_CLOCK_VPU>,
+               <&clocks BCM2835_CLOCK_DPI>;
+      clock-names = "core", "pixel";
+      #address-cells = <1>;
+      #size-cells = <0>;
+      //status = "disabled";
+    };
     serial@7e215040 {
       compatible = "brcm,bcm2835-aux-uart";
       reg = <0x7e215040 0x40>;
@@ -320,12 +343,22 @@
       pinctrl-0 = <&emmc>;
       bus-width = <0x04>;
     };
+    hvs@7e400000 {
+      compatible = "brcm,bcm2835-hvs";
+      reg = <0x7e400000 0x6000>;
+      interrupts = <2 1>;
+    };
     /*
     vchiq: mailbox@7e00b840 {
       compatible = "brcm,bcm2835-vchiq";
       reg = <0x7e00b840 0x3c>;
       interrupts = <0 2>;
     };*/
+    pixelvalve@7e807000 {
+      compatible = "brcm,bcm2835-pixelvalve2";
+      reg = <0x7e807000 0x100>;
+      interrupts = <2 10>; /* pixelvalve */
+    };
     power {
       compatible = "raspberrypi,bcm2835-power";
       //firmware = <0x07>;
@@ -404,6 +437,9 @@
       pinctrl-1 = <&i2c1_cam>;
       pinctrl-2 = <&i2c1_smps>;
       status = "disabled"; // not much need for the 2nd mux
+    };
+    vc4: gpu {
+      compatible = "brcm,bcm2835-vc4";
     };
   };
   clocks {

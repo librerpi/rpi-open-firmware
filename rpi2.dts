@@ -33,7 +33,7 @@
     serial@7e201000 {
       compatible = "brcm,bcm2835-pl011", "arm,pl011", "arm,primecell";
       reg = <0x7e201000 0x200>;
-      interrupts = <0x02 0x19>;
+      interrupts = <2 25>;        // bank 2 irq 25, aka gpu irq 57
       clocks = <&clocks 19
                 &clocks 20>;
       clock-names = "uartclk", "apb_pclk";
@@ -92,7 +92,7 @@
                         "dma14",
                         "dma-shared-all";
       #dma-cells = <1>;
-      brcm,dma-channel-mask = <0x7f35>;
+      brcm,dma-channel-mask = <0x7f30>;
     };
     intc: interrupt-controller@7e00b200 {
       compatible = "brcm,bcm2836-armctrl-ic";
@@ -133,8 +133,8 @@
     mmc@7e202000 {
       compatible = "brcm,bcm2835-sdhost";
       reg = <0x7e202000 0x100>;
-      interrupts = <2 24>;
-      clocks = <&clocks 20>; // BCM2835_CLOCK_VPU
+      interrupts = <2 24>;        // bank 2 irq 24, aka gpu irq 56
+      clocks = <&clocks 20>;      // BCM2835_CLOCK_VPU
       dmas = <&dma (13|(1<<29))>; //0x2000000d>;
       dma-names = "rx-tx";
       status = "okay";

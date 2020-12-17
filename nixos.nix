@@ -72,6 +72,7 @@ in {
     openssh.enable = true;
     ntp.enable = false; # cross-compile breaks it
     avahi.enable = true;
+    prometheus.exporters.node.enable = true;
   };
   programs.bash.enableCompletion = false;
   users.users.root = {

@@ -1,0 +1,2 @@
+terminal, in-kernel, speakup
+gui, orca

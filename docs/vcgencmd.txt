@@ -1,0 +1,25 @@
+https://www.raspberrypi.org/forums/viewtopic.php?f=29&t=245733&p=1500079&hilit=measure_volts+usb_pd#p1500079
+
+root@raspberrypi:~# vcgencmd measure_volts usb_pd
+volt=1.7600V
+
+one ADC channel on the PMIC is routed to one CC line, and can read the center of the voltage-divider, if the cable is "not flipped"
+
+
+vcgencmd measure_volts ain1
+the 2nd ADC on the PMIC, usually tied to gnd
+
+
+for src in altscb arm cam0 cam1 ckl108 clk27 clk54 core debug0 debug1 dft dpi dsi0 dsi0esc dsi1 dsi1esc emmc emmc2 genet125 genet250 gisb gpclk0 gpclk1 h264 hevc isp m2mc otp pcm pixel plla pllb pllc plld pllh pulse pwm smi tectl testmux tsens uart usb v3d vec wdog xpt; do echo -e "$src:\t$(vcgencmd measure_clock $src)" ; done
+measure various clocks
+
+vcgencmd measure_temp pmic
+measure PMIC temp sensor
+
+
+for src in altscb arm cam0 cam1 ckl108 clk27 clk54 core debug0 debug1 dft dpi dsi0 dsi0esc dsi1 dsi1esc emmc emmc2 genet125 genet250 gisb gpclk0 gpclk1 h264 hevc isp m2mc otp pcm pixel plla pllb pllc plld pllh pulse pwm smi tectl testmux tsens uart usb v3d vec wdog xpt; do echo -e "$src:\t$(vcgencmd enable_clock $src)" ; done
+show if a clock is enabled or not
+
+
+vcgencmd measure_volts 2711
+

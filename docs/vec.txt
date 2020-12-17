@@ -1,0 +1,43 @@
+root@raspberrypi:~# cat /boot/config.txt
+dtoverlay=vc4-kms-v3d
+root@raspberrypi:~# cat /proc/cpuinfo
+model name      : ARMv6-compatible processor rev 7 (v6l)
+Revision        : 100000e
+Serial          : 00000000230aad04
+Model           : Raspberry Pi Model B Rev 2
+
+root@raspberrypi:~# cat /sys/kernel/debug/dri/0/vec_regs
+      VEC_WSE_CONTROL = 0x00001614
+     VEC_WSE_WSS_DATA = 0x00000800
+    VEC_WSE_VPS_DATA1 = 0x00000010
+  VEC_WSE_VPS_CONTROL = 0x00000780
+            VEC_REVID = 0x00002708
+          VEC_CONFIG0 = 0x00000040
+            VEC_SCHPH = 0x0000ff28
+      VEC_CLMP0_START = 0x000000ac
+        VEC_CLMP0_END = 0x000000ec
+          VEC_FREQ3_2 = 0x000029c7
+          VEC_FREQ1_0 = 0x00001c72
+          VEC_CONFIG1 = 0x00001c00
+          VEC_CONFIG2 = 0x00000060
+VEC_INTERRUPT_CONTROL = 0x00000003
+ VEC_INTERRUPT_STATUS = 0x00000003
+      VEC_FCW_SECAM_B = 0x284bda13
+   VEC_SECAM_GAIN_VAL = 0x44824224
+          VEC_CONFIG3 = 0x00000000
+          VEC_STATUS0 = 0x00000003
+            VEC_MASK0 = 0x00000000
+              VEC_CFG = 0x0000000a
+         VEC_DAC_TEST = 0x00000000
+       VEC_DAC_CONFIG = 0x460c000c
+         VEC_DAC_MISC = 0x00000101
+root@raspberrypi:~# tvservice -s
+state 0x40001 [NTSC 4:3], 720x480 @ 60.00Hz, interlaced
+
+
+https://www.raspberrypi.org/forums/viewtopic.php?p=1728650
+> enable_tvout limits the core clock to 432 (from default of 500) as the vec hardware needs 108MHz and shares a PLL channel.
+
+
+https://www.raspberrypi.org/forums/viewtopic.php?f=67&t=271568
+> Understanding custom frequency setting in VEC

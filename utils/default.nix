@@ -6,4 +6,5 @@ stdenv.mkDerivation {
   buildInputs = [ common raspberrypi-tools libdrm ];
   src = stdenv.lib.cleanSource ./.;
   dontStrip = true;
+  enableParallelBuilding = true;
 }

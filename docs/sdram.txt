@@ -5,3 +5,80 @@ writing 0 to SD_IDL will zero both counts?
 
 both are 28bit ints, that dont overflow
 at 400mhz, it will overflow between 0.5 and 1 seconds, so you must poll every 0.5 seconds at least
+
+2020-06-12 05:00:41 < geist> yah that makes sense, given it says it's LPDDR4-3200
+2020-06-12 05:00:53 < geist> so yeah that's 400 * 2 (DDR) * 4 (32bit wide)
+2020-06-12 05:00:56 < clever> timestamp since boot, clocks idle, total clocks, percent, counters reset every half second
+2020-06-12 05:00:57 < doug16k> ya but ddr though. 800mhz ram is 400mhz clocked
+2020-06-12 05:00:59 < geist> hence 3200MB/sec
+
+2020-06-12 05:18:55 < doug16k> clever, that ram appears to have 8192 rows
+2020-06-12 05:18:58 < clever> but i cant see any obvious ratio between 19.2 and 400, that involves 0x53 with any shift
+2020-06-12 05:19:07 < doug16k> 0.064/0.00000778
+2020-06-12 05:19:13 < geist> 19.2 * 0x53 (83) == 1593.6
+2020-06-12 05:19:22 < geist> 1593.6 / 4 = 398.4
+2020-06-12 05:19:27 < clever> oh
+
+
+2020-06-12 05:29:16 < clever> there is also a function in the firmware, that maps an enum to one of the following ints: 1350, 2160, 2400, 2667, 3200, 3733
+2020-06-12 05:29:27 < clever> would 3733 fit your benchmarks?
+2020-06-12 05:29:35 < geist> 3733 would fit yeah
+2020-06-12 05:29:47 < geist> it's a brand new 8GB model, maybe they bumped the frequency for it
+2020-06-12 05:30:05 < clever> i'm looking at the firmware from 2020-05-15, which predates the release i believe
+2020-06-12 05:31:30 < clever> ive also found new info on the vl805, where it doesnt have enough ram to hold its own firmware
+2020-06-12 05:31:31 < geist> oh hmm, i think my calculations are all off anyway. looks like DDR3 and DDR4 run at quad data rate
+2020-06-12 05:31:40 < geist> ie, a 400mhz DDR4 is actually clocking data at 1600mhz
+2020-06-12 05:31:40 < clever> so its basically reading its own firmware/state out of system dram
+2020-06-12 05:31:48 < clever> and probably has its own L1/L2 cache internally
+2020-06-12 05:31:52 < geist> + *2 for DDR
+2020-06-12 05:32:04 < geist> so *thats* where the 3200 comes from. it's the transfer rate per pin
+2020-06-12 05:32:08 < clever> ahh
+2020-06-12 05:32:40 < geist> https://en.wikipedia.org/wiki/DDR_SDRAM#Generations assuming lpddr has same properties
+2020-06-12 05:32:41 < bslsk05> ​en.wikipedia.org: DDR SDRAM - Wikipedia
+
+
+APHY_CSR_ADDR_PVT
+DPHY_CSR_DQ_PVT
+force_pvt=
+disable_pvt=
+bootcode-vc4-9d4f640625529b104303a31482f5ccbd2d8da51b.bin
+0x80007888 is involved in setting up pvt
+
+2020-10-12 04:16:28 < clever> https://www.jedec.org/sites/default/files/docs/JESD209-2B.pdf appears to be a jedec datasheet, but they have some fingerprinting of their own going on
+2020-10-12 04:16:39 < clever> you must register an acct with a name/company/email first to view it
+2020-10-12 04:16:52 < clever> and the company name you give, is embeded in the background of every page of the datasheet
+2020-10-12 04:17:18 < clever> your name/email and timestamp is even in the footer of every page
+
+ram size (byte wise) | density | io size | rowbits | colbits | banklow | bank number?
+---------------------|---------|---------|---------|---------|---------|-------------
+      1gbyte         |   4Gb   |   16    |    3    |    3    |    3    |   2
+      512mb          |   4Gb   |   32    |    2    |    2    |    2    |   1
+      256mb          |   2Gb   |   32    |    2    |    1    |    2    |   1
+      128mb          |   1Gb   |   32    |    2    |    1    |    2    |   1
+
+
+1gig dram chip from my pi3
+https://www.micron.com/products/dram/lpdram/part-catalog/edb8132b4pb-8d-f
+168b_2e0e_embedded_lpddr2_sdram.pdf
+2048 columns (11bits)
+16384 rows (14 bits)
+8 banks
+2 dies driven in parallel
+16 bits per cell
+
+> (16 * Math.pow(2,14) * Math.pow(2,11) * 8 * 2) / 8 / 1024 / 1024 / 1024
+1
+
+exactly 1gig worth of dram
+
+
+2020-10-12 06:16:07 < doug16k> 512M = 2^29. half that is 15 so probably 2^14 or 2^15 byte row
+2020-10-12 06:17:26 < clever> if it was 262144 bits per row, then both the row# and col# would span 0-127, 7 bits
+2020-10-12 06:17:29 < doug16k> that tells you explicitly
+2020-10-12 06:17:52 < clever> assuming perfectly square matrix of rows
+2020-10-12 06:18:09 < doug16k> ya row is a huge L1 cache in a sense
+2020-10-12 06:18:29 < doug16k> well
+2020-10-12 06:18:30 < doug16k> L2
+
+
+original pi1, K4P2G324ED-AGC1

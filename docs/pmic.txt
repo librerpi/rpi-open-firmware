@@ -1,0 +1,16 @@
+https://www.raspberrypi.org/forums/viewtopic.php?f=63&t=236442
+
+low voltage detection:
+https://www.raspberrypi.org/forums/viewtopic.php?p=1724251#p1724251
+> 3B+ and 4B poll the PMIC, other devices with under-voltage detection have a simple circuit made of discrete components that drives a GPIO.
+
+https://www.raspberrypi.org/forums/viewtopic.php?p=1758877#p1758877
+> A little bit more information on the low power detection circuit on the Pi4/400 that I didn't know!
+> There is a range where the detection is guaranteed to fire, might fire, and wont fire. This is down to the PMIC, nothing to do with us.
+> 0-4.52 Will fire
+> 4.52-4.65 Might fire
+> 4.65-5.1+ Won't fire
+> Since 4.52, the guaranteed detection point, is below our PS specification range, we are in the clear here, as before, there is nothing to worry about.
+
+
+CM4 uses MxL7704

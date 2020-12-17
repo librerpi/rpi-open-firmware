@@ -1,0 +1,12 @@
+> One core failing to start feels like an arm reset issue. We had this in the early days. Some chips were more susceptible than others.
+> The fix involved ensuring one of the stb clocks was running prior to the (synchronous) arm reset.
+> So my guess was firmware, and a commit related to changing when clocks were enabled.
+
+> But that doesn't seem to tie up with either of tests.
+
+https://github.com/Hexxeh/rpi-firmware/issues/232
+
+
+
+> By default in RPiOS gcc is set to generate ARMv6 compatible code so that the resulting executable will run on all models of RPi including the 0 and 1 (which don't have NEON units).
+https://www.raspberrypi.org/forums/viewtopic.php?f=63&t=280934

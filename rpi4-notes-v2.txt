@@ -1,0 +1,5 @@
+so, I can talk to the MxL7004 now
+that was an easy one - the I2C bus frequency must run at a much lower speed
+but the firmware sucks again; they're writing magic values to undocumented registers, XORing values read from other registers and comparing them to XORed values of other (documented) registers
+why on Earth?
+and then there's an undocumented register 0xf that can be read only immediately after you read BUCK4 voltage 4 times in a row

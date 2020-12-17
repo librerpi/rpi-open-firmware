@@ -1,0 +1,8 @@
+https://www.raspberrypi.org/forums/viewtopic.php?f=63&t=281380
+The LPDDR4 standard has optional support for on-die TRR.
+This is the part number for the Micron 4GB SDRAM chip:
+https://www.micron.com/support/tools-and-utilities/fbga?fbga=d9whv#pnlFBGA
+Registration is required in order to get the datasheet for it.
+
+As far as I'm aware, the SDRAM controller does not track row open/close counts so TRR isn't implemented.
+

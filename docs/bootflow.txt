@@ -1,0 +1,4 @@
+stage 0, the boot rom in the SoC
+stage 1, bootcode.bin, brings dram online
+stage 2, start(4).elf, the rest of the firmware
+state 3, kernel.img, the arm kernel

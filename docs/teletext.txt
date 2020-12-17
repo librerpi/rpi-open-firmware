@@ -1,0 +1,17 @@
+https://www.etsi.org/deliver/etsi_i_ets/300700_300799/300706/01_60/ets_300706e01p.pdf
+
+each symbol is either black or (white * 0.75)
+45 bytes per scanline (including a preamble of 10101010 10101010 11100100, 3rd byte is framing code)
+16 scanlines per field
+2020-06-15 09:54:07 < clever> bit order for the main payload?
+2020-06-15 09:56:33 < ali1234> the LSBit is transmitted first, i just read it
+2020-06-15 09:58:27 < ali1234> if you dont stretch it wont work. the clock run in has to be within a certain tolerance
+
+2020-06-15 09:55:17 < ali1234> there are two modes
+2020-06-15 09:55:34 < ali1234> in normal mode there are 16 lines that can contain data but not all have to be filled
+2020-06-15 09:55:45 < ali1234> in full field mode every line contains teletext including picture lines
+2020-06-15 09:56:17 < clever> and the tv will auto-detect that? or it needs a special cmd in the first 16 scanlines?
+2020-06-15 09:56:41 < ali1234> i have never seen a TV that supports full field mode
+2020-06-15 09:56:54 < ali1234> and it needs a special command to enable it yes
+2020-06-15 09:57:09 < ali1234> something in a broadcast service packet iirc
+

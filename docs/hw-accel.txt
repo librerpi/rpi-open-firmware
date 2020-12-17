@@ -1,0 +1,14 @@
+https://www.raspberrypi.org/forums/viewtopic.php?f=43&t=294033
+/dev/video names
+
+0 is the Unicam image node
+1 is the Unicam metadata node (not actually relevant here)
+10 is the video decoder
+11 is the video encoder
+12 is the simple video conversion/resize using the ISP
+13-16 are the more complex ISP.
+  13 is the input
+  14 hi res output
+  15 low res output
+  16 stats output.
+

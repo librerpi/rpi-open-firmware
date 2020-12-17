@@ -1,0 +1,52 @@
+gpio 19 is backlight, active high
+
+screen will not function until init program is ran:
+https://github.com/pimoroni/hyperpixel4/blob/pi4-libgpiod/src/hyperpixel4-init.c
+
+dpi_output_format=0x7f216
+dpi_timings=480 0 10 16 59 800 0 15 113 15 0 0 0 60 0 32000000 6
+
+
+PV0 raw dump:
+0x7e206000 05 40 10 01 03 00 00 00  00 00 00 00 10 00 3b 00  |.@............;.|
+0x7e206010 e0 01 0a 00 71 00 0f 00  20 03 0f 00 00 00 00 00  |....q... .......|
+0x7e206020 00 00 00 00 00 00 00 00  00 00 00 00 44 00 00 00  |............B...|
+0x7e206030 00 00 00 00 20 00 00 00  01 00 00 00 00 00 02 00  |.... ...........|
+0x7e206040 02 00 03 00 00 03 05 00  00 00 00 00 c8 0f 00 00  |................|
+0x7e206050 00 00 00 00 00 00 00 00  00 00 00 00 20 00 00 00  |............ ...|
+0x7e206060 00 00 00 00 08 08 08 05  07 00 00 00 e0 01 00 00  |................|
+0x7e206070 60 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |`...............|
+C: 1104005
+  0     enabled
+  2:3   clock mux channel: 1
+  4:5   extra clocks per pixel: 0
+  14    clear at start
+  15:20 fifo full level: 32
+  21:23 format: 0
+  24:31 unknown: 0x1
+VC: 3
+  video enable
+  contiuous
+vsyncd_even: 0
+VERT EVEN A: 0 B: 0
+INT enable: 0 status: 0
+DSI_HACT_ACT: 44
++----------------------------------+
+| front|      |      |      15     |
+|      | sync |      |     113     |
+|      |      | back |      15     |
+|   10 |   16 |   59 |  480 x  800 |
++----------------------------------+
+CM_DPI clk src: 1
+pixel clock: XOSC / 1.687500 == 32.000000
+hsync clock(10+16+59+480==565): 0.056637MHz
+vsync clock(15+113+15+800==943): 60.060623Hz
+total clocks per frame: 532795
+
+
+DPI_C: 0x12f01
+  enabled
+  vsync invert
+  hsync invert
+  pixel clk invert
+

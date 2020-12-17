@@ -32,14 +32,14 @@
     dma-ranges = <0xc0000000 0x00 0x3f000000>; /* map arm physical 0 to the uncached alias, 1008mb long */
 
     local_intc: local_intc@40000000 {
-      compatible = "brcm,bcm2836-l1-intc";
+      compatible = "brcm,bcm2835-l1-intc";
       reg = <0x40000000 0x100>;
       interrupt-controller;
       #interrupt-cells = <2>;
       interrupt-parent = <&local_intc>;
     };
     intc: interrupt-controller@7e00b200 {
-      compatible = "brcm,bcm2836-armctrl-ic";
+      compatible = "brcm,bcm2835-armctrl-ic";
       reg = <0x7e00b200 0x200>;
       interrupt-controller;
       #interrupt-cells = <0x02>;

@@ -5,7 +5,7 @@ there are 64 IRQ's within the VC4
 1       ST_C1
 2       ST_C2
 3       ST_C3
-4       codec0
+4       codec0 (vce? h264?)
 5       codec1
 6       codec2
 7       jpeg
@@ -43,11 +43,11 @@ there are 64 IRQ's within the VC4
 39      cam1
 40      hdmi0
 41      hdmi1
-42      pixelvalve1
+42      pixelvalve1 (PV2!!)
 43      i2c_spi_slv_int
 44      dsi1
-45      pwa0
-46      pwa1
+45      pwa0    (PV0)
+46      pwa1    (PV1)
 47      cpr
 48      smi
 49      gpio_int[0]

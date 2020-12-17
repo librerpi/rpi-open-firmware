@@ -36,9 +36,10 @@ void dump_pv(void *mmiobase, uint32_t offset, int pvnr) {
   void *pvaddr = reinterpret_cast<void*>(mmiobase) + offset;
   hexdump_ram(pvaddr, 0x7e000000 + offset, 0x80);
   struct pixel_valve pv;
-  volatile pixel_valve *rawpv = reinterpret_cast<volatile pixel_valve *>(pvaddr);
+  pixel_valve *rawpv = reinterpret_cast<pixel_valve *>(pvaddr);
   memcpy(&pv, (void*)pvaddr, sizeof(struct pixel_valve));
   int vfp, vbp, vsync, vactive;
+  int vfp_even, vbp_even, vsync_even, vactive_even;
   int hfp, hbp, hsync, hactive;
 
   vfp = (pv.vertb >> 16) & 0xffff;
@@ -47,30 +48,40 @@ void dump_pv(void *mmiobase, uint32_t offset, int pvnr) {
   vactive = pv.vertb & 0xffff;
   int total_scanlines = vfp + vsync + vbp + vactive;
 
+  vfp_even = (pv.vertb_even >> 16) & 0xffff;
+  vsync_even = pv.verta_even & 0xffff;
+  vbp_even = (pv.verta_even >> 16) & 0xffff;
+  vactive_even = pv.vertb_even & 0xffff;
+  int total_scanlines_even = vfp_even + vsync_even + vbp_even + vactive_even;
+
   hfp = (pv.horzb >> 16) & 0xffff;
   hsync = pv.horza & 0xffff;
   hbp = (pv.horza >> 16) & 0xffff;
   hactive = pv.horzb & 0xffff;
   int scanline_length = hfp + hsync + hbp + hactive;
 
-  if (0) {
-    vfp = 0;
-    vsync = 1;
-    vbp = 0;
-    vactive = 2;
+  if (1) {
+    hbp = 30;
 
-    hfp = 0;
-    hsync = 1;
-    hbp = 0;
-    hactive = 10;
+    //vsync = 1;
+    vactive_even = vactive = 150;
+    vfp = 262 - vsync - vbp - vactive;
+    vfp_even = 263 - vsync_even - vbp_even - vactive_even;
+
+    //hsync = 1;
+    hactive = 720;
+    hbp = 60;
+    hfp = 858 - hsync - hactive - hbp;
   }
 
-  if (0) {
+  if (1) {
     rawpv->horza = (hbp << 16) | hsync;
     rawpv->horzb = (hfp << 16) | hactive;
 
     rawpv->verta = (vbp << 16) | vsync;
     rawpv->vertb = (vfp << 16) | vactive;
+    rawpv->verta_even = (vbp_even << 16) | vsync_even;
+    rawpv->vertb_even = (vfp_even << 16) | vactive_even;
   }
 
   if (0) {
@@ -104,12 +115,12 @@ void dump_pv(void *mmiobase, uint32_t offset, int pvnr) {
   printf("INT enable: %x status: %x\n", pv.int_enable, pv.int_status);
   printf("DSI_HACT_ACT: %x\n", pv.h_active);
 
-  puts(  "+----------------------------------+");
-  printf("| front|      |      |    %4d     |\n", vfp);
-  printf("|      | sync |      |    %4d     |\n", vsync);
-  printf("|      |      | back |    %4d     |\n", vbp);
-  printf("| %4d | %4d | %4d | %4d x %4d |\n", hfp, hsync, hbp, hactive, vactive);
-  puts(  "+----------------------------------+");
+  puts(  "+-------------------------------------+");
+  printf("| front|      |      |        %3d/%3d |\n", vfp, vfp_even);
+  printf("|      | sync |      |        %3d/%3d |\n", vsync, vsync_even);
+  printf("|      |      | back |        %3d/%3d |\n", vbp, vbp_even);
+  printf("| %4d | %4d | %4d | %4d x %3d/%3d |\n", hfp, hsync, hbp, hactive, vactive, vactive_even);
+  puts(  "+-------------------------------------+");
 
   int iDivisor = 0;
   float fDivisior = 0;
@@ -213,7 +224,7 @@ int main(int argc, char **argv) {
   struct peripherals handle;
   open_peripherals(handle);
   void *mmiobase = handle.peripherals_start;
-  dump_pv(mmiobase, 0x206000, 0);
+  //dump_pv(mmiobase, 0x206000, 0);
   //print_clock(rawaddr, 0x101068, "DPI");
   puts("\nVec:");
   print_clock(mmiobase, 0x1010f8, "VEC");
@@ -222,7 +233,7 @@ int main(int argc, char **argv) {
   } else {
     hexdump_ram(mmiobase + 0xc13000, 0x7ec13000, 0x300);
   }
-  dump_pv(mmiobase, 0x207000, 1);
+  //dump_pv(mmiobase, 0x207000, 1);
   if (handle.vc == 4) {
     dump_pv(mmiobase, 0x807000, 2);
   } else if (handle.vc == 6) {
@@ -231,13 +242,13 @@ int main(int argc, char **argv) {
     dump_pv(mmiobase, 0x216000, 4);
   }
   //hexdump_ram(((uint32_t)rawaddr) + 0x200000, 0x7e200000, 0x200);
-  hexdump_ram(mmiobase + 0x400000, 0x7e400000, 0xd0);
+  //hexdump_ram(mmiobase + 0x400000, 0x7e400000, 0xd0);
   puts("");
-  hexdump_ram(mmiobase + 0x402000, 0x7e402000, 0x100);
-  dump_hvs(mmiobase, 0, SCALER_DISPLIST0, handle.vc);
+  //hexdump_ram(mmiobase + 0x402000, 0x7e402000, 0x100);
+  //dump_hvs(mmiobase, 0, SCALER_DISPLIST0, handle.vc);
   dump_hvs(mmiobase, 1, SCALER_DISPLIST1, handle.vc);
-  dump_hvs(mmiobase, 2, SCALER_DISPLIST2, handle.vc);
-  hexdump_ram(mmiobase + 0x402000, 0x7e402000, 0x100);
-  hexdump_ram(mmiobase + 0x404000, 0x7e404000, 0x100);
-  print_dpi_state(mmiobase);
+  //dump_hvs(mmiobase, 2, SCALER_DISPLIST2, handle.vc);
+  //hexdump_ram(mmiobase + 0x402000, 0x7e402000, 0x100);
+  //hexdump_ram(mmiobase + 0x404000, 0x7e404000, 0x100);
+  //print_dpi_state(mmiobase);
 }

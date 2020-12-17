@@ -1,0 +1,6 @@
+https://www.raspberrypi.org/forums/viewtopic.php?p=1708780
+> Pi 4 doesn't support any of these optional features. It uses the same BCM43455 that was in the 3B+ with a RAM patch that changes the Bluetooth version from 4.1 to 5.0. This allowed it to be recertified as Bluetooth 5.0 compatible. The patch memory is tiny and there isn't enough space to add any of the optional features. You need hardware support for some of them anyway.
+
+https://discordapp.com/channels/620838168794497044/672272612008787993/779366573973438504
+> also, RTS must be held LOW if no hardware flow control is used, or the chip will not respond
+

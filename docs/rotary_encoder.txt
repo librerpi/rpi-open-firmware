@@ -1,0 +1,5 @@
+https://www.raspberrypi.org/forums/viewtopic.php?p=1754475#p1754475
+
+> multiple rotary_encoder dtoverlays
+> dtoverlay=rotary-encoder,pin_a=12,pin_b=13
+

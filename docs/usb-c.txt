@@ -1,0 +1,65 @@
+http://ww1.microchip.com/downloads/en/appnotes/00001953a.pdf
+
+both CC pins on a usb-c port should have matching resistors
+Rp pullup for a "downstream" port
+Rd pulldown for an "upstream" port
+Ra pulldown for e-marked cable
+
+the Ra pulldown is on the vbus pin
+while Rd/Rp is on the CC pin
+that allows detecting if its an e-marked cable, seperately from what is on the remote end of the cable
+
+the CC wire in the usb-cable will link CC1<->CC1 on either end of the cable
+the VCONN on CC2 will either be open or have diodes to block the flow
+
+the pullup and pulldown then form a voltage divider, and the voltage on the CC pin defines what both parties are
+if the cable is flipped, that voltage will be present on CC2 instead of CC1
+
+after detecting which way its flipped, the downstream (power source) device can put +5v onto VBUS line (whichever is not CC)
+
+
+Rp should be:
++-------------------+----------+-----------+----------------+
+| current available | ~5v rail | 3.3v rail | current source |
++-------------------+----------+-----------+----------------+
+| 500mA/900mA       |  56k     |    36k    |    80 uA       |
+|    1.5A @ 5V      |   22k    |    12k    |    180 uA      |
+|    3.0A @ 5V      |   10k    |    4.7k   |    330 uA      |
++-------------------+----------+-----------+----------------+
+
+Ra should be between 800ohm and 1.2kohm
+
+
+USB-PD master is the thing supplying power (downstream port)
+all comms happen on the CC line
+32bit message, with 4b/5b encoded bi-phase mark coded
+300k Baud rate
+crc32 error detection + message retries
+
+USB-PD also deals with alternate mode negotiation
+and deciding which party is usb-host and which is usb-device
+
+
+https://www.silabs.com/community/mcu/8-bit/knowledge-base.entry.html/2016/09/26/what_s_the_role_ofc-kQYe
+
+https://www.raspberrypi.org/forums/viewtopic.php?f=63&t=278935&p=1689416&hilit=measure_volts#p1689416
+rev 1.1 pi4b has 5.1k pulldowns
+
+root@raspberrypi:~# vcgencmd measure_volts usb_pd
+volt=1.7600V
+
+one ADC channel on the PMIC is routed to one CC line, and can read the center of the voltage-divider, if the cable is "not flipped"
+
+> 5 * (5.1 / (9.35+5.1))
+1.7647058823529411
+assuming 5v on the source (official rpi psu), and 5.1k on the pi4, the psu has a 9.35k pullup
+
+vcgencmd measure_volts ain1
+the 2nd ADC on the PMIC, usually tied to gnd
+
+https://www.scorpia.co.uk/wp-content/uploads/2019/06/image.png
+
+https://microchipdeveloper.com/usb:tc-pins
+
+https://www.embedded.com/usb-type-c-and-power-delivery-101-power-delivery-protocol/
+https://www.usb.org/usb-charger-pd

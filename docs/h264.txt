@@ -1,3 +1,6 @@
 https://www.raspberrypi.org/forums/viewtopic.php?f=98&t=272591
 
 info on the h264 block being the same between all models
+
+https://www.raspberrypi.org/forums/viewtopic.php?f=43&t=293883
+h264 capabilities

@@ -1,0 +1,12 @@
+https://www.raspberrypi.org/forums/viewtopic.php?p=1758227#p1758227
+> Raspberry Pi 7" DSI panel support is now up as a PR for 5.9 and 5.10 kernels - https://github.com/raspberrypi/linux/pull/3954 and https://github.com/raspberrypi/linux/pull/3955.
+> This is currently only working on Pi0-3 (tested on Pi3). Pi4 is still to come.
+
+
+https://www.raspberrypi.org/forums/viewtopic.php?f=98&t=290497&start=25
+> http://www.tek.com/dl/61W_25772_0_HR.pdf gives you a background to the D-PHY layer for DSI and CSI. Low power states that can be switched to either during H&V blanking, just V blanking, or never.
+> Wiki gives a very basic summary - https://en.wikipedia.org/wiki/Display_Serial_Interface
+
+
+https://www.raspberrypi.org/forums/viewtopic.php?p=1768417#p1768417
+> http://rfmw.em.keysight.com/mod/pdf/axie_u4421a_mipi_d-phy_protocol_fundamentals_detailed_presentation.pdf

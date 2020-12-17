@@ -1,0 +1,3 @@
+https://www.raspberrypi.org/forums/viewtopic.php?f=63&t=279585
+> start.elf and more importantly the ROM (for recovery.bin) require the boot partition to be in one of the first 8 FAT/EFI partitions (skipping over unrecognised partition types).Similarly, make sure the boot partition is within the first 2TB
+

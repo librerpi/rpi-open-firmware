@@ -1,0 +1,17 @@
+J5 on rpi2, vpu jtag, 8 pins
+J5 on rpi4b, vpu jtag, 0.5mm pitch 8 pins
+
+            use this one
+1   TCK     8
+2   GND     7
+3   TMS     6
+4   TDO     5
+5   GND     4
+6   TDI     3
+7   TRST_N  2
+8   RUN     1
+
+
+> I think I have had one SD card corruption due to power pulling, but MANY SD card corruptions from using the JTAG debugger on the Videocore and forgetting to shutdown correctly. This is because the JTAG stops all the cores, even during SD card writes.
+
+https://www.raspberrypi.org/forums/viewtopic.php?p=1750304#p1750304

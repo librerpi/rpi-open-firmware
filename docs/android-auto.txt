@@ -1,0 +1,3 @@
+https://github.com/viktorgino/headunit-desktop
+https://github.com/viktorgino/libheadunit
+https://github.com/f1xpl/openauto

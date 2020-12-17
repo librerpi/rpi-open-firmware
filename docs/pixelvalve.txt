@@ -32,6 +32,12 @@ PV2 X     X     X
 PV3       X
 PV4 X     X     X
 
+https://www.raspberrypi.org/forums/viewtopic.php?p=1758588#p1758588
+> You've missed out the transposer from that list which is a special PV that writes back to memory with optional transpose (up to 1920 pixels in either direction IIRC). That can only be routed off HVS channel 2.
+> The firmware reserves channel 2 exclusively for the transposer, hence max 2 displays.
+> KMS doesn't and so allows 3 displays as long as they don't conflict on PV usage. The transposer does have a driver and is exposed as a writeback connector, but very little currently uses such a thing.
+
+
 PIXELVALVEn_C           base + 0x00
 0     enable
 1     fifo clear

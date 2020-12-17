@@ -34,3 +34,40 @@ each tick of the 5bit int represents 0.025volts of offset, relative to a baselin
 core: A2W_SMPS_A_VOLTS
 another 5bit int, sign extend, 0.025 volt increments, 1.2v baseline, but then offset by something in GP
 then convert backwards into a 5bit int, and further translate into the -16<->+8 range, and convert back to voltage??
+
+https://github.com/raspberrypi/linux/issues/932
+PM_RSTS docs
+
+
+
+
+pi3
+power applied but reset held
+4.73v (crappy cable)
+110mA
+
+network booted, VPU at 500mhz but held in sleep
+4.78v
+124mA
+
+netboot, VPU 250mhz, held in sleep
+4.79v
+116mA
+
+vpu now 125mhz
+4.81v
+112mA
+
+100mhz
+4.81v
+112mA
+
+
+10mhz
+4.82v
+111mA
+
+https://www.raspberrypi.org/forums/viewtopic.php?f=28&t=292538
+> 1.2V is the defailt voltage when idle.
+> It increases when in turbo mode by an amount that varies with silicon. (And you are forcing turbo mode always).
+

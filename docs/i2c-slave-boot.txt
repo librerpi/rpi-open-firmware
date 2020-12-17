@@ -1,0 +1,3 @@
+OTP17 bit 27 will enable i2c-slave boot support
+when enabled, gpio 18/19 are set to ALT3 mode, and the SoC will act as an i2c slave on address 0x66
+

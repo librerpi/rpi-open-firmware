@@ -6,3 +6,8 @@ https://www.raspberrypi.org/forums/viewtopic.php?p=1677250#p1677250
 > Only vc4-kms-v3d is Linux driving the hardware directly, the others are using the firmware.
 > vc4-kms-v3d is still a work in progress for the Pi4 as the hardware has significant changes over the previous generations of Pi.
 
+
+https://www.raspberrypi.org/forums/viewtopic.php?p=1757953#p1757953
+> I am not aware of any mechanism to get 10bit YUV via the DPI peripheral, and certainly not in 2017 when the original post was made. 10bit output only gets routed through the HDMI blocks on Pi4.
+> The HVS can output YUV4:4:4 by using the OLED colour conversion block that is in the output block of each channel. It's not possible to directly output YUV4:2:0 or 4:2:2, although the HDMI blocks can downconvert to 4:2:2.
+

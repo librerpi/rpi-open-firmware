@@ -1,0 +1,18 @@
+https://www.raspberrypi.org/forums/viewtopic.php?f=63&t=286030
+> The very earliest Pis used controller 0 for Linux, and controller 1 for the camera. This swapped with the 1B+/1A+.
+> The camera should work fine on your 256 and 512MB B's, just be careful to use i2c_vc or i2c_arm in devicetree/config.txt and not explicit controller numbers.
+
+
+https://www.raspberrypi.org/forums/viewtopic.php?p=1744863#p1744863
+> Also be aware that I2C-1 and I2C-2 blocks fail to implement clock stretching properly and may not work with some slave devices.
+
+https://www.raspberrypi.org/forums/viewtopic.php?p=1761407#p1761407
+> GPIOs 44&45 are connected to CAM1 and DISP1, and a recent kernel should configure those as /dev/i2c-10 if you add dtparam=i2c_vc=on to config.txt. The fan and RTC are connected to this bus.
+
+
+https://www.raspberrypi.org/forums/viewtopic.php?p=1779231#p1779231
+> i2c-0 = controller I2C0 on GPIOs 0 & 1
+> i2c-1 = controller I2C1 with no mux - GPIOs 2 & 3 are hard-coded as the only sensible choice
+> i2c-10 = controller I2C0 on GPIOs 44 & 45 (or whatever the cameras and displays are configured to use)
+> i2c-11 = the I2C0 mux, which end up being on the set of pins last used - it's best to avoid this
+

@@ -1,0 +1,28 @@
+xHC ver: 272 HCS: 01000140 0c0000f1 07ff000a HCC: 0220fe65
+bcm controller
+
+xHC ver: 256 HCS: 05000420 fc000031 00e70004 HCC: 002841eb
+vl805 controller
+
+HCS1          bcm   vl805
+slots         64    32
+interrupters  1     4
+ports         1     5
+
+HCS2            bcm vl805
+event ring seg  15  3
+scratchpad      1   31    pages
+
+HCC       bcm   vl805
+64bit     Y     Y
+BW Neg    N     Y
+ctx size  64    32
+port pwr  N     Y
+light rst Y     Y
+LTC       Y     Y
+NSS       N     Y
+PAE       N     Y
+SPC       Y     n
+SEC       Y     n
+CFC       Y     n
+MaxPSASize  15  4

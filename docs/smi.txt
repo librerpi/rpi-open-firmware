@@ -1,0 +1,73 @@
+compatible = "brcm,bcm2835-smi-dev" creates a character device, smi_handle must point to the main smi instance
+compatible = "brcm,bcm2835-smi", the main smi instance
+the register bank is 0x44 bytes long
+
+include/linux/broadcom/bcm2835_smi.h appears to describe the ioctl api on the char dev and the overall device interface
+
+SMI_CS  0x00  control+status
+0       ENABLE
+1       DONE      returns 1 when done
+2       ACTIVE    returns 1 when doing a transfer
+3       START     write 1 to start transfer
+4       CLEAR     write 1 to clear fifo
+5       WRITE     direction, 1=write, 0=read
+6:7     PAD       for write, drop the first $PAD bytes in the fifo, for read, drop $PAD bytes from hw, before filling fifo
+08      TEEN      tear effect mode enabled, transfers will wait for TE trigger
+09      INTD      interrupt when done
+10      INTT      interrupt on tx
+11      INTR      interrupt on rx
+12      PVMODE    enable pixelvalve mode
+13      SETERR    write 1 to clear, turns 1 to signal a change to timing while ACTIVE
+14      PXLDAT    enable pixel transfer modes
+15      EDREQ     signals an external DREQ level
+24      pixel ready?
+25      axi fifo error, set to 1 to clear, sets itself if you read fifo when empty, or write fifo when full
+26      tx fifo needs writing (under 1/4ths full)
+27      rx fifo needs reading (either 3/4ths full, or DONE and not empty)
+28      tx fifo has room
+29      rx fifo contains data
+30      tx fifo empty
+31      rx fifo full
+SMI_L   0x04  lenght/count (n external txfers)
+SMI_A   0x08  address
+  0:5     address
+  8:9     device address
+SMI_D   0x0c  data
+
+SMI_DSR0  0x10  device0 read settings
+SMI_DSW0  0x14  device0 write settings
+
+SMI_DSR1  0x18  device1 read
+SMI_DSW1  0x1c  device1 write
+
+SMI_DSR2  0x20
+SMI_DSW2  0x24
+SMI_DSR3  0x28
+SMI_DSW3  0x2c
+
+settings:
+0:6     strobe    clock cycles to assert strobe
+7       dreq      use external dma request on sd16 to pace reads from device, sd17 to pace writes
+8:14    pace      clock cycles to wait between CS deassertion and start of next xfer
+15      paceall   if 1, use the PACE value, even if the next device is different
+16:21   hold    clock cycles between strobe going inactive and cs/addr going inactive
+22      read:fsetup 1: setup time only on first xfer after addr change, write: wswap(swap pixel data bits)
+23      read:mode68 0:(oe+we) 1:(enable+dir), write: wformat(0=rgb565, 1=32bit rgba8888)
+24:29   setup, clock cycles between chipselect/address, and read/write strobe
+30:31   width, 00=8bit, 01==16bit, 10=18bit, 11=9bit
+
+SMI_DC    0x30  dma control registers
+  24    dma passthru
+  28    dma enable
+SMI_DCS   0x34  direct control/status register
+  0     ENABLE
+  1     START
+  2     DONE
+  3     WRITE
+SMI_DA    0x38  direct address register
+  0:5   addr
+  8:9   device
+SMI_DD    0x3c  direct data registers
+SMI_FD    0x40  FIFO debug register
+  0:5   FCNT    current fifo count
+  8:13  FLVL    high tide mark of FIFO count during most recent xfer

@@ -85,13 +85,13 @@ static const char* lpddr2_manufacturer_name(uint32_t mr) {
 static enum RamSize lpddr2_size(uint32_t mr) {
 	switch (mr) {
 	case 0x58:
-		return kRamSize1GB;
+		return kRamSize1GB;    // 4Gb x 16 S4 SDRAM
 	case 0x18:
-		return kRamSize512MB;
+		return kRamSize512MB;  // 4Gb x 32 S4 SDRAM
 	case 0x14:
-		return kRamSize256MB;
+		return kRamSize256MB;  // 2Gb x 32 S4 SDRAM
 	case 0x10:
-		return kRamSize128MB;
+		return kRamSize128MB;  // 1Gb x 32 S4 SDRAM
 	default:
 		return kRamSizeUnknown;
 	}

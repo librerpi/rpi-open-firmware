@@ -1,0 +1,10 @@
+https://www.raspberrypi.org/forums/viewtopic.php?p=1761440#p1761440
+> No it doesn't. You can't buy a Pi 4B 8GB C0
+
+
+https://www.raspberrypi.org/forums/viewtopic.php?p=1772727#p1772727
+> Doing even an A0 and a B0 spin of the chip and testing once back is generally at least 6 months per spin. Getting a B0 chip that works and is suitable for production is actually a fairly impressive task.
+> I recall a tale of one chip ending up being on something like G3 (7th full respin, and 3rd metal layer mod) before it worked - how they funded that one I don't know!
+
+
+B1 adds RSA signatures

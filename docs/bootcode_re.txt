@@ -61,6 +61,11 @@ SUBNET              string      16        y
 GATEWAY             string      16        y
 FREEZE_VERSION      unsigned              y
 
+USB_DEV_BOOT_MAX_RETRIES, NET_BOOT_MAX_RETRIES, USB_MSD_BOOT_MAX_RETRIES, SD_BOOT_MAX_RETRIES all behave the same way
+when in the relevant mode, it gets copied to a generic max-tries variable
+
+if (USB_DEV_FILE_TIMEOUT < 10000) USB_DEV_FILE_TIMEOUT = 10000;
+
 long  short
 0     4         start4.elf not found
 0     9         require_total_mem not met
@@ -115,3 +120,17 @@ a size of 0 seems to indicate end of list?
 on VC4:
 0xc010_0000 (1mb into ram) appears to be the temp buffer the ELF is held at during loading
 
+gpio3 is the wake-on-halt pin by default, pairing up to dtoverlay=gpio-shutdown
+gpio1 is wake-on-halt for rpi 1 a rev 0/1
+
+
+from a vc4 bootcode.bin, try this later
+PM_SMPS = 0x5a000001;
+A2W_SMPS_LDO1 = 0x5a040000;
+A2W_SMPS_LDO0 = 0x5a000000;
+*REG32(0x7e102190) |= 0x5a000010;
+
+
+
+usb-dev-boot-max-retries, 0x80018480
+usb-dev file timeout,     0x80018494

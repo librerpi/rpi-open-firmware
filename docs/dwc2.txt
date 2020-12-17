@@ -1,0 +1,26 @@
+https://www.silabs.com/documents/public/reference-manuals/EZR32WG-RM.pdf
+https://github.com/raspberrypi/linux/pull/3151#issuecomment-522126503
+> Yes, i also assume the PHY is part of the DWC2 IP. Unfortunately we don't have a PHY driver yet, the devicetree fake this via non-op driver. Maybe this is the root cause of this issue. The BCM2835 datasheet provides a register description for MDIO access incl. VBUS interrupt.
+> In case you need a datasheet for the DWC2 IP, try to google for Silicon Labs EZR32WG. It seems to use the same core.
+
+USB_GHWCFG4 says it has hw support for 7 IN's including control
+
+USB_GHWCFG1:     0x0
+USB_GHWCFG2:     0x228ddd50
+USB_GHWCFG3:     0xff000e8
+USB_GHWCFG4:     0x1ff00020
+
+uses UTMI+ to connect to phy
+
+7 device mode EP's
+8 host mode channels
+host mode allows periodic OUT
+dynamic fifo size allowed
+dedicated fifo per EP/channel
+
+non-periodic request queue depth, 8
+host mode periodic request depth, 8
+
+19bit transfer size counters
+10bit packet size counters, hardware max of 1024 bytes per packet?
+4080 x 32bit dfifo depth

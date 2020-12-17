@@ -98,6 +98,7 @@ https://paulwratt.github.io/rpi-internal-registers-online/index.html
 
 0x7e90_[0-7]000                               "dbus"
 0x7e91_[0-7]000                               "ave0"
+0x7e9c_0000                                             bcm XHCI
 0x7f00_0000                                             H264_BASE
 
 bus address space:

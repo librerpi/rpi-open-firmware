@@ -1,0 +1,54 @@
+there are only 2 differences between the rpi1 and rpi2 rom's i have dumped
+
+1: a 100 got changed to a 228 in an unknown function
+2: an unsafe memcmp for the signature, got replaced with a constant-time memcmp
+    by pi3-era, that memcmp got inlined into the relevant function, and pi4 is still the same
+
+pi1/pi2 rom boot sequence
+
+the top 0x10c0 of the L2 cache is used as a scratch space by some loaders
+
+1: sdhost, enabled by bit 21
+    bit 22, 1==GPIO22-27, 0==GPIO48-53
+2: sdhci 4bit mode, enabled by bit 23
+    bit 23-24, 1==GPIO22-27, 2==GPIO34-39, 3==GPIO48-53
+3: nand flash, enabled by bit 5
+    bit 13 0, GPIO 0 to width+7 ALT1
+      bit 8 width, 0==8bit, 1==16bit
+    bit 13 1, GPIO 28-43 ALT1
+4: sdhci 8bit capable, enabled by bits 25-26 being non-zero
+    bits 25-26, 1=GPIO22-27, 2==34-43, 3==48-53
+5: spi0 boot, enabled by bits 30-31 being non-zero
+    bit 30-31, 1==GPIO7-11=ALT0, 2==GPIO35-39=ALT0, 3==GPIO46-49=ALT2(undocumented altmode)
+    not confirmed 100%, but it looks very similar to rpi4, a 0x55aaf00f magic, length prefix, then raw bootcode.bin
+6: usb-device boot, as documented in usbboot, enabled with bit28==1 and bit29==0
+7: i2c slave, enabled by bit 27
+  GPIO18-19 = ALT3
+  send the same 24 byte boot_message_t as usbboot
+  send the entire bootcode.bin
+  it is not smbus based, so no register, just raw i2c writes
+  i2c address 0x66
+  never responds to i2c reads
+8: MPHI boot, enabled by bit19==0
+  ?????
+
+pi3 rom boot sequence
+1: sdhost
+2: sdhci 4bit
+3: nand
+4: sdhci 8bit
+5: spi0 boot
+6: usb-device, enabled by only bit28 now
+7: i2c-slave
+
+B0 first 2711 revision
+B1 silicon adds RSA signatures to rom, fixes DMA
+C0 revision adds more clock gating for pi400
+
+
+the C0 gating, involves turning the clock to a component off, any time it doesnt need a clock
+
+https://github.com/raspberrypi/rpi-eeprom/issues/243
+> The ROM issue with exFAT is a known issue in B0 - don't make the first partition exFAT.
+
+

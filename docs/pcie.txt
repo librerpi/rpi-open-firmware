@@ -1,0 +1,12 @@
+from the linux dtb file: reg = <0x0 0x7d500000 0x9310>,
+
+from start4.elf:
+vid: 7d50_8000
+pid: 7d50_8002
+for the vl805 detection
+
+2020-05-25 11:27:12 < doug16k> if it is, it's basically a flat array of every possible bus/slot/function with 4KB for each
+2020-05-25 11:27:56 < clever> if its 4kb each, then +0x8000 would just be slot 8 (zero based indexing)
+2020-05-25 11:28:32 < clever> and lspci claims its on bus 1, so 8 slots (0-7) spent on bus 0 (the root hub?)
+2020-05-25 11:29:07 < doug16k> usually it's huge, but I've only seen it on giant desktop machines
+

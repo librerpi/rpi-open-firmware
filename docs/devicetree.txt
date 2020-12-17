@@ -1,0 +1,22 @@
+https://gist.github.com/mrvn/a9e596aa4d02a5db0b9d0e8f04ac5b37
+a pi4 dtb file
+
+interrupt maps
+https://www.devicetree.org/open-firmware/practice/imap/imap0_9d.pdf
+
+pci bindings
+https://www.devicetree.org/open-firmware/bindings/pci/pci2_1.pdf
+
+https://elinux.org/images/f/f9/Petazzoni-device-tree-dummies_0.pdf
+
+https://docs.rs/device_tree/1.1.0/device_tree/
+
+overall
+https://readthedocs.org/projects/devicetree-specification/downloads/pdf/stable/
+
+https://saurabhsengarblog.wordpress.com/2015/11/28/device-tree-tutorial-arm/
+
+https://www.kernel.org/doc/Documentation/devicetree/bindings/input/gpio-keys.txt
+
+cpu release addr
+https://android.googlesource.com/kernel/msm/+/android-7.1.0_r0.2/Documentation/devicetree/bindings/arm/cpus.txt#204

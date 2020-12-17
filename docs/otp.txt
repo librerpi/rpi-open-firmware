@@ -1,5 +1,28 @@
+17: boot mode, exact meaning differs between VC4 and VC6
+
+19: signing key
+20
+21
+22
+23: signing key backup
+24
+25
+26
+
+
 28: the 32bit serial# of the chip, as seen in `cat /proc/cpuinfo
-the lower 24 bits of the serial# also become the last 3 bytes of the ethernet mac`
+  the lower 24 bits of the serial# also become the last 3 bytes of the ethernet mac`
+29: negated backup serial#
+30: hw revision
+31:
+32: has a bit to signal mfg test failure?
+  start4.elf will run otp_write(28, 4, 4) if program_mfgtest_fail=1 has been set
+  i think otp_write() takes a base otp reg, an otp offset (max of 16), and a value, so the above would program OTP32?
+33: a US pi400 has a 4 here, it may be "board_rev_ext"
+45: burned MPG2 decode key
+46: burned WVC1 decode key
+
+64/64, ethernet mac
 
 https://github.com/raspberrypi/documentation/blob/master/hardware/raspberrypi/otpbits.md
 
@@ -13,25 +36,47 @@ rpi3 (and maybe older)
   reg17:
     bit 0, brick the pi! (may enable signature checks)
     bit 1, 1==19.2mhz
+    bit 2, 0 means validate OTP key checksum in OTP 27?
     bit 3, enable SDIO pullup
+    bit 4, NAND/emmc, enables DMA?
     bit 5, NAND/SMI boot
     bit 8, SMI data bus width
       0=8bit
       1=16bit
     bit 9-10, change SMI bus timings, 0->1cycle, 1->2cycles, 2->3cycles, 3->10cycles
+      0:
+        2 cycle strobe
+        1 pace/hold/setup
+      1:
+        4 strobe
+        2 pace/hold/setup
+      2:
+        6 strobe
+        3 pace/hold/setup
+      3:
+        10 strobe/pace/hold/setup
+    bit 11-12, nand related
+    bit 14-17 if 0, treat as 0b1011, becomes bits 2:5 of SMI_A/SMI_DA
+    bit 18, nand related
     bit 19, enable GPIO bootmode
-    bit 21, enable booting from SD card
-    bit 22 sets bank to boot from
-    bit 27, BSC slave boot on gpio 18/19
+    bit 20, MPHI related
+    bit 21, enable booting from SDHOST card
+    bit 22 sets SDHOST bank to boot from, 0==gpio48-53, 1==gpio22-27
+    bit 23-24, SDHCI bank, default=22-27, 1=34-39, 2=48-53, non-zero means try SDHCI boot
+    bit 25-26, SDHCI-wide bank, same as 23-24, but 1 is in 8bit mode
+    bit 27, BSC slave boot on gpio 18/19 ALT3
     bit 28, enable usb device booting
     bit 29, enable usb host booting (mass-storage, ethernet)
     bit 30-31, SPI boot
       0 disable
-      1 gpio 7-11
+      1 gpio 7-11 ALT0
+      2 gpio 35-39 ALT0
+      3 gpio 46-49 ALT2, undocumented mode!!
 
 rpi4:
   reg17:
-    bit 1, 0=54mhz crystal, 1=192.mhz
+    bit 1, 0=54mhz crystal, 1=19.2mhz
+    bit 2, 0 means validate OTP key checksum in OTP 27?
     bit 4-6, spi boot pins
       0 = none
       1 = gpio 7-11 alt0
@@ -39,13 +84,16 @@ rpi4:
       3 = gpio 40-43 alt4 (pre-burned)
       4 = gpio 46-49 alt2
     bit 7, usb device boot (over usb-c port), only used if eeprom fails checksum
+    bit 8-10 thing1
     bit 11-13, emmc pins
       0 = none
-      1 = ???
+      1 = ??? PI400 is here, it likely means the EMMC2 port
       2 = gpio 22-27 alt3
       3 = gpio 34-39 alt3
       4 = gpio48-53 alt3 (wired to sd card slot)
+    bit 28-30 thing2
 
+thing1 and thing2 are compared, and control if 66/67 get loaded
 
 
 rpi4 only?
@@ -66,3 +114,31 @@ to disable onboard devices (sdcard, spi), you must set bit 15 (enable that half)
 gpio 20 will enable SD booting when low
 gpio 21 will enable SPI booting when low
 yes, the action when the requested polatrity is met, is backwards
+
+
+OTP 67
+0x80 enable bit
+0x40 first level
+0x3f bitmask for pin#
+
+the given pin is set to "first level", then 25ms later, the reverse
+
+
+
+
+
+pi400 sample:
+# hexdump /proc/device-tree/chosen/rpi-country-code
+0000000 0000 0400
+# vcgencmd otp_dump
+16:c0280000
+17:000008b0
+18:000008b0
+27:00005d5d
+28:c7eac687
+29:38153978
+30:00c03130
+33:00000004
+64:481c0000
+65:dca632d7
+

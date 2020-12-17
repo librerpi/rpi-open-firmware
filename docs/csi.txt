@@ -1,0 +1,7 @@
+https://www.raspberrypi.org/forums/viewtopic.php?f=43&t=277885
+> There is an alternative driver (bcm2835_unicam) that is a pure Linux driver for the csi2 receiver. It purely writes the frames to ram and has no ae or awb control loops, but it can easily support any sensor for which there is a Linux driver.
+
+https://www.raspberrypi.org/forums/viewtopic.php?p=1724505#p1724505
+> The CPU provides the CSI2 receiver peripheral with the address of the buffer to write to, and it then provides an interrupt at the end of frame.
+> Forget the firmware. Use the V4L2 drivers ("dtoverlay=imx477" in config.txt)
+

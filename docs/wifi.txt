@@ -1,0 +1,9 @@
+https://www.raspberrypi.org/forums/viewtopic.php?f=140&t=289934&start=850
+> AIUI, the country code leads to "disablement" of (5GHz) WiFi channels that are restricted/illegal in the country specified (and may be other WiFi channel associated things too) as required by certification (of the WiFi module?) for use in the associated country. Totally separate from keyboard layout etc.
+
+https://www.raspberrypi.org/forums/viewtopic.php?f=98&t=292691
+> BCM43438 on Zero/3A/3B
+> BCM43455 on 3A+/3B+/4B/CM4
+> BCM43456 on 400
+> CM4 is BCM43455.
+> CM4 is CYW43455

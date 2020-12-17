@@ -4,3 +4,14 @@ mkdosfs -s 32 /dev/mmcblk0p1
 
 [root@system76:~]# cat /sys/kernel/debug/mmc0/ios
 view the SD bus state on linux
+
+
+https://www.raspberrypi.org/forums/viewtopic.php?f=29&t=284261
+pi4 ddr50 stuff
+
+
+https://www.raspberrypi.org/forums/viewtopic.php?t=241182
+https://www.raspberrypi.org/forums/viewtopic.php?p=1777011
+https://goughlui.com/static/multicid.htm
+https://goughlui.com/2014/01/02/project-read-collect-decode-sd-card-cid-register-data/
+CID decoding

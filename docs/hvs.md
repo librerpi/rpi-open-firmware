@@ -1,3 +1,95 @@
+# registers
+
+name | VC4 addr
+---|---
+`SCALER_DISPSTAT`   | `0x7e400004`
+`SCALER_DISPDITHER` | `0x7e400014`
+`SCALER_DISPEOLN`   | `0x7e400018`
+`SCALER_DISPBKGND0` | `0x7e400044`
+`SCALER_DISPBKGND1` | `0x7e400054`
+`SCALER_DISPBKGND2` | `0x7e400064`
+`SCALER_DISPGAMADR` | `0x7e400078`
+`SCALER_DISPGAMDAT` | `0x7e4000e0`
+
+## `SCALER_DISPSTAT`
+bits | usage
+---|---
+0     | IRQSCL
+1:3   | IRQDISP(0:2)
+4     | IRQDMA, Set when any of the EOF/EOLN/ESFRAME/ESLINE bits are set and their corresponding interrupt bit is enabled in DISPCTRL.
+5     | IRQSLVWR, Set when `SCALER_DISPSTAT_DMA_ERROR` is set, or `SCALER_DISPSTAT_RESP_ERROR` is not `SCALER_DISPSTAT_RESP_OKAY`.
+6     | IRQSLVRD, Set on AXI slave write decode error
+7     | `DMA_ERROR`, Set on AXI slave read decode error
+8     | eof(0)
+9     | euflow(0)
+10    | esline(0)
+11    | esframe(0)
+12    | eoln(0)
+13    | coblow(0)
+14:15 | resp, 0=okay, 1=EXOKAY, 2=SLVERR, 3=DECERR
+16    | eof(1)
+17    | euflow(1)
+18    | esline(1)
+19    | esframe(1)
+20    | eoln(1)
+21    | coblow(1)
+24    | eof(2)
+25    | euflow(2)
+26    | esline(2)
+27    | esframe(2)
+28    | eoln(2)
+29    | coblow(2)
+
+## `SCALER_DISPDITHER`
+
+based on https://www.raspberrypi.org/forums/viewtopic.php?f=41&t=45290&p=363475#p363475 and a recent start.elf decompile
+
+bits | usage
+---|---
+0:1   | channel 0 type
+2:3   | channel 0 depth
+8:9   | channel 1 type
+10:11 | channel 1 depth
+16:17 | channel 2 type
+18:19 | channel 2 depth
+30    | unknown
+
+from the disassembly, it appears to just be a 4bit field containing the `dither_type` and `dither_depth`, repeated 3 times, once per channel
+
+## `SCALER_DISPEOLN`
+
+3 groups of 9 bits, one group per hvs channel
+
+bits | usage
+---|---
+30 | enable something?
+
+## `SCALER_DISPBKGNDn`
+
+bits | usage
+---|---
+0:23 | background color
+24 | fill with background color, costs more clock cycles
+25:28 | test mode
+29 | respect the gamme bits in `SCALER_DISPGAMDAT`?
+30 | interlace
+31 | autohs 
+
+## `SCALER_DISPGAMADR`
+bits | usage
+---|---
+30 | enable gamma sram
+31 | autoincrement
+
+## `SCALER_DISPGAMDAT`
+
+i think `SCALER_DISPGAMADR` sets the addr into the gamma ram, and if it increments on each write to `SCALER_DISPGAMDAT`
+
+each hvs channel starts 0x300 bytes from the last?
+
+
+# display list information
+
 a display list is a series of planes in the dlist memory, followed by a `SCALER_CTL0_END` flag
 
 for example: `[CTL(valid,...), POS0, POS2, POS3, POINT0, POINTCTX, PITCH0, CTL(END)]` would be a list containing just one plane
@@ -118,3 +210,7 @@ Control Word, Position Word 0, Position Word 2, Position Word 3, Pointer Word 0,
 
 VC6 RGB unity scaling:
 Control Word, Position Word 0, Control Word 2, Position Word 2, Position Word 3, Pointer Word 0, Pitch Word 0
+
+# misc notes
+`hvs_priority` in config.txt sets its axi priority?
+https://www.raspberrypi.org/forums/viewtopic.php?f=38&t=79330&p=584389&hilit=hvs_priority#p584389

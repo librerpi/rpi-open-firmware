@@ -1,0 +1,48 @@
+https://github.com/raspberrypi/firmware/issues/1374#issuecomment-617628570
+high perif notes
+
+addr      length      description
+7e9c0000  0x100000    xhci controller on the SoC
+<longhorn> You can switch the Type-C port to it... but it'll work as host mode EHCI only because other pins aren't wired
+https://github.com/raspberrypi/documentation/issues/1217#issuecomment-536932640
+> Do not access the disabled hardware - the register bus has been physically multiplexed into a different peripheral.
+
+
+
+https://www.raspberrypi.org/forums/viewtopic.php?p=1707079
+> The card-detect pin is present on Pi4 and connected to GPIO31 which IIRC is shared with WLAN_ON so it isn't really used in Linux. The bootloader doesn't really use it except as a hint on the HDMI diagnostics in-case the user has forgotten to insert the card.
+
+https://www.raspberrypi.org/forums/viewtopic.php?p=1724363#p1724363
+> The Linux iProc SDHCI driver polls forever sending SD CMDs if card-detect is not available according to device-tree (it isn't because the pin is muxed with WLAN). When the SDCMD fails because there is no card it reports it as an error.
+> That's the system polling the SD card slot, looking for a card. Add dtparam=sd_poll_once to config.txt and reboot to stop the polling.
+if the sd card isnt present, and the card-detect gpio is missing, linux will poll the sd slot non-stop, causing the led to stay on
+
+
+based on linux/arch/arm/boot/dts/bcm2838.dtsi:
+4 address spaces, each mapping back to physical ram in a different way
+
+VPU addr space
+arm-physical    vpu                     size
+0xff800000      0x40000000              8mb     MMIO
+0xfc000000      0x7c000000<->7e000000   32mb    MMIO
+0xfe000000      0x7e000000<->7f800000   24mb    MMIO
+0x0             0xc0000000              960mb   for DMA use, tell VPU peripherals to access ram via the uncached alias
+
+V3D addr space
+arm-physical    v3d                     size
+0x0             0x0                     960mb   for DMA use, tell V3D to access ram without any offset (v3d mmu mapped to uncached alias??)
+0xff800000      0x40000000              8mb     MMIO, duplicate from VPU space
+0xfc500000      0x7c500000              51mb    MMIO?
+
+64bit-capable addr space
+arm-physical    bus                     size
+0x0             0x0                     4032mb  MMIO to pci cards??
+0xfc000000      0x7c000000              56mb    MMIO
+0xff800000      0x40000000              8mb     MMIO, duplicate
+0x600000000     0x600000000             1024mb  MMIO to pci cards??
+
+arm's overall view
+0x fc000000<->0x fdffffff   0x7c000000<->0x7dffffff   VPU MMIO
+0x fe000000<->0x ff7fffff   0x7e000000<->0x7f7fffff   VPU MMIO
+0x ff800000<->0x ffffffff   0x40000000<->0x407fffff   compatible = "brcm,bcm2836-l1-intc"; interrupt controller MMIO
+0x600000000<->0x63fffffff   0x600000000<->0x63fffffff PCI-E MMIO

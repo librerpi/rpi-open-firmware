@@ -1,0 +1,3 @@
+the maskrom at 0x6000_0000 appears to vanish from the bus once linux is running
+the HVS is read-only from the arm until the firmware unlocks it
+the DDR2 control registers return 0 when read from the arm, even under closed firmware

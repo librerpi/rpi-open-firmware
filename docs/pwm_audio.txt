@@ -1,0 +1,3 @@
+> From a software perspective you just need to add "dtoverlay=audremap" to config.txt, which will enable the audio outputs on GPIOs 12 & 13 (header pins 32 and 33). "dtoverlay=audremap,pins_18_19" will send the output to GPIOs 18 & 19 (header pins 12 & 35) . But as James says, you really need some external circuitry to turn it into a usable audio signal.
+
+https://www.raspberrypi.org/forums/viewtopic.php?p=1754646#p1754646

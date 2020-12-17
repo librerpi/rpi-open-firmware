@@ -7,3 +7,13 @@ vcdbg log assert
 
 
 root@raspberrypi:~# vcdbg dumpstate 2>/dev/null
+
+
+https://www.raspberrypi.org/forums/viewtopic.php?f=29&t=195178&start=100
+> What are the comparative loadings on the 2 VPU cores? "sudo vcdbg hist gnuplot" should give you two files called task.gpt and task.gpt, and "gnuplot task.gpt" should then display the three graphs of VPU0, VPU1, and combined.
+
+`vcdbg hist gnuplot` shows VPU usage??
+
+> Got the static vcdbg from pelwell's link:
+> https://github.com/raspberrypi/Raspberry-Pi-OS-64bit/issues/67#issuecomment-653209729
+a static vcdbg!
