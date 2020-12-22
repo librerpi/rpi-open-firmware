@@ -84,8 +84,12 @@ struct LoaderImpl {
   LoaderImpl() {
     find_and_mount();
     auto kernel = load_kernel();
-    size_t initrd_size;
-    auto initrd = load_initrd(&initrd_size);
+    size_t initrd_size = 0;
+    bool do_load_initrd = true;
+    uint8_t *initrd = NULL;
+    if (do_load_initrd) {
+      load_initrd(&initrd_size);
+    }
 
     /* read the command-line null-terminated */
     uint8_t *cmdline;
@@ -230,11 +234,13 @@ struct LoaderImpl {
     else {
       /* pass in command line args */
       res = fdt_setprop(v_fdt, chosen, "bootargs", cmdline, strlen((char*) cmdline) + 1);
-      // chosen.txt describes linux,initrd-start and linux,initrd-end within the chosen node
-      uint32_t value = htonl((uint32_t)initrd_start);
-      res = fdt_setprop(v_fdt, chosen, "linux,initrd-start", &value, 4);
-      uint32_t initrd_end = htonl((uint32_t)(initrd_start + initrd_size));
-      res = fdt_setprop(v_fdt, chosen, "linux,initrd-end", &initrd_end, 4);
+      if (initrd_size) {
+        // chosen.txt describes linux,initrd-start and linux,initrd-end within the chosen node
+        uint32_t value = htonl((uint32_t)initrd_start);
+        res = fdt_setprop(v_fdt, chosen, "linux,initrd-start", &value, 4);
+        uint32_t initrd_end = htonl((uint32_t)(initrd_start + initrd_size));
+        res = fdt_setprop(v_fdt, chosen, "linux,initrd-end", &initrd_end, 4);
+      }
     }
 
     /* pass in a memory map, skipping first meg for bootcode */
