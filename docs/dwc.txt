@@ -1,0 +1,31 @@
+2020-06-08 05:59:46 < geist> like every N cycles go refresh the next line, etc
+2020-06-08 06:00:04 < geist> i suppose on a modern fast machine if you could guarantee it you could run a high priority task or irq that just does that
+2020-06-08 06:00:31 < geist> this is something a cortex-m would do fantastically with sice they have an elaborate N level IRQ scheme for precisely that sort of thing
+2020-06-08 06:01:27 < geist> well when i say modern machine i mean a more modern microcontroller
+2020-06-08 06:02:06 < geist> something that can tolerate having irqs fire at say 10k/sec and still get a fair amount of work done otherwise
+2020-06-08 06:03:00  * clever eyes dwc
+2020-06-08 06:03:56 < geist> right, that's precisely what something like dwc is designed for. it's basically a dumb usb controller that is okay for microcontroller class hardware where you're probably not 
+                             running tasks but lots of irqs, or even just polling it
+2020-06-08 06:04:10 -!- sangoma [~zeus@154.228.213.63] has quit [Ping timeout: 246 seconds]
+2020-06-08 06:04:19 < geist> trouble with it is it got extended and then vendors like broadcomm actually put it in High End cpus where that sort of thing is more of a drag
+2020-06-08 06:04:26 < clever> i was thinking mobile use, where its almost never in host mode
+2020-06-08 06:04:36 < clever> so the crappy host performance isnt a major issue
+2020-06-08 06:05:05 < clever> a phone is in device mode 10% of the time, host mode 1% of the time, and not even using usb 89% of the time
+2020-06-08 06:05:46 < geist> it's crappy even in device mode, much like how a lot of usb device controllers would be implemented on a microcontroller
+2020-06-08 06:06:14 < geist> once at a convention i was talking to a guy from Synopsys and brought up the DWC2
+2020-06-08 06:06:35 < geist> like 'hey man what gives with that thing?' and he was like 'oh my god yeah. i wish that would die but it got out and now vendors keep using it'
+2020-06-08 06:06:50 < geist> as in they wish it'd die too, but i guess vendors get some sort of lifetime use for it or something
+2020-06-08 06:06:58 < clever> lol
+2020-06-08 06:07:10 < geist> thankfully for the most part usb 3 has at least forced most vendors to move onto dwc3, which is at least xhci based (i think)
+
+
+2020-12-02 20:06:32 < zyp> IIRC you can theoretically fit max 13 of those per microframe, so 8 * 512B * 13 * 8000 for around 426 Mb/s of actual throughput
+2020-12-02 20:06:49 < zyp> bulk transfers, that is
+
+
+LS  usb1    1.5 Mbps
+FS  usb1.1  12  Mbps
+HS  usb2    480 Mbps
+SS  usb3    5   Gbps
+SS  usb3.1  10  Gbps
+

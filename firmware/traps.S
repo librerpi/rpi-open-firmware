@@ -1,7 +1,3 @@
-# 1 "traps.S"
-# 1 "<built-in>"
-# 1 "<command-line>"
-# 1 "traps.S"
 .macro SaveRegsLower
   stm lr, (--sp)
   stm r0-r5, (--sp)

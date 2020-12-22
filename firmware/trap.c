@@ -68,7 +68,7 @@ void print_vpu_state(vc4_saved_state_t* pcb) {
 	printf(
 	    "   src0: 0x%08lx src1: 0x%08lx vaddr: 0x%08lx\n"
 	    "      C: 0x%08lx    S: 0x%08lx\n",
-	    IC0_SRC0,
+	    IC0_SRC0, // the 0x10 bit might signal a pending interrupt?
 	    IC0_SRC1,
 	    IC0_VADDR,
 	    IC0_C,

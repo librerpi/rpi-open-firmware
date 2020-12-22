@@ -1,0 +1,5 @@
+https://www.raspberrypi.org/forums/viewtopic.php?f=38&t=294684
+
+> Each time you open the Memory to Memory (M2M) devices you get a totally new standalone instance of the decoder/encoder/simple isp (not for the complex ISP on /dev/video13-16).
+> v4l2-ctl will therefore only tell you the default values, or the values that you've set in that particular v4l2-ctl call, as it closes the file handle at the end.
+

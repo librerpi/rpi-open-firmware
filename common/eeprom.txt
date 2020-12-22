@@ -1,0 +1,22 @@
+https://github.com/raspberrypi/rpi-eeprom/pull/244/files
+# The last 4KB of the EEPROM image is reserved for internal use by the
+# bootloader and may be overwritten during the update process.
+
+.sig files now contain:
+```
+${sha256}
+ts: ${timestamp}
+```
+the timestamp is a unix timestamp, base10
+# During an self-update mode the bootloader examines the update timestamp
+# and will only update itself if it is newer than than the current update timestamp
+
+
+https://github.com/raspberrypi/rpi-eeprom/pull/246
+# On Pi 4B 1.4 (8GB) initialise SDRAM whilst waiting for the USB port power off time. This makes booting slightly faster.
+# Skip rendering of the diagnostics screen for HDMI_DELAY seconds (default 5). This means that for SD-card and USB MSD flash boot devices the diagnostics screen will not be visible.
+# Fix issue where boot would stop if partition type 0x83 was encountered before the first FAT partition.
+# SELF_UPDATE mode (Network, USB MSD boot) now reads the timestamp information in pieeprom.sig created by rpi-eeprom-update to see if the updated is newer than the current 'update-timestamp'. If not, the update is skipped to avoid stale updates on network or USB disks being installed by accident.
+# recovery.bin updates (from the SD card) do not check the timestamp because recovery.bin renames itself once the update is completed. However, it still writes the update-timestamp to the EEPROM.
+# Add support for the 'tryboot' feature that enables operating systems to implement a fallback mechanism if an OS upgrade fails. This works with all bootable media types but requires updated firmware and OS software.
+

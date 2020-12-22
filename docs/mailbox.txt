@@ -34,6 +34,12 @@ https://github.com/raspberrypi/firmware/wiki/Mailbox-property-interface
 0x00038002    set clock rate
 0x00038003    set voltage
 0x00038009    set turbo
+
+# https://github.com/raspberrypi/linux/pull/3937/files
+0x00030064    RPI_FIRMWARE_GET_REBOOT_FLAGS
+0x00038064    RPI_FIRMWARE_SET_REBOOT_FLAGS
+
+
 0x00040001    framebuffer allocate
 0x00040002    framebuffer blank screen
 0x00040003    framebuffer get display w/h
@@ -89,6 +95,7 @@ linux/include/soc/bcm2835/raspberrypi-firmware.h
 0x00030049    get poe hat val
 0x00030050    set poe hat val
 0x00038021    set customer otp
+0x00038022    OTP related (found in start4.elf)
 0x00038030    set domain state
 0x00038041    get gpio state
 0x00038042    set sdhost clock
@@ -136,7 +143,7 @@ undocumented:
 0x00030053
 0x00030054
 0x00030055
-0x00030056
+0x00030056    turns 3v3_aud on/off in the pmic
 0x00030057    something involving global_reset pin
 0x00030059
 0x00030060    voltage related

@@ -1,0 +1,20 @@
+https://discordapp.com/channels/620838168794497044/672272612008787993/780848911920529420
+Device (XHC1)
+        {
+            Name (_HID, "PNP0D10")      // _HID: Hardware ID
+            Name (_UID, 0x01)           // _UID: Unique ID
+            Name (_CCA, 0x00)           // _CCA: Cache Coherency Attribute
+
+            Name (_CRS, ResourceTemplate ()  // _CRS: Current Resource Settings
+            {
+                Memory32Fixed (ReadWrite,
+                    0xfe9c0000,         // Address Base (MMIO)
+                    0x100000,         // Address Length
+                    )
+                Interrupt (ResourceConsumer, Level, ActiveHigh, Exclusive, ,, )
+                {
+                  208
+                }
+            })
+        }
+

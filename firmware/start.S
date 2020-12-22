@@ -49,7 +49,3 @@ _start:
   /* jump to C code */
   bl _main
   b .
-
-findme:
-  mov r0, sr
-  rts

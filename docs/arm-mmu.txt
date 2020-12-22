@@ -1,0 +1,47 @@
+arm32 level1 page table
+16kb long
+32bit slots
+4096 slots total
+each slot addresses a 1mb chunk of virtual space
+
+level2 page table
+1kb long
+32bit slots
+256 slots total
+each slot addresses a 4kb chunk of virt space
+typically 4 level2's in a 4k page
+
+i probably want TTBR0
+use TTBCR to make entire space obey TTBR0
+TTBCR.N=0 means TTBR0 controls all
+i want TRE=0, no remapping types
+
+normal ram should be TEX=001, C=1, B=1, S=1
+AP? domain? nG? S?
+XN, execute never
+PXN, priv execute never
+NS, says to use the secure or nonsecure mappings
+
+
+
+short descriptor format
+TTBCR bits 2:0, the size of the memory split
+TTBR0 index comes from addr bits 31:(14-N)
+
+size  fixed bits    variable bits   TTBR0-level1 size   slots
+0     31:14         13:0            16kb                4096
+1     31:13         12:0            8kb                 2048
+2     31:12         11:0            4kb                 1024
+3     31:11         10:0            2kb                 512
+4     31:10         9:0             1kb                 256
+5     31:9          8:0             512b                128
+6     31:8          7:0             256b                64
+7     31:7          6:0             128b                32
+
+https://developer.arm.com/documentation/ddi0333/h/memory-management-unit/mmu-descriptors/first-level-descriptor-address
+https://documentation-service.arm.com/static/5e8e358afd977155116a8bb5?token=
+
+bits (32-N):20 of the virt addr, act as an index into TTBR0
+bits 31:20 of the virt addr act as ain index into TTBR1
+a mux then decides which to actually use, based on N and the split
+TTBR1 must always point to a 16kb table that is 16kb aligned, but the lower split is shadowed by TTBR0 and can be treated as free ram

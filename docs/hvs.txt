@@ -11,3 +11,9 @@ https://www.raspberrypi.org/forums/viewtopic.php?p=1757953#p1757953
 > I am not aware of any mechanism to get 10bit YUV via the DPI peripheral, and certainly not in 2017 when the original post was made. 10bit output only gets routed through the HDMI blocks on Pi4.
 > The HVS can output YUV4:4:4 by using the OLED colour conversion block that is in the output block of each channel. It's not possible to directly output YUV4:2:0 or 4:2:2, although the HDMI blocks can downconvert to 4:2:2.
 
+
+https://www.raspberrypi.org/forums/viewtopic.php?p=1781249#p1781249
+>> can the HVS/DPI peripherals handle colorspace conversion, and emit YPbPr over the 24 bits of the DPI port?
+> In theory it can produce YUV 444, but I've never looked into the detail.
+> For HDMI output as YUV there is a conversion available in the HDMI block (including chroma subsample to 422), and that is the approach we're likely to take.
+
