@@ -32,6 +32,7 @@ Second stage bootloader.
 #include <stdio.h>
 
 #include "drivers/fatfs/diskio.h"
+#include "start.h"
 
 #define logf(fmt, ...) print_timestamp(); printf("[LDR:%s]: " fmt, __FUNCTION__, ##__VA_ARGS__);
 
