@@ -138,7 +138,6 @@ struct LoaderImpl {
   }
 
   inline void __attribute__((noreturn)) run_linux(linux_t kernel, uint8_t *fdt) {
-    panic("testing");
     /* fire away -- this should never return */
 
     logf("Jumping to the Linux kernel...\n");
