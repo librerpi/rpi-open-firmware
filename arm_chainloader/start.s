@@ -236,6 +236,11 @@ L_finish_init:
 bl c_entry
 b .
 
+.global debug_stall
+debug_stall:
+  b .
+  bx lr
+
 L_deadloop:
   mov r0, #0x43
   //bl uart_putc

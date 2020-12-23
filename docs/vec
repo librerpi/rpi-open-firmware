@@ -1,0 +1,3 @@
+(composite video output)
+
+base clock is 108mhz, muxed from pllh on the rpi3, pllc on the rpi4

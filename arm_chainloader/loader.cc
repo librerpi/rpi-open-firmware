@@ -42,8 +42,6 @@ FATFS g_BootVolumeFs;
 #define KERNEL_LOAD_ADDRESS 0x2000000 // 32mb from start
 #define INITRD_LOAD_ADDRESS 0x4000000 // 64mb from start
 
-extern "C" void disable_icache();
-
 typedef void (*linux_t)(uint32_t, uint32_t, void*);
 
 struct mem_entry {
@@ -140,6 +138,10 @@ struct LoaderImpl {
   inline void __attribute__((noreturn)) run_linux(linux_t kernel, uint8_t *fdt) {
     /* fire away -- this should never return */
 
+#if 0
+    logf("stalling until jtag attaches\n");
+    debug_stall();
+#endif
     logf("Jumping to the Linux kernel...\n");
     kernel(0, ~0, fdt);
   }

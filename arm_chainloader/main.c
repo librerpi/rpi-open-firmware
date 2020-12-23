@@ -120,6 +120,7 @@ uint32_t arm_lowlevel_setup() {
   bool unlock_coproc = false;
   bool unlock_l2 = false;
   bool enable_smp = false;
+  bool drop_secure = true;
   uint32_t corenr;
 
   __asm__ __volatile__("mrc p15, 0, %0, c0, c0, 0" : "=r"(midr));
@@ -129,6 +130,7 @@ uint32_t arm_lowlevel_setup() {
   case 0x410FB767: // armv6? rpi 0/1
     printf("MIDR: 0x%lx\nMPIDR: 0x%lx\n", midr, mpidr);
     corenr = 0;
+    drop_secure = false;
     break;
   case 0x410FC075: // rpi2
     need_timer = true;
@@ -158,7 +160,7 @@ uint32_t arm_lowlevel_setup() {
     //asm_set_ACTLR(1<<6 | 1<<5 | 1<<4 || 1<<1 | 1<<0);
     set_CPUECTLR();
   }
-  asm_drop_secure();  // SCR
+  if (drop_secure) asm_drop_secure();  // SCR
   enable_icache();    // SCTLR
   return corenr;
 }
