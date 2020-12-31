@@ -1,7 +1,7 @@
 digraph {
   sdhost [label="SDHOST\n0x7e202000\nSD0_x"]
   sdhci [label="SDHCI\n0x7e300000\nSD1_x"]
-  EMMC2
+  EMMC2 [label="EMMC2\n0x7e340000"]
   genet
 
   sd_bank0 -> GPIO22_27
