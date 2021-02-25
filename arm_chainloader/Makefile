@@ -43,7 +43,7 @@ OBJ := $(addprefix build/, $(addsuffix .o, $(basename $(SRCS))))
 
 include $(OBJ:.o=.d)
 
-LINKFLAGS = -nostdlib -march=$(ARCH) -Wl,--build-id=none -T linker.lds -ltlsf -lgcc -lcommon -lnotc -lstdc++ -Wl,--gc-sections -ltlsf
+LINKFLAGS = -nostdlib -march=$(ARCH) -Wl,--build-id=none -T linker.lds -ltlsf -lgcc -lcommon -lnotc -Wl,--gc-sections -ltlsf
 FPUFLAGS=-mfpu=vfp -mfloat-abi=softfp
 
 # applied to as, gcc and g++
@@ -103,7 +103,7 @@ build/arm_chainloader.bin: build/arm_chainloader.elf
 
 build/arm_chainloader.elf: $(OBJ)
 	@echo $(WARN_COLOR)LD  $(NO_COLOR) $@
-	$(CC) $(OBJ) $(LINKFLAGS) -o $@ -Wl,-Map=build/arm_chainloader.map
+	$(CXX) $(OBJ) $(LINKFLAGS) -o $@ -Wl,-Map=build/arm_chainloader.map
 
 clean:
 	@echo $(ERROR_COLOR)CLEAN$(NO_COLOR)
