@@ -8,12 +8,6 @@ Technical discussion occurs in `#raspberrypi-internals` on [Freenode](http://web
 
 All Broadcom headers are licensed under 3-Clause BSD License while our code is under GPLv2+. See `LICENSE` for more information. Various external projects are mirrored under a mix of GPL-compatible licenses.
 
-## Is this project dead or abandoned?
-
-It's not dead and not abandoned in a conventional sense. 
-
-However, it is on an indefinite hold. I wrote a detailed explanation [in issue #37](https://github.com/christinaa/rpi-open-firmware/issues/37) of its current situation. 
-
 ## Building
 
 As a prerequisite, Julian Brown's [VC4 toolchain](https://github.com/itszor/vc4-toolchain) is necessary as well as the `arm-none-eabi-` toolchain (Debian package `gcc-arm-none-eabi`). You can tweak the VC4 toolchain path in `CROSS_COMPILE` in `Makefile` and the ARM path in `arm_chainloader/Makefile` if necessary. Contributors should not commit their personal paths. After configuration, run `buildall.sh`. The binary is at `build/bootcode.bin`, ready to be copied to an SD card.
