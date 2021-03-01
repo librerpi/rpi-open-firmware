@@ -4,9 +4,6 @@
 /* Put a character                              */
 /*----------------------------------------------*/
 
-int putchar (int c)
-{
-	if (_CR_CRLF && c == '\n') putchar('\r');		/* CR -> CRLF */
-
-	uart_putc(c);
+int putchar (int c) {
+  pl011_putchar(c);
 }

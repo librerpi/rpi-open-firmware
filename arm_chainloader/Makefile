@@ -7,7 +7,6 @@ SRCS = \
 	lib_armv6/arm_strlen.s \
 	lib_armv6/arm_memcmp.s \
 	lib_armv6/string_misc.c \
-	drivers/uart.c \
 	drivers/cprman.cc \
 	drivers/libfdt/fdt.c \
 	drivers/libfdt/fdt_ro.c \
@@ -43,11 +42,11 @@ OBJ := $(addprefix build/, $(addsuffix .o, $(basename $(SRCS))))
 
 include $(OBJ:.o=.d)
 
-LINKFLAGS = -nostdlib -march=$(ARCH) -Wl,--build-id=none -T linker.lds -ltlsf -lgcc -lcommon -lnotc -lstdc++ -Wl,--gc-sections -ltlsf
+LINKFLAGS = -flto -nostdlib -march=$(ARCH) -Wl,--build-id=none -T linker.lds -ltlsf -lgcc -lcommon -lnotc -lstdc++ -Wl,--gc-sections -ltlsf
 FPUFLAGS=-mfpu=vfp -mfloat-abi=softfp
 
 # applied to as, gcc and g++
-COMMON_FLAGS = -c -ffreestanding -march=$(ARCH) -I../ -I./ -I./drivers/libfdt/ -mtune=arm1176jzf-s ${FPUFLAGS} -ffunction-sections -fdata-sections -DBAREMETAL -fno-common
+COMMON_FLAGS = -flto -c -ffreestanding -march=$(ARCH) -I../ -I./ -I./drivers/libfdt/ -mtune=arm1176jzf-s ${FPUFLAGS} -ffunction-sections -fdata-sections -DBAREMETAL -fno-common
 
 # applied to gcc and g++
 COMMON_FLAGS2 = -nostdlib -nostartfiles -g -O3

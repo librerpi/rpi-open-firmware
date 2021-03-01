@@ -4,7 +4,7 @@ FPUFLAGS=-mfpu=vfp -mfloat-abi=softfp
 ARMCFLAGS=-mtune=arm1176jzf-s -march=armv6zk
 CFLAGS = -Ilib -I. -Iinclude -ffunction-sections -Wall -g
 
-OBJS=hexdump.o crc32.o
+OBJS=hexdump.o crc32.o pl011.o
 
 ifeq (${BAREMETAL},1)
   OBJS += hardware.o panic.o cxx_runtime.o print_timestamp.o IODevice.o udelay.o BCM2708Gpio.o

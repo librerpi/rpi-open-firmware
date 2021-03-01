@@ -1,3 +1,12 @@
 https://www.raspberrypi.org/forums/viewtopic.php?f=91&t=252049
 
 controlling genet activity LED's
+
+
+genet tx cheap, irq/cpu wise
+genet rx is expensive
+
+when iperf is bound to core0 (same as irq), and doing gigabit rx, there is nearly 1 genet A irq for every packet received, 89k irq/sec, irq B is nearly idle, 938 Mbits/sec
+if iperf is bound to core1, genet A drops to 68k/sec, and B rises to 19.5k/sec, 941 Mbits/sec
+
+

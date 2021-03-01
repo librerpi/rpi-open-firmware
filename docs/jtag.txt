@@ -12,7 +12,7 @@ the following gpio must be in alt4 mode
 27 TMS
 and ARM_CONTROL0 must have the ARM_C0_JTAGGPIO bit set
 
-the arm cpu will hang on boot, but jtag will now respond
+the arm cpu will hang on boot(see line 3), but jtag will now respond
 
 pi@raspberrypi:~/openocd $ nix-shell ~/nixpkgs-channels/ -A openocd
 [nix-shell:~/openocd]$ git rev-parse HEAD

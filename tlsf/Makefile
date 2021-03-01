@@ -1,14 +1,14 @@
 all: libtlsf.a
 
-FPUFLAGS=-mfpu=vfp -mfloat-abi=softfp
-ARMCFLAGS=-mtune=arm1176jzf-s -march=armv6zk ${FPUFLAGS} #-mthumb
+CFLAGS=-ffunction-sections -fdata-sections
+
 ifeq (${CC},vc4-elf-gcc)
-CFLAGS=
+  CFLAGS=
 else
   ifeq (${CC},aarch64-unknown-linux-gnu-gcc)
-    CFLAGS=${BASECFLAGS}
+    CFLAGS +=
   else
-    CFLAGS=${ARMCFLAGS}
+    CFLAGS += -mtune=arm1176jzf-s -march=armv6zk -mfpu=vfp -mfloat-abi=softfp
   endif
 endif
 

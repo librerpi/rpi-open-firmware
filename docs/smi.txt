@@ -46,11 +46,11 @@ SMI_DSR3  0x28
 SMI_DSW3  0x2c
 
 settings:
-0:6     strobe    clock cycles to assert strobe
-7       dreq      use external dma request on sd16 to pace reads from device, sd17 to pace writes
-8:14    pace      clock cycles to wait between CS deassertion and start of next xfer
-15      paceall   if 1, use the PACE value, even if the next device is different
-16:21   hold    clock cycles between strobe going inactive and cs/addr going inactive
+0:6     strobe    0-127 clock cycles to assert strobe
+7       dreq            use external dma request on sd16 to pace reads from device, sd17 to pace writes
+8:14    pace            clock cycles to wait between CS deassertion and start of next xfer
+15      paceall         if 1, use the PACE value, even if the next device is different
+16:21   hold      0-63  clock cycles between strobe going inactive and cs/addr going inactive
 22      read:fsetup 1: setup time only on first xfer after addr change, write: wswap(swap pixel data bits)
 23      read:mode68 0:(oe+we) 1:(enable+dir), write: wformat(0=rgb565, 1=32bit rgba8888)
 24:29   setup, clock cycles between chipselect/address, and read/write strobe
@@ -71,3 +71,23 @@ SMI_DD    0x3c  direct data registers
 SMI_FD    0x40  FIFO debug register
   0:5   FCNT    current fifo count
   8:13  FLVL    high tide mark of FIFO count during most recent xfer
+
+
+notes from experiments done with /dev/smi
+the dma on the rpi can only send/recv 32bit chunks to the SMI (see drivers/char/broadcom/bcm2835_smi_dev.c odd_bytes)
+any extra has to be sent as a second transaction? with an variable delay after the main burst
+the main burst can operate at max speed with very dense packing
+
+a burst involves a repeating setup, strobe, hold, setup, strobe, hold cycle
+a burst is always followed by a pace period?
+
+SOE goes low during the strobe period of a read?
+the default smi clock on a pi0 is about 125mhz (cat /sys/kernel/debug/clk/smi/clk_rate)
+bcm270x.dtsi defines the `assigned-clock-rates` to 125mhz
+SA is held during at least strobe and hold, but vanishes during pace, bcm2835_smi.h claims its held during pace!!
+
+during a read, SD0-SD17 are tristated at the start of SETUP, then driven low at the end of HOLD
+during a read, SD0-SD17 are sampled at the end of STROBE
+if 2 READ's occur back to back, the end of HOLD is the start of SETUP, and SD0-SD17 remain tri-state
+
+in the default mode, SOE will strobe during reads, SWE strobes during writes

@@ -1,0 +1,148 @@
+name          GIC SPI/PPI linux1  linux2
+GIC internal? 9           1       25
+arm timer     10
+arm timer     11
+arm timer     13
+arm timer     14
+
+arm-pmu       16                  48
+arm-pmu       17                  49
+arm-pmu       18                  50
+arm-pmu       19                  51
+
+mailbox       33                  65
+vchiq         34                  66
+
+usb           40                  72
+
+system_timer  64                  96
+system_timer  65                  97
+system_timer  66                  98
+system_timer  67                  99
+              68                  100
+              69                  101
+              70                  102
+              71                  103
+              72                  104
+usb           73                  105
+v3d           74          39      106
+txp           75                  107
+
+DMA           80                  112
+DMA           81                  113
+DMA           82                  114
+DMA           83                  115
+DMA           84                  116
+DMA           85                  117
+DMA           86                  118
+DMA           87                  119
+DMA           88                  120
+DMA 11        89                  121
+DMA 12        90                  122
+DMA 13        91                  123
+DMA 14        92                  124
+spi1          93                  125
+spi2          93
+uart1         93
+
+hdmi0         96                  128
+hdmi1         96
+HVS           97                  129
+h265          98                  130
+
+dsi0          100                 132
+
+CSI0          102                 134
+CSI1          103                 135
+
+pv3           106                 138
+
+dsi1          108                 140
+pv0           109                 141
+pv1           110                 142
+pv2           110
+pv4           110
+                                  143
+firmware-kms(smi) 112             144
+smi           112
+gpio          113                 145
+gpio          114                 146
+gpio          115                 147
+gpio          116                 148
+i2c0          117                 149
+i2c1    117
+i2c3  117
+i2c4  117
+i2c5  117
+i2c6  117
+spi           118                 150
+spi3  118
+spi4  118
+spi5  118
+spi6  118
+                                  151
+sdhost        120                 152
+uart0         121         14      153
+uart2 121
+uart3 121
+uart4 121
+uart5 121
+vec     123                       153
+                                  154
+                                  155
+                                  156
+                                  157
+mmc           126         25      158
+mmcnr         126
+emmc2         126
+sdhci         126
+                                  159
+                                  160
+                                  161
+                                  162
+                                  163
+                                  164
+                                  165
+                                  166
+                                  167
+                                  168
+                                  169
+                                  170
+                                  171
+                                  172
+                                  173
+                                  174
+PCIe          143                 175
+                                  176
+                                  177
+                                  178
+                                  179
+PCIe          148                 180
+                                  181
+                                  182
+                                  183
+                                  184
+                                  185
+                                  186
+                                  187
+                                  188
+genet         157         32      189
+genet         158         32      190
+                                  191
+                                  192
+                                  193
+                                  194
+                                  195
+                                  196
+                                  197
+                                  198
+                                  199
+                                  200
+                                  201
+                                  202
+                                  203
+                                  204
+                                  205
+                                  206
+                                  207
+xhci          176                 208

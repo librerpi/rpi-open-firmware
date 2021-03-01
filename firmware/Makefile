@@ -11,7 +11,6 @@ SRCS = \
 	drivers/gpclk.cc \
 	hang_cpu.o \
 	utils.cc \
-	pl011.c \
 	pll_read.c \
 	interrupt.c \
 	traps.S \
@@ -21,7 +20,7 @@ SRCS = \
 
 .PHONY: default all clean device
 
-default: build/bootcode.bin start4.elf
+default: build/bootcode.bin
 
 BASE_OBJ := $(addprefix build/, $(addsuffix .o, $(basename $(SRCS))))
 EXTRA_OBJ := arm_chainloader.o
@@ -81,12 +80,6 @@ arm_chainloader.o: arm_chainloader/build/arm_chainloader.bin
 
 build/arm_chainloader.d:
 	@echo 'build/arm_chainloader.o: arm_chainloader/build/arm_chainloader.bin' > $@
-
-startelf4.o: startelf4.S
-	$(CC) startelf4.S -o startelf4.o -c
-
-start4.elf: startelf4.o startelf.o pll_read.o build/traps.o trap.o hang_cpu.o arm_monitor.o panic.o interrupt.o utils.o utils4.o drivers/BCM2708ClockDomains.o pl011.o BCM2708PlatformStartup.o drivers/BCM2708PowerManagement.o drivers/BCM2708ArmControl.o arm_chainloader.o otp.o build/otp_asm.o
-	$(CC) -o $@ $^ start.ld -nostdlib -lcommon
 
 build/bootcode.elf: $(OBJ)
 	$(CREATE_SUBDIR)

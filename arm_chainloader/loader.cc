@@ -43,7 +43,7 @@ FATFS g_BootVolumeFs;
 #define KERNEL_LOAD_ADDRESS 0x2000000 // 32mb from start
 #define INITRD_LOAD_ADDRESS 0x4000000 // 64mb from start
 
-typedef void (*linux_t)(uint32_t, uint32_t, void*);
+typedef void __attribute__((noreturn)) (*linux_t)(uint32_t, uint32_t, void*);
 
 struct mem_entry {
   uint32_t address;

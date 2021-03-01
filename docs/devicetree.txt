@@ -20,3 +20,8 @@ https://www.kernel.org/doc/Documentation/devicetree/bindings/input/gpio-keys.txt
 
 cpu release addr
 https://android.googlesource.com/kernel/msm/+/android-7.1.0_r0.2/Documentation/devicetree/bindings/arm/cpus.txt#204
+
+
+https://github.com/raspberrypi/rpi-eeprom/pull/273
+> /proc/device-tree/chosen/bootloader/version is populated in the latest firmware and should be used in preference to vcgencmd bootloader_versions because it does not depend on VCHI and is non-blocking.
+

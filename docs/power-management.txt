@@ -71,3 +71,20 @@ https://www.raspberrypi.org/forums/viewtopic.php?f=28&t=292538
 > 1.2V is the defailt voltage when idle.
 > It increases when in turbo mode by an amount that varies with silicon. (And you are forcing turbo mode always).
 
+
+
+
+pi0
+arm_clock pllb    divisor   core_v
+100mhz    2.4ghz  /24       1.2
+200mhz    2.4ghz  /12       1.35
+300mhz    2.4ghz  /8        1.35
+400mhz    3.2ghz  /8        1.35
+500mhz    2ghz    /4        1.35
+600mhz    2.4ghz  /4        1.35
+700mhz    2.8ghz  /4        1.35
+
+700mhz    2.8ghz  /4        1.2
+800mhz    3.2ghz  /4        1.35
+900mhz    1.8ghz  /2        1.35
+1ghz      2ghz    /2        1.35

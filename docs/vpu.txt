@@ -1,0 +1,17 @@
+MMIO writes appear to be async, the dummy irq can fire due to a bad write (power domain disabled target), but the pc will have advanced beyond the point of failure
+
+H(row,col) refers to 16 cells, spanning col to col+15
+
+rX = ((x&0x3f) << 6) | (y & 0x3f)
+H(row,col)+rX refers to 16 cells, starting at row+x col+y
+
+row/col must be immediates
+
+0,0 to 7,63 are initialized to 0 by the boot rom setting up the L2 cache
+it was doing a `v32mov H32(0++,0), 0 REP8`, then storing that 512 byte chunk to the L2
+
+vector contents survive a watchdog reset
+vector contents corrupted when RUN is held low
+
+v16add Vd,Va,Vb
+take 2 vectors of 16 ints, sign-extend asif they where 16bit?, add, save to Vd

@@ -17,3 +17,7 @@ https://www.raspberrypi.org/forums/viewtopic.php?p=1781249#p1781249
 > In theory it can produce YUV 444, but I've never looked into the detail.
 > For HDMI output as YUV there is a conversion available in the HDMI block (including chroma subsample to 422), and that is the approach we're likely to take.
 
+https://www.raspberrypi.org/forums/viewtopic.php?p=1808040#p1808040
+> The OLED colour matrix block has changed with Pi4/HVS5, so the existing code doesn't work. Whereas previously there was one CTM that could be assigned to an HVS channel, there is now an OLED CTM per HVS channel. That means a moderate amount of fiddling within the KMS driver.
+
+it deals with color space conversion

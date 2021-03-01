@@ -1,4 +1,5 @@
 rpi1:
+0x4000104 rpi0 with wifi and headers
 0x4000104 rpi1 with composite video
 0x4000104 rpi1 with composite video and i2s header
 

@@ -19,6 +19,7 @@ uint32_t __attribute__ ((aligned (16384))) level1[4096] __attribute__ ((section(
 #define M 1
 
 void init_page_tables(uint32_t ram_size) {
+  uint32_t sctlr;
   // identity maps ${ram_size}mb of ram with full caching as sections (1mb pages, 1 level of table)
   for (int i=0; i<ram_size; i++) {
     level1[i] = (i<<20) // section base addr
@@ -41,7 +42,6 @@ void init_page_tables(uint32_t ram_size) {
   /* Set the access control to all-supervisor */
   __asm__ volatile("mcr p15, 0, %0, c3, c0, 0" : : "r" (~0));
 
-  uint32_t sctlr;
   __asm__ volatile ("mrc p15, 0, %0, c1, c0, 0" : "=r"(sctlr));
   sctlr |= 1<<29 | 1<<2 | M;
   __asm__ volatile ("mcr p15, 0, %0, c1, c0, 0" : : "r" (sctlr) : "cc");

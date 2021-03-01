@@ -1,0 +1,7 @@
+https://www.raspberrypi.org/forums/viewtopic.php?p=1817706#p1817706
+> Pi0-3 use T-format for textures into V3D.
+> Pi4 uses UIF format, but has a hardware block (the Texture Formatter Unit or TFU) to convert other formats into UIF efficiently. That said it's just been noted that NV12/21 haven't been using the hardware - that's being fixed.
+
+> The YUYV family of YUV4:2:2 formats are generally not supported by anything other than the ISP.
+> Mesa hides the conversions from you, so whilst it may say that it can import format X, it may not be an efficient import :-/
+

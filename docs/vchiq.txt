@@ -1,0 +1,3 @@
+https://github.com/RusPiRo/ruspiro-vchiq
+https://www.raspberrypi.org/forums/viewtopic.php?f=91&t=296492&p=1787208#p1787208
+https://picamera.readthedocs.io/en/latest/fov.html#division-of-labor

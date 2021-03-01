@@ -15,3 +15,8 @@ J5 on rpi4b, vpu jtag, 0.5mm pitch 8 pins
 > I think I have had one SD card corruption due to power pulling, but MANY SD card corruptions from using the JTAG debugger on the Videocore and forgetting to shutdown correctly. This is because the JTAG stops all the cores, even during SD card writes.
 
 https://www.raspberrypi.org/forums/viewtopic.php?p=1750304#p1750304
+
+
+https://www.raspberrypi.org/forums/viewtopic.php?p=1808846#p1808846
+> I don't know why people think this is difficult to work with. Seems to work fine to me, but then I am using the recommend setup - Pi4, OpenOCD, Pico. Sometimes use VSCode, sometimes the command line. It all just works. Compared with dev systems I have used in the past, it's a joy! The only embedded system that I've used that is better is the one for the VideoCore, which is very good, but costs a lot.
+

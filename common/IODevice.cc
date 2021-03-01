@@ -38,7 +38,7 @@ void IODevice::driverLog(const char* fnName, const char* fmt, ...) {
 }
 
 IODevice* IODevice::findByTag(uint32_t tag) {
-	for (int i = 0; i < (sizeof(g_DeviceRegistry) / sizeof(void*)); i++) {
+	for (unsigned int i = 0; i < (sizeof(g_DeviceRegistry) / sizeof(void*)); i++) {
 		IODevice* dev = g_DeviceRegistry[i];
 		if (dev && dev->tag == tag) {
 			return dev;

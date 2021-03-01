@@ -17,3 +17,8 @@ https://www.raspberrypi.org/forums/viewtopic.php?f=29&t=195178&start=100
 > Got the static vcdbg from pelwell's link:
 > https://github.com/raspberrypi/Raspberry-Pi-OS-64bit/issues/67#issuecomment-653209729
 a static vcdbg!
+
+
+https://www.raspberrypi.org/forums/viewtopic.php?p=1827424#p1827424
+> There is an alternative implementation of part of vcdbg that you can try: https://git.venev.name/hristo/rpi-vc-log
+

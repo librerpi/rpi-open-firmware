@@ -7,3 +7,11 @@ https://www.raspberrypi.org/forums/viewtopic.php?f=98&t=292691
 > BCM43456 on 400
 > CM4 is BCM43455.
 > CM4 is CYW43455
+
+
+https://www.raspberrypi.org/forums/viewtopic.php?p=1586034#p1586034
+> You need to patch the WiFi firmware to enable monitor mode.
+> https://github.com/seemoo-lab/nexmon
+
+https://www.raspberrypi.org/forums/viewtopic.php?p=1547885#p1547885
+> https://sandilands.info/sgordon/capturing-wifi-in-monitor-mode-with-iw
