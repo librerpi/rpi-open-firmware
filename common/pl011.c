@@ -13,6 +13,8 @@ static char buffer[512];
 
 static void pl011_flush();
 static int uart_write(void *uart, const char *str, int length);
+
+#ifdef BAREMETAL
 //FILE *funopen(void *cookie, int (*read)(void*, char *, int), int (*write)(void*, const char*, int), int, int);
 
 void pl011_putchar(unsigned char c) {
@@ -58,3 +60,4 @@ static int uart_write(void *uart, const char *str, int length) {
 static void pl011_flush() {
   while(UART_MSR & 0x20);
 }
+#endif
