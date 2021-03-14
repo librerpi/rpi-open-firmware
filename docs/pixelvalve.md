@@ -19,7 +19,7 @@ bits | usage
 -----|-----
 0    | enable
 1    | fifo clear
-2:3  | clock select
+2:3  | clock select, 0=dsi, 1=dpi/smi/hdmi, 2=vec
 4:5  | pixel rep
 12   | wait hstart
 13   | trigger underflow
