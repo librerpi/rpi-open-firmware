@@ -28,10 +28,9 @@
  * to systems using Cortex-A53.
  */
 #define ARM_C0_AARCH64   0x00000200
-#define ARM_C0_JTAGMASK  0x00000E00
-#define ARM_C0_JTAGOFF   0x00000000
-#define ARM_C0_JTAGBASH  0x00000800 // Debug on GPIO off
-#define ARM_C0_JTAGGPIO  0x00000C00 // Debug on GPIO on
+#define ARM_C0_JTAGMASK  0x00000C00
+#define ARM_C0_JTAGON    0x00000800 // Debug on
+#define ARM_C0_JTAGGPIO  0x00000400 // Debug on GPIO (BASH mode otherwise)
 #define ARM_C0_APROTMSK  0x0000F000
 #define ARM_C0_DBG0SYNC  0x00010000 // VPU0 halt sync
 #define ARM_C0_DBG1SYNC  0x00020000 // VPU1 halt sync
