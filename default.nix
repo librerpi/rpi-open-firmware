@@ -206,7 +206,7 @@ let
           ];
           users.users.root.initialPassword = "password";
           sdImage = {
-            compressImage = false;
+            compressImage = true;
             firmwareSize = 128;
             populateRootCommands = ''
               touch files/dummy.txt
