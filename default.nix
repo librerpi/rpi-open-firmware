@@ -263,7 +263,7 @@ in pkgs.lib.fix (self: {
     inherit (arm64) chainloader64 common;
   };
   vc4 = {
-    inherit (vc4) tlsf firmware common notc openssh;
+    inherit (vc4) tlsf firmware common notc;
     #gdb = vc4.buildPackages.gdb;
   };
   arm = {
