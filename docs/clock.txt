@@ -70,43 +70,43 @@ CM_TDCLKEN = CM_PASSWORD;
 CM_TD0CTL = CM_PASSWORD | 0x1; // enable = false;
 return a * 2000
 
+core clocks:
+CM_H264CTL    1
+CM_ISPCTL     2     ISP (camera stuff)
+CM_SDCCTL     3?    Secondary SDRAM clock.  Used for low-voltage modes when the PLL in the SDRAM controller can't be used.
+CM_V3DCTL     4?
+CM_VPUCTL     5     controls VPU core clock and VPU L1 cache
+
 oscillator based:
-CM_OTPCTL     One Time Programmable Memory clock.  Maximum 10Mhz.
-CM_TECCTL     unknown
-CM_TSENSCTL   Clock for the temperature sensor. Generally run at 2Mhz, max 5Mhz.
-CM_TIMERCTL   Used for a 1Mhz clock for the system clocksource, and also used by the watchdog timer and the camera pulse generator.
+CM_OTPCTL     6     One Time Programmable Memory clock.  Maximum 10Mhz.
+CM_TECCTL           unknown
+CM_TSENSCTL         Clock for the temperature sensor. Generally run at 2Mhz, max 5Mhz.
+CM_TIMERCTL   9     Used for a 1Mhz clock for the system clocksource, and also used by the watchdog timer and the camera pulse generator.
 CM_PULSECTL   unknown
 
-core clocks:
-CM_VPUCTL     controls VPU core clock and VPU L1 cache
-CM_H264CTL
-CM_ISPCTL     ISP (camera stuff)
-CM_V3DCTL
-CM_SDCCTL     Secondary SDRAM clock.  Used for low-voltage modes when the PLL in the SDRAM controller can't be used.
-
-peripheral clocks:
-CM_CAM0CTL
-CM_CAM1CTL
-CM_DPICTL     DPI clock
-CM_GP0CTL
-CM_GP1CTL
-CM_GP2CTL
-CM_HSMCTL     HDMI state machine
-CM_PCMCTL     i2s
-CM_PWMCTL     PWM
-CM_SLIMCTL    unknown, has a header file, "slim bus"??
-CM_SMICTL     SMI
-CM_UARTCTL    PL011 uart
-CM_VECCTL     composite video generator, must be 108mhz to function
-CM_DFTCTL     unknown, also has PM_DFT
-CM_AVEOCTL    unknown
-CM_EMMCCTL    Arasan EMMC clock (sdhci?)
-
 dsi clocks:
-CM_DSI0ECTL
-CM_DSI0PCTL
+CM_DSI0ECTL   0xc
+CM_DSI0PCTL   0xd
 CM_DSI1ECTL
 CM_DSI1PCTL
+
+peripheral clocks:
+CM_CAM0CTL    0xe
+CM_CAM1CTL    0xf
+CM_DPICTL     0x11  DPI clock
+CM_GP0CTL     0x14
+CM_GP1CTL     0x15
+CM_GP2CTL
+CM_HSMCTL     0x16  HDMI state machine
+CM_PCMCTL     0x17  i2s
+CM_PWMCTL     0x18  PWM
+CM_SLIMCTL    0x19  unknown, has a header file, "slim bus"??
+CM_SMICTL     0x1b  SMI
+CM_UARTCTL    0x1c  PL011 uart
+CM_VECCTL     0x1d  composite video generator, must be 108mhz to function
+CM_DFTCTL           unknown, also has PM_DFT
+CM_AVEOCTL    0x26? unknown
+CM_EMMCCTL    0x26? Arasan EMMC clock (sdhci?)
 
 other:
 CM_GNRICCTL   unknown purpose, also has PM_GNRIC
