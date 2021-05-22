@@ -79,18 +79,18 @@ CM_PULSECTL   unknown
 
 core clocks:
 CM_VPUCTL     controls VPU core clock and VPU L1 cache
-H264
+CM_H264CTL
 CM_ISPCTL     ISP (camera stuff)
-V3D
+CM_V3DCTL
 CM_SDCCTL     Secondary SDRAM clock.  Used for low-voltage modes when the PLL in the SDRAM controller can't be used.
 
 peripheral clocks:
-CAM0
-CAM1
+CM_CAM0CTL
+CM_CAM1CTL
 CM_DPICTL     DPI clock
-GP0
-GP1
-GP2
+CM_GP0CTL
+CM_GP1CTL
+CM_GP2CTL
 CM_HSMCTL     HDMI state machine
 CM_PCMCTL     i2s
 CM_PWMCTL     PWM
@@ -103,13 +103,15 @@ CM_AVEOCTL    unknown
 CM_EMMCCTL    Arasan EMMC clock (sdhci?)
 
 dsi clocks:
-DSI0E
-DSI0P
-DSI1E
-DSI1P
+CM_DSI0ECTL
+CM_DSI0PCTL
+CM_DSI1ECTL
+CM_DSI1PCTL
 
 other:
 CM_GNRICCTL   unknown purpose
 CM_ARMCTL     ARM freq control
 CM_TCNTCTL    frequency measurement
 CM_PLLTCTL    PLL T?
+CM_TD0CTL
+CM_TD1CTL
