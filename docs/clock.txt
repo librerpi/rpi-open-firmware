@@ -1,0 +1,115 @@
+name    id      freq(pi0)
+core     1        250,000,000
+dpi      4
+dsi0     7                  0
+dsi1     8                  0
+vec     10
+dsi0esc 11
+dsi1esc 12
+gpclk0  18
+gpclk1  19
+uart    22
+pcm     23
+smi     24
+pwm     25
+otp     26          4,800,000
+h264    28                  0
+pixel   29
+genet250 30
+genet125 31
+cam0    41
+cam1    43
+isp     45                  0
+v3d     46        250,000,000
+arm     48        700,000,000
+usb     49
+emmc    50        200,000,000
+emmc2   51
+tsens   55          1,920,000
+tectl   62                  0
+wdog    63                  0
+dft     64
+pulse   65
+testmux 66
+xpt     67
+debug0  68
+debug1  69
+gisb    70
+altscb  71
+clk27   72
+clk54   73
+clk108  74
+m2mc    75
+hevc    76                  0
+plla    100     2,250,000,128
+pllb    100     2,800,000,000
+pllc    100     2,000,000,128
+plld    100     2,000,000,128
+pllh    100     2,160,000,000
+
+
+
+clock_measure_arm makes use of TD0 and other previously unseen clock regs
+
+CM_PLLTCTL = CM_PASSWORD | 0x20; // set kill bit
+CM_PLLTCTL = CM_PASSWORD | 0x2; // set source to 2
+CM_TDCLKEN = CM_PASSWORD | 0x20; // PLLBDIV2
+CM_TD0DIV = CM_PASSWORD | 0x1000; // divisor = 0x1000 (supports a 24bit int)
+CM_TD0CTL = CM_PASSWORD | 0x1; // source = 1
+CM_TD0CTL = CM_PASSWORD | 0x11 // source=1, enable=true
+CM_BURSTCNT = CM_PASSWORD | 0x4b00; // 19.2mhz / 1000
+CM_BURSTCTL = CM_PASSWORD | 0x10;   // enable = true
+
+wait until ((CM_PLLTCTL & 0x80) == 0), meaning its not busy, waiting has a timeout, and a sleep
+
+if it didnt timeout, a=CM_PLLTCNT0
+
+CM_PLLTCTL = CM_PASSWORD | 0x20; // set kill bit
+CM_PLLTCTL = CM_PASSWORD;
+CM_TDCLKEN = CM_PASSWORD;
+CM_TD0CTL = CM_PASSWORD | 0x1; // enable = false;
+return a * 2000
+
+oscillator based:
+CM_OTPCTL     One Time Programmable Memory clock.  Maximum 10Mhz.
+CM_TECCTL     unknown
+CM_TSENSCTL   Clock for the temperature sensor. Generally run at 2Mhz, max 5Mhz.
+CM_TIMERCTL   Used for a 1Mhz clock for the system clocksource, and also used by the watchdog timer and the camera pulse generator.
+CM_PULSECTL   unknown
+
+core clocks:
+CM_VPUCTL     controls VPU core clock and VPU L1 cache
+H264
+CM_ISPCTL     ISP (camera stuff)
+V3D
+CM_SDCCTL     Secondary SDRAM clock.  Used for low-voltage modes when the PLL in the SDRAM controller can't be used.
+
+peripheral clocks:
+CAM0
+CAM1
+CM_DPICTL     DPI clock
+GP0
+GP1
+GP2
+CM_HSMCTL     HDMI state machine
+CM_PCMCTL     i2s
+CM_PWMCTL     PWM
+CM_SLIMCTL    unknown
+CM_SMICTL     SMI
+CM_UARTCTL    PL011 uart
+CM_VECCTL     composite video generator, must be 108mhz to function
+CM_DFTCTL     unknown
+CM_AVEOCTL    unknown
+CM_EMMCCTL    Arasan EMMC clock (sdhci?)
+
+dsi clocks:
+DSI0E
+DSI0P
+DSI1E
+DSI1P
+
+other:
+CM_GNRICCTL   unknown purpose
+CM_ARMCTL     ARM freq control
+CM_TCNTCTL    frequency measurement
+CM_PLLTCTL    PLL T?
