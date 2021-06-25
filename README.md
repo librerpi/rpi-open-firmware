@@ -4,7 +4,7 @@
 
 See [issue #31](https://github.com/christinaa/rpi-open-firmware/issues/31) for a compatibility table and related discourse.
 
-Technical discussion occurs in `#raspberrypi-internals` on [Freenode](http://webchat.freenode.net/?channels=#raspberrypi-internals). Please come on IRC before randomly hacking on the codebase :-)
+Technical discussion occurs in `#raspberrypi-internals` on [libera](https://web.libera.chat/). Please come on IRC before randomly hacking on the codebase :-)
 
 All Broadcom headers are licensed under 3-Clause BSD License while our code is under GPLv2+. See `LICENSE` for more information. Various external projects are mirrored under a mix of GPL-compatible licenses.
 
