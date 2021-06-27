@@ -1291,15 +1291,15 @@ p31       Unassigned
    #define OTP_CONTROL_ROW                       (OTP_VPU_CACHE_KEY_ROW+OTP_VPU_CACHE_KEY_SIZE_IN_ROWS)
    #define OTP_CONTROL_SIZE_IN_ROWS              1
 
-   #define OTP_BOOT_ROM_ROW                      (OTP_CONTROL_ROW+OTP_CONTROL_SIZE_IN_ROWS)
+   #define OTP_BOOT_ROM_ROW                      (OTP_CONTROL_ROW+OTP_CONTROL_SIZE_IN_ROWS)                             // 17
    #define OTP_BOOT_ROM_SIZE_IN_ROWS             1
 
-   #define OTP_BOOT_ROM_ROW_REDUNDANT            (OTP_BOOT_ROM_ROW+OTP_BOOT_ROM_SIZE_IN_ROWS)
+   #define OTP_BOOT_ROM_ROW_REDUNDANT            (OTP_BOOT_ROM_ROW+OTP_BOOT_ROM_SIZE_IN_ROWS)                           // 18
 
-#ifdef __BCM2708A0__
-   #define OTP_BOOT_SIGNING_KEY_ROW              (OTP_BOOT_ROM_ROW_REDUNDANT+OTP_BOOT_ROM_SIZE_IN_ROWS)
+   #define OTP_BOOT_SIGNING_KEY_ROW              (OTP_BOOT_ROM_ROW_REDUNDANT+OTP_BOOT_ROM_SIZE_IN_ROWS)                 // 19
    #define OTP_BOOT_SIGNING_KEY_SIZE_IN_ROWS     4
 
+#ifdef __BCM2708A0__
    #define OTP_BOOT_SIGNING_PARITY_ROW           (OTP_BOOT_SIGNING_KEY_ROW+OTP_BOOT_SIGNING_KEY_SIZE_IN_ROWS)
    #define OTP_BOOT_SIGNING_PARITY_SIZE_IN_ROWS  1
 
@@ -1343,63 +1343,58 @@ p31       Unassigned
    #define OTP_PRIVATE_KEY_ROW_REDUNDANT          OTP_PRIVATE_KEY_ROW
 #else
    // BCM2708B0 has less reliable OTP so we need a redundant row for the boot signing key (and the corresponding parity)
-   #define OTP_BOOT_SIGNING_KEY_ROW                   (OTP_BOOT_ROM_ROW_REDUNDANT+OTP_BOOT_ROM_SIZE_IN_ROWS)                 // 19
-   #define OTP_BOOT_SIGNING_KEY_SIZE_IN_ROWS          4
-
    #define OTP_BOOT_SIGNING_KEY_ROW_REDUNDANT         (OTP_BOOT_SIGNING_KEY_ROW+OTP_BOOT_SIGNING_KEY_SIZE_IN_ROWS)           // 23
 
    #define OTP_BOOT_SIGNING_PARITY_ROW                (OTP_BOOT_SIGNING_KEY_ROW_REDUNDANT+OTP_BOOT_SIGNING_KEY_SIZE_IN_ROWS) // 27
    #define OTP_BOOT_SIGNING_PARITY_SIZE_IN_ROWS       1
 
-   #define OTP_CODE_SIGNING_KEY_ROW                   (OTP_BOOT_SIGNING_PARITY_ROW+OTP_BOOT_SIGNING_PARITY_SIZE_IN_ROWS)     // 28
-   #define OTP_CODE_SIGNING_KEY_SIZE_IN_ROWS          4
+   #define OTP_SERIAL_ROW                             (OTP_BOOT_SIGNING_PARITY_ROW+OTP_BOOT_SIGNING_PARITY_SIZE_IN_ROWS)     // 28
+   #define OTP_SERIAL_SIZE_IN_ROWS                    1
 
-   #define OTP_CODE_SIGNING_KEY_ROW_REDUNDANT         (OTP_CODE_SIGNING_KEY_ROW+OTP_CODE_SIGNING_KEY_SIZE_IN_ROWS)           // 32
+   #define OTP_SERIAL_NEG_ROW                         (OTP_SERIAL_ROW+OTP_SERIAL_SIZE_IN_ROWS)                               // 29
 
-   #define OTP_CODE_SIGNING_PARITY_ROW                (OTP_CODE_SIGNING_KEY_ROW_REDUNDANT+OTP_CODE_SIGNING_KEY_SIZE_IN_ROWS) // 36
-   #define OTP_CODE_SIGNING_PARITY_SIZE_IN_ROWS       1
+   #define OTP_REVISION_ROW                           (OTP_SERIAL_NEG_ROW+OTP_SERIAL_SIZE_IN_ROWS)                           // 30
+   #define OTP_REVISION_SIZE_IN_ROWS                  1
 
-   #define OTP_HDCP_AES_KEY_ROW                       (OTP_CODE_SIGNING_PARITY_ROW+OTP_CODE_SIGNING_PARITY_SIZE_IN_ROWS)     // 37
-   #define OTP_HDCP_AES_KEY_SIZE_IN_ROWS              4
+   #define OTP_REVISION_PADDING_ROW                   (OTP_REVISION_ROW+OTP_REVISION_SIZE_IN_ROWS)                           // 31
+   #define OTP_REVISION_PADDING_SIZE_IN_ROWS          2
 
-   #define OTP_HDCP_AES_KEY_ROW_REDUNDANT             (OTP_HDCP_AES_KEY_ROW+OTP_HDCP_AES_KEY_SIZE_IN_ROWS)                   // 41
+   #define OTP_REVISION_EXT_ROW                       (OTP_REVISION_PADDING_ROW+OTP_REVISION_PADDING_SIZE_IN_ROWS)           // 33
+   #define OTP_REVISION_EXT_SIZE_IN_ROWS              1
 
-   #define OTP_HDCP_AES_PARITY_ROW                    (OTP_HDCP_AES_KEY_ROW_REDUNDANT+OTP_HDCP_AES_KEY_SIZE_IN_ROWS)         // 45
-   #define OTP_HDCP_AES_PARITY_SIZE_IN_ROWS           1
+   #define OTP_REVISION_EXT_PADDING_ROW               (OTP_REVISION_EXT_ROW+OTP_REVISION_EXT_SIZE_IN_ROWS)                   // 34
+   #define OTP_REVISION_EXT_PADDING_SIZE_IN_ROWS      2
 
-   #define OTP_PUBLIC_KEY_ROW                         (OTP_HDCP_AES_PARITY_ROW+OTP_HDCP_AES_PARITY_SIZE_IN_ROWS)             // 46
-   #define OTP_PUBLIC_KEY_SIZE_IN_ROWS                4
+   #define OTP_USER_ROW                               (OTP_REVISION_EXT_PADDING_ROW+OTP_REVISION_EXT_PADDING_SIZE_IN_ROWS)   // 36
+   #define OTP_USER_SIZE_IN_ROWS                      8
 
-   #define OTP_PUBLIC_KEY_ROW_REDUNDANT               (OTP_PUBLIC_KEY_ROW+OTP_PUBLIC_KEY_SIZE_IN_ROWS)                       // 50
+   #define OTP_USER_PADDING_ROW                       (OTP_USER_ROW+OTP_USER_SIZE_IN_ROWS)                                   // 44
+   #define OTP_USER_PADDING_SIZE_IN_ROWS              1
 
-   #define OTP_PUBLIC_PARITY_ROW                      (OTP_PUBLIC_KEY_ROW_REDUNDANT+OTP_PUBLIC_KEY_SIZE_IN_ROWS)             // 54
-   #define OTP_PUBLIC_PARITY_SIZE_IN_ROWS             1
+   #define OTP_MPG2_KEY_ROW                           (OTP_USER_PADDING_ROW+OTP_USER_PADDING_SIZE_IN_ROWS)                   // 45
+   #define OTP_MPG2_KEY_SIZE_IN_ROWS                  1
 
-   #define OTP_PRIVATE_KEY_ROW                        (OTP_PUBLIC_PARITY_ROW+OTP_PUBLIC_PARITY_SIZE_IN_ROWS)                 // 55
-   #define OTP_PRIVATE_KEY_SIZE_IN_ROWS               4
+   #define OTP_WVC1_KEY_ROW                           (OTP_MPG2_KEY_ROW+OTP_MPG2_KEY_SIZE_IN_ROWS)                           // 46
+   #define OTP_WVC1_KEY_SIZE_IN_ROWS                  1
 
-   #define OTP_PRIVATE_KEY_ROW_REDUNDANT              (OTP_PRIVATE_KEY_ROW+OTP_PRIVATE_KEY_SIZE_IN_ROWS)                     // 59
+   #define OTP_SIGNED_BOOT_ROW                        (OTP_WVC1_KEY_ROW+OTP_WVC1_KEY_SIZE_IN_ROWS)                           // 47
+   #define OTP_SIGNED_BOOT_SIZE_IN_ROWS               9
 
-   #define OTP_PRIVATE_PARITY_ROW                     (OTP_PRIVATE_KEY_ROW_REDUNDANT+OTP_PRIVATE_KEY_SIZE_IN_ROWS)           // 63
-   #define OTP_PRIVATE_PARITY_SIZE_IN_ROWS            1
+   #define OTP_SIGNED_BOOT_PADDING_ROW                (OTP_SIGNED_BOOT_ROW+OTP_SIGNED_BOOT_SIZE_IN_ROWS)                     // 56
+   #define OTP_SIGNED_BOOT_PADDING_SIZE_IN_ROWS       8
 
-   #define OTP_CODE_SIGNING_FLAG_ROW                  (OTP_PRIVATE_PARITY_ROW+OTP_PRIVATE_PARITY_SIZE_IN_ROWS)               // 64
-   #define OTP_CODE_SIGNING_FLAG_SIZE_IN_ROWS         1
-
-   // Suspend/resume secure RAM key: ensure that these values match the ones
-   // used in vcsuspend_asm_vc4.s
-   #define OTP_SUSPEND_SECURE_RAM_KEY                 (OTP_CODE_SIGNING_FLAG_ROW+OTP_CODE_SIGNING_FLAG_SIZE_IN_ROWS)         // 65
-   #define OTP_SUSPEND_SECURE_RAM_KEY_SIZE_IN_ROWS    2
+   #define OTP_ETHERNET_MAC_ROW                       (OTP_SIGNED_BOOT_PADDING_ROW+OTP_SIGNED_BOOT_PADDING_SIZE_IN_ROWS)     // 64
+   #define OTP_ETHERNET_MAC_SIZE_IN_ROWS              2
 
    // strictly this is C0 only
-   #define OTP_BOOT_EXTRAS_ROW                        (OTP_SUSPEND_SECURE_RAM_KEY+OTP_SUSPEND_SECURE_RAM_KEY_SIZE_IN_ROWS)   // 67
-   #define OTP_BOOT_EXTRAS_ROW_SIZE_IN_ROWS           1
+   #define OTP_BOOT_ROM_EXT_ROW                       (OTP_ETHERNET_MAC_ROW+OTP_ETHERNET_MAC_SIZE_IN_ROWS)                   // 66
+   #define OTP_BOOT_ROM_EXT_ROW_SIZE_IN_ROWS          1
 // locations fixed by hardware
    #define OTP_JTAG_DEBUG_KEY_ROW_REDUNDANT           68
    #define OTP_VPU_CACHE_KEY_ROW_REDUNDANT            72
    #define OTP_JTAG_VPU_PARITY_REDUNDANT              76
 
-   #if( OTP_BOOT_EXTRAS_ROW+OTP_BOOT_EXTRAS_ROW_SIZE_IN_ROWS > OTP_JTAG_DEBUG_KEY_ROW_REDUNDANT )
+   #if( OTP_BOOT_ROM_EXT_ROW+OTP_BOOT_ROM_EXT_ROW_SIZE_IN_ROWS > OTP_JTAG_DEBUG_KEY_ROW_REDUNDANT )
       #error "User OTP space has overwritten CPU bits" OTP_SUSPEND_SECURE_RAM_KEY OTP_SUSPEND_SECURE_RAM_KEY_SIZE_IN_ROWS OTP_JTAG_DEBUG_KEY_ROW_REDUNDANT
    #endif
 
@@ -1434,6 +1429,21 @@ p31       Unassigned
 #endif
 #if( OTP_BOOT_ROM_ROW_REDUNDANT != 18 )
    #error "The OTP bootrom copy row has moved - it must be 18!"
+#endif
+#if( OTP_SERIAL_ROW != 28 )
+   #error "The OTP serial row has moved - it must be 28!"
+#endif
+#if( OTP_REVISION_ROW != 30 )
+   #error "The OTP revision row has moved - it must be 30!"
+#endif
+#if( OTP_REVISION_EXT_ROW != 33 )
+   #error "The OTP extended revision row has moved - it must be 33!"
+#endif
+#if( OTP_ETHERNET_MAC_ROW != 64 )
+   #error "The OTP extended revision row has moved - it must be 64!"
+#endif
+#if( OTP_BOOT_ROM_EXT_ROW != 66 )
+   #error "The OTP extended boot rom row has moved - it must be 66!"
 #endif
 
    /*---------------------------------------------------------------------------*/

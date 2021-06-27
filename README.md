@@ -10,9 +10,9 @@ All Broadcom headers are licensed under 3-Clause BSD License while our code is u
 
 ## Building
 
-As a prerequisite, Julian Brown's [VC4 toolchain](https://github.com/itszor/vc4-toolchain) is necessary as well as the `arm-none-eabi-` toolchain (Debian package `gcc-arm-none-eabi`). You can tweak the VC4 toolchain path in `CROSS_COMPILE` in `Makefile` and the ARM path in `arm_chainloader/Makefile` if necessary. Contributors should not commit their personal paths. After configuration, run `buildall.sh`. The binary is at `build/bootcode.bin`, ready to be copied to an SD card.
+As a prerequisite, [nix](https://nixos.org/download.html#nix-verify-installation) is necessary. It packages Julian Brown's [VC4 toolchain](https://github.com/itszor/vc4-toolchain) as well as the `arm-none-eabi-` toolchain. The build system for the firmware is provided as nix packaging scripts as well. To build the firmware run `nix-build -A vc4.firmware`. The built firmware binary will be at `/nix/store/*-firmware-vc4-elf/bootcode.bin`, ready to be copied to a SD card.
 
-### Building on macOS
+### Building on macOS (obsolete - use nix)
 
 macOS compilation is similar to GNU/Linux, save platform errata described here. Instructions to build the ARM toolchain are [here](https://launchpadlibrarian.net/287100910/How-to-build-toolchain.pdf). Due to symlinking by default, GCC must be installed manually, and, an older version of guile is necessary (homebrew packages `gcc-6` and `guile18`, respectively). Finally, set the environment variable `LIBRARY_PATH` to `/lib:/lib64` when running `buildall.sh. 
 
