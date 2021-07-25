@@ -16,7 +16,7 @@ endif
 
 ifeq (${CC},vc4-elf-gcc)
 else
-  ifeq (${CC},aarch64-unknown-linux-gnu-gcc)
+  ifeq (${system},aarch64-linux)
   else
     CFLAGS += ${ARMCFLAGS}
   endif
