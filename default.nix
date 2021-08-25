@@ -260,7 +260,7 @@ let
 in pkgs.lib.fix (self: {
   inherit dtbFiles testcycle;
   arm64 = {
-    inherit (arm64) chainloader64 common;
+    inherit (arm64) common; #chainloader64;
   };
   vc4 = {
     inherit (vc4) tlsf firmware common notc;
