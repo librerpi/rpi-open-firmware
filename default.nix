@@ -16,6 +16,12 @@ let
   aarch64 = pkgs.pkgsCross.aarch64-multiplatform;
   arm64 = pkgs.pkgsCross.aarch64-embedded;
   x86_64 = pkgs;
+  kernels = {
+    linux_rpi1 = arm6.linux_rpi1;
+    linux_rpi2 = arm7.linux_rpi2;
+    linux_rpi3 = aarch64.linux_rpi3;
+    linux_rpi4 = aarch64.linux_rpi4;
+  };
   trimHaskellNixTree = input: filter:
   let
     f1 = k: v: {
@@ -62,6 +68,7 @@ let
     notc = self.stdenv.mkDerivation {
       name = "notc";
       src = lib.cleanSource ./notc;
+      buildInputs = [ self.common ];
       propagatedBuildInputs = [];
       enableParallelBuilding = true;
       hardeningDisable = [ "fortify" "stackprotector" ];
@@ -253,12 +260,12 @@ let
     exec ${x86_64.uart-manager}/bin/uart-manager
   '';
   filterArmUserlandPackages = input: {
-    inherit (input) initrd bcm2835 busybox openssl linux_rpi2 diskImage bootdir utils nix raspberrypi-tools systemd libdrm;
+    inherit (input) initrd bcm2835 busybox openssl diskImage bootdir utils nix raspberrypi-tools systemd libdrm;
     #inherit (aarch64) ubootRaspberryPi3_64bit linux_rpi3 bcm2835;
     hs = trimHaskellNixTree input.pkgSet { hs-gpio = true; };
   };
 in pkgs.lib.fix (self: {
-  inherit dtbFiles testcycle;
+  inherit dtbFiles testcycle kernels;
   arm64 = {
     inherit (arm64) common; #chainloader64;
   };
