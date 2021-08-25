@@ -14,13 +14,10 @@ else
   CFLAGS2=${BASECFLAGS}
 endif
 
-ifeq (${CC},vc4-elf-gcc)
-else
-  ifeq (${system},aarch64-linux)
-  else
-    CFLAGS += ${ARMCFLAGS}
-  endif
+ifeq (${targetArch},arm32)
+  CFLAGS += ${ARMCFLAGS}
 endif
+
 CXXFLAGS=${CFLAGS} -fno-exceptions -fno-rtti
 LFLAGS=-nostdlib -nostartfiles -ffreestanding
 
