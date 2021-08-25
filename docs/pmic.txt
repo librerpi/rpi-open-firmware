@@ -14,3 +14,7 @@ https://www.raspberrypi.org/forums/viewtopic.php?p=1758877#p1758877
 
 
 CM4 uses MxL7704
+
+
+https://www.raspberrypi.org/forums/viewtopic.php?p=1849000#p1849000
+pi4 PMIC schematic info

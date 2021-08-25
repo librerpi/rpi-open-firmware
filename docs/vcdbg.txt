@@ -4,6 +4,9 @@ https://github.com/raspberrypi/firmware/issues/377#issuecomment-84022356
 vcdbg log msg
 vcdbg log assert
 `vcdbg tx -v` requires a non-stripped ELF, which the rpi foundation doesnt release
+https://www.raspberrypi.org/forums/viewtopic.php?p=1875343#p1875343
+> "vcdbg log assert" needs to have "start_debug=1" in config.txt to report anything.
+
 
 
 root@raspberrypi:~# vcdbg dumpstate 2>/dev/null

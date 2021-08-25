@@ -46,3 +46,16 @@ arm's overall view
 0x fe000000<->0x ff7fffff   0x7e000000<->0x7f7fffff   VPU MMIO
 0x ff800000<->0x ffffffff   0x40000000<->0x407fffff   compatible = "brcm,bcm2836-l1-intc"; interrupt controller MMIO
 0x600000000<->0x63fffffff   0x600000000<->0x63fffffff PCI-E MMIO
+
+
+https://www.raspberrypi.org/forums/viewtopic.php?f=98&t=307484&p=1839923#p1839923
+> Once an SDCARD is in 1.8v mode to get back to 3.3v mode you need to power cycle the card. On the CM4IO board there is an SDCARD power switch.
+> so resetting the PMIC is a work-around for the rev 1.1 boards
+> and ones after that, can cut SD power, via external gpio 6
+
+
+https://www.raspberrypi.org/forums/viewtopic.php?p=1845921#p1845921
+> It's not possible. External reset is linked to the chip reset so there's no way to prevent USB port power from being turned off at reboot. This is also true on pre 1.4 but it's a very brief reset/glitch which is why USB_MSD_PWR_OFF_TIME was added.
+>
+> USB_MSD_PWR_OFF_TIME can be used to increase the power off time but can't get rid of the reset. All USB devices have to cope with disconnect / VBUS power off (e.g. they should not need an external button to be pressed but some do!). A possible workaround for those devices is a powered hub / caddy but unfortunately that might not be useful in your setup.
+

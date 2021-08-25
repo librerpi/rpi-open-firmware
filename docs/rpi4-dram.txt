@@ -6,3 +6,9 @@ Registration is required in order to get the datasheet for it.
 
 As far as I'm aware, the SDRAM controller does not track row open/close counts so TRR isn't implemented.
 
+
+Initialising SDRAM 'Samsung' 8Gb x1 total-size: 8 Gbit 3200       # 1gig model??
+Initialising SDRAM 'Samsung' 16Gb x1 total-size: 16 Gbit 3200     # 2gig model??
+Initialising SDRAM 'Micron' 16Gb x2 total-size: 32 Gbit 3200      # 4gig model
+Initialising SDRAM 'Micron' 32Gb x2 total-size: 64 Gbit 3200      # 8gig model??
+

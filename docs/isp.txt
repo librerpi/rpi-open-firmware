@@ -10,3 +10,11 @@ https://android.googlesource.com/kernel/bcm/+/android-bcm-tetra-3.10-kitkat-wear
 https://www.raspberrypi.org/forums/viewtopic.php?p=1765429#p1765429
 > We normally reckon on around 130MPix/s through the ISP. 1280x800@120fps is 122.8MPix/s, and you're trying to do that twice!
 > I don't think the ISP has been accurately benchmarked for a long time. Theory is it can handle one pixel per clock cycle, but that's limited both sides of any scaling. It also works in tiles with overlaps, so full throughput depends on exactly how many tiles are required.
+
+
+https://www.raspberrypi.org/forums/viewtopic.php?p=1832607#p1832607
+details on which v4l nodes do what
+
+https://www.raspberrypi.org/forums/viewtopic.php?p=1832607#p1832607
+> media-ctl --print-dot /dev/media2 > isp.dot
+> dot -Tpng isp.dot > isp.png

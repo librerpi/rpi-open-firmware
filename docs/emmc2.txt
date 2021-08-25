@@ -1,0 +1,3 @@
+https://www.raspberrypi.org/forums/viewtopic.php?p=1883142#p1883142
+> I think the problem is that the CM4, like newer Pi 4s, has a BCM2711C0. They differ in that the EMMC2 interface is on the ARM (not VPU) memory bus, so the (dma-)ranges property is different. The firmware takes care of the changes, but by bypassing it you miss out.
+

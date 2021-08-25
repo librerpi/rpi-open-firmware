@@ -52,3 +52,6 @@ https://github.com/raspberrypi/rpi-eeprom/issues/243
 > The ROM issue with exFAT is a known issue in B0 - don't make the first partition exFAT.
 
 
+https://www.raspberrypi.org/forums/viewtopic.php?f=98&t=298186
+> But on a CM3+ if you enable both host boot and device boot then the bootcode will use the OTG ID pin to choose between the two modes ( can only boot from one mode), this would then fail to work properly on the CMIO board when switching between the USB slave connector and the USB host connector because the OTG_ID pin is not driving correctly based on the state of the VBUS on the USB host connector. Since the default state of the OTG_ID pin is to have a pull down then this will make it go to host mode and therefore not work with rpiboot.
+

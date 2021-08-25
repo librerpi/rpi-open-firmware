@@ -1,0 +1,47 @@
+arm11 specs:
+
+IR is 5 bits wide
+IR=0 maps DR to EXTEST? to allow writing the scan chain selected by Scan_N
+IR=2 maps DR to Scan_N/SCREG
+IR=4 executes Restart? which lets the arm core execute normally, once back in Run-Test/Idle
+IR=8 executes Halt? forcing the arm core into a debug state
+IR=12 maps DR INTEST? to allow reading the scan chain selected by Scan_N
+IR=29 maps DR directly to ITR, skipping the Scan_N=4+EXTEST combo
+IR=30 maps DR to the IDcode register, 32 bits wide, capture-dr loads idcode into shiftreg, shift-dr exports it to the debugger
+IR=31 maps DR to bypass instruction, 1 bit wide
+
+
+IDcode on bcm2835's arm1176 core is 0x07b7617F
+
+DR registers:
+Scan_N is 5 bits wide
+
+use IR to map DR to Scan_N/INTEST/EXTEST
+
+INTEST is used to read a given scan-chain, and trigger any clear-upon-read actions
+EXTEST is used to write a given scan-chain, but also allows reading the previous value during the shifting, does not trigger clear-upon-read actions
+
+Scan_N=0 debug ID register DIDR, 8+32==40 bits long
+  allows access of CP14 debug register 0, upper 8 bits hard-wired to 0x41(A)
+Scan_N=1 debug status and control register DSCR, 32 bits long
+  allows access of CP14 debug register 1
+Scan_N=4 instruction transfer register ITR 1+32 == 33 bits long
+  the processor must be in debug state
+  DSCR[13] must be set
+  Scan_N must be 4 or 5
+  opcode in ITR is only executed while in Run-Test/Idle
+  DSCR[6] must be clear
+  bit 33 indicates if the loaded opcode has executed
+Scan_N=5 access to the DTR register and 2 status bits, 1+1+32 == 34 bits long
+  writes will return nDTRempty++InstCompl++wDTR and set nRetry++Ready+rDTR
+  reads return wDTRfull++InstCompl++wDTR
+Scan_N=6 embedded trace macrocell, 1+7+32 == 40 bits
+Scan_N=7 debug, 7+32+1 == 40 bits
+  direct access to several debug related registers: VCR, PC, BRP, WRP
+  7bit addr, 32bit data, 1bit ReqCompl/ready/nRW
+
+
+COMMAND_HANDLER(arm11_handle_vcr)
+the openocd "vcr" command can be used to set the "vector catch register" on an arm1176
+that will cause a debug halt if certain exception vectors are taken
+
