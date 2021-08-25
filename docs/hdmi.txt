@@ -8,3 +8,5 @@ https://www.raspberrypi.org/forums/viewtopic.php?p=1728940#p1728940
 > HDMI < 2.0 maxes out at 300MHz, and this is described in one part of the EDID.
 > HDMI >= 2.0 have to support scrambling as a spread spectrum EMC-reduction step, and that is described in the HF-VSDB (HDMI Forum Vendor Specific Data Block) of the EDID.
 
+4f5f9d02246 firmware: hdmi: HDMI SM clock must not run slower than audio MAI clock See: https://github.com/raspberrypi/firmware/issues/1295
+

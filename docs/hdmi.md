@@ -1,5 +1,11 @@
 from `linux/drivers/gpu/drm/vc4/vc4_hdmi_regs.h` and `linux/drivers/gpu/drm/vc4/vc4_hdmi_phy.c`
 # HDMI register overview
+VC4 bases
+reg set | base       | length
+--------|------------|--
+HDMI    | 0x7e902000 | 0x600
+HD      | 0x7e808000 | 0x100
+
 pi4 base for each set and port
 reg set | HDMI0       | HDMI1       | length
 --------|-------      |-------      |---
@@ -188,3 +194,39 @@ register | offset
 `MAI_CHANNEL_MAP`     | 0x9c
 `MAI_CONFIG`          | 0xa0
 `HOTPLUG`             | 0x1a8
+
+# HDMI HD registers
+involved in digital audio
+
+vc4 layout:
+register      | offset
+`M_CTL`       | 0x0c
+`MAI_CTL`     | 0x14
+`MAI_THR`     | 0x18
+`MAI_FMT`     | 0x1c
+`MAI_DATA`    | 0x20
+`MAI_SMP`     | 0x2c
+`VID_CTL`     | 0x38
+`CSC_CTL`     | 0x40
+`CSC_12_11`   | 0x44
+`CSC_14_13`   | 0x48
+`CSC_22_21`   | 0x4c
+`CSC_24_23`   | 0x50
+`CSC_32_31`   | 0x54
+`CSC_34_33`   | 0x58
+`FRAME_COUNT` | 0x68
+
+vc5 layout:
+register      | offset
+---|---
+`DVP_CTL`     | 0x00
+`MAI_CTL`     | 0x10
+`MAI_THR`     | 0x14
+`MAI_FMT`     | 0x18
+`MAI_DATA`    | 0x1c
+`MAI_SMP`     | 0x20
+`VID_CTL`     | 0x44
+`FRAME_COUNT` | 0x60
+
+SPDIF byte are written into `MAI_DATA` using dma, to provide digital audio
+

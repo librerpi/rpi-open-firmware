@@ -5,3 +5,5 @@ https://github.com/synthetos/PiOCD/wiki/Using-a-Raspberry-Pi-as-a-JTAG-Dongle
 https://www.suse.com/c/debugging-raspberry-pi-3-with-jtag/
 https://spin.atomicobject.com/2014/04/01/ethernet-adapter-jtag/
 https://www.raspberrypi.org/forums/viewtopic.php?t=202540
+
+enable_jtag_gpio=1 configures the jtag pins to the right alt modes

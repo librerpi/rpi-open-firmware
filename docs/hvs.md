@@ -90,6 +90,10 @@ each hvs channel starts 0x300 bytes from the last?
 
 # display list information
 
+on VC4, the display list starts at base + 0x2000, on VC6 its at base + 0x4000
+
+the displaylist is 0x4000 bytes long
+
 a display list is a series of planes in the dlist memory, followed by a `SCALER_CTL0_END` flag
 
 for example: `[CTL(valid,...), POS0, POS2, POS3, POINT0, POINTCTX, PITCH0, CTL(END)]` would be a list containing just one plane
