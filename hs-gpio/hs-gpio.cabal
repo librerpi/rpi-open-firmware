@@ -15,15 +15,25 @@ build-type:          Simple
 
 executable hs-gpio
   main-is:             Main.hs
-  other-modules:       GPIO
+  other-modules:       AltModeViewer
+                     , FileChooser
+                     , GPIO
+                     , MainMenu
+                     , PlayWithDither
+                     , PromptString
+                     , Types
   -- other-extensions:
-  build-depends:       base >=4.12 && <4.13
+  build-depends:       base
                      , brick
-                     , HPi
+                     --, HPi
                      , unix
                      , formatting
                      , vty
                      , async
+                     , vector
+                     , directory
+                     , mtl
+                     --, prometheus
   -- hs-source-dirs:
   default-language:    Haskell2010
   C-sources:           cbits/helper.c

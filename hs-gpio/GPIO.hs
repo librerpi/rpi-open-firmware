@@ -6,6 +6,14 @@ import           Foreign.Storable
 import           GHC.Ptr
 
 data GPIO
+data RPI
+data HVS
+
+toGPIO :: Ptr RPI -> Ptr GPIO
+toGPIO p = (castPtr p) `plusPtr` 0x200000
+
+toHVS :: Ptr RPI -> Ptr HVS
+toHVS p = (castPtr p) `plusPtr` 0x400000
 
 data AltMode = AltIn | AltOut | Alt0 | Alt1 | Alt2 | Alt3 | Alt4 | Alt5 deriving Show
 
@@ -38,3 +46,14 @@ getPinAltMode addr (Pin pin) = do
   let (bank, row) = pin `divMod` 10
   reg <- peek (addr `plusPtr` (4 * bank))
   pure $ rawModeToAltMode $ (shiftR reg (3 * row)) .&. 7
+
+getPinStates :: Ptr GPIO -> IO [(Pin, AltMode)]
+getPinStates addr = do
+  let
+    allPins = [ minBound .. maxBound ]
+    f :: Pin -> IO (Pin, AltMode)
+    f pin = do
+      mode <- getPinAltMode addr pin
+      --fprint ("pin "%d%" is in mode "%shown%"\n") (fromEnum pin) mode
+      pure (pin, mode)
+  mapM f allPins

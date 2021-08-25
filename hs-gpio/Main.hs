@@ -8,20 +8,19 @@ import GHC.Ptr
 import System.Posix.IO.ByteString
 import System.Posix.Types
 import           Foreign.C.Types
-import           Formatting
-import           Formatting.ShortFormatters hiding (s, f)
 import           Brick
 import qualified Graphics.Vty as V
-import           Brick.BChan (BChan, newBChan, writeBChan)
+import           Brick.BChan (newBChan)
 import qualified Brick.Widgets.List as L
 import qualified Brick.AttrMap as A
 import Brick.Forms (focusedFormInputAttr, invalidFormInputAttr)
-import Data.List
-import Control.Concurrent.Async
-import Control.Concurrent
-import Control.Monad
 import GPIO
 import Data.Word
+import qualified Data.Vector as V
+
+import Types (Name(MainMenu), Dialog(dHandleEvent, dRender), DialogReply(DialogReplyContinue,DialogReplyHalt,DialogReplyLiftIO), CustomEvent, AppState(AppState, asDialogStack))
+import AltModeViewer (alt0Attr,alt1Attr,alt2Attr,alt3Attr,alt4Attr,alt5Attr)
+import           MainMenu
 
 theMap :: A.AttrMap
 theMap = A.attrMap V.defAttr
@@ -37,107 +36,67 @@ theMap = A.attrMap V.defAttr
   , (alt5Attr            , V.cyan `on` V.black)
   ]
 
-alt0Attr, alt1Attr, alt2Attr, alt3Attr, alt4Attr, alt5Attr :: AttrName
-alt0Attr = attrName "alt0"
-alt1Attr = attrName "alt1"
-alt2Attr = attrName "alt2"
-alt3Attr = attrName "alt3"
-alt4Attr = attrName "alt4"
-alt5Attr = attrName "alt5"
+drawUI :: AppState -> [ Widget Name ]
+drawUI state = (dRender . asDialogStack) state state
+
+handleEvent :: AppState -> BrickEvent Name CustomEvent -> EventM Name (Next (AppState))
+handleEvent state@AppState{asDialogStack} event = do
+  let
+    thing :: IO Dialog -> IO AppState
+    thing ioact = do
+      dlg <- ioact
+      pure $ state { asDialogStack = dlg }
+    go :: DialogReply -> EventM Name (Next AppState)
+    go reply = do
+      case reply of
+        DialogReplyHalt s -> halt s
+        DialogReplyContinue dlg -> continue $ state { asDialogStack = dlg }
+        DialogReplyLiftIO ioact -> suspendAndResume (thing ioact)
+  newDlg <- (dHandleEvent asDialogStack) state event
+  go newDlg
 
 main :: IO ()
 main = do
-  (addr, fd) <- openGPIO GpioMem
-  print addr
-  getPinAltMode addr 14 >>= print
-  getPinAltMode addr 15 >>= print
+  (addr, _fd) <- openMMIO
+  let gpio = toGPIO addr
   eventChan <- newBChan 10
   --replyChan <- newBChan 10
   let
     mkVty = V.mkVty V.defaultConfig
-    app :: App State StateUpdate ()
+    app :: App AppState CustomEvent Name
     app = App
-      { appDraw = drawEverything
-      , appChooseCursor = showFirstCursor
+      --{ appDraw = drawEverything
+      { appDraw = drawUI
       , appHandleEvent = handleEvent
+      , appChooseCursor = showFirstCursor
       , appStartEvent = pure
       , appAttrMap = const theMap
       }
-  pinModes <- getPinStates addr
+    dlg :: Dialog
+    dlg = mkMainMenu $ MainMenuState
+      { psMenuState = L.list MainMenu (V.fromList [ ShowAltModes, PlayWithDither ]) 1
+      , psCallback = \as -> do
+        pure $ DialogReplyHalt as
+      }
   vty <- mkVty
-  bgthread <- async $ backgroundThread addr eventChan
-  finalState <- customMain vty mkVty (Just eventChan) app (State 0 pinModes "")
-  cancel bgthread
-  print finalState
+  _finalState <- customMain vty mkVty (Just eventChan) app (AppState eventChan "" dlg addr)
+  pure ()
 
-getPinStates :: Ptr GPIO -> IO [(Pin, AltMode)]
-getPinStates addr = do
-  let
-    allPins = [ minBound .. maxBound ]
-    f :: Pin -> IO (Pin, AltMode)
-    f pin = do
-      mode <- getPinAltMode addr pin
-      --fprint ("pin "%d%" is in mode "%shown%"\n") (fromEnum pin) mode
-      pure (pin, mode)
-  mapM f allPins
-
-backgroundThread :: Ptr GPIO -> BChan StateUpdate -> IO ()
-backgroundThread addr eventChan = forever $ do
-  newState <- getPinStates addr
-  writeBChan eventChan $ StateUpdate newState
-  threadDelay 1000000
-
-data StateUpdate = StateUpdate [(Pin, AltMode)] deriving Show
-
-handleEvent :: State -> BrickEvent () StateUpdate -> EventM () (Next State)
-handleEvent s (VtyEvent (V.EvKey (V.KChar 'q') [])) = halt s
-handleEvent s (AppEvent (StateUpdate modes)) = continue $ s { pinModeList = modes }
-handleEvent s@State{eventCount} e = do
-  if eventCount > 5 then
-    halt s
-  else
-    continue $ s
-    { eventCount = eventCount + 1
-    , debugmsg = show e
-    }
-
-drawEverything :: State -> [Widget ()]
-drawEverything State{pinModeList,debugmsg} = [ hBox [ padLeftRight 1 $ vBox leftList, padLeftRight 1 $ vBox rightList, str debugmsg ] ]
-  where
-    (leftcol, rightcol) = partition (\(Pin p,_) -> p < 32) pinModeList
-    leftList = map pinToRow leftcol
-    rightList = map pinToRow rightcol
-
-pinToRow :: (Pin, AltMode) -> Widget ()
-pinToRow (Pin pin, mode) = addAttr mode $ txt $ sformat (d % " " % shown) pin mode
-
-addAttr :: AltMode -> Widget () -> Widget ()
-addAttr Alt0 w = withAttr alt0Attr w
-addAttr Alt1 w = withAttr alt1Attr w
-addAttr Alt2 w = withAttr alt2Attr w
-addAttr Alt3 w = withAttr alt3Attr w
-addAttr Alt4 w = withAttr alt4Attr w
-addAttr Alt5 w = withAttr alt5Attr w
-addAttr _ w = w
-
-data State = State
-  { eventCount :: Int
-  , pinModeList :: [(Pin, AltMode)]
-  , debugmsg :: String
-  } deriving Show
 
 data MMIOMethod = GpioMem | RawMem
 
 openGPIO :: MMIOMethod -> IO (Ptr GPIO, Fd)
 openGPIO GpioMem = do
   fd <- openFd "/dev/gpiomem" ReadWrite Nothing defaultFileFlags
-  ptr <- c_mmap_helper 0 fd
-  pure (ptr, fd)
-openGPIO RawMem = do
-  fd <- openFd "/dev/mem" ReadWrite Nothing defaultFileFlags
-  ptr <- c_mmap_helper 0x3f200000 fd
+  ptr <- c_mmap_helper 0 4096 fd
   pure (ptr, fd)
 
-foreign import ccall unsafe "c_mmap_helper" c_mmap_helper :: Word32 -> Fd -> IO (Ptr GPIO)
+openMMIO :: IO (Ptr RPI, Fd)
+openMMIO = do
+  fd <- openFd "/dev/mem" ReadWrite Nothing defaultFileFlags
+  ptr <- c_mmap_helper 0xfe000000 (1024*1024*16) fd
+  pure (ptr, fd)
+
+foreign import ccall unsafe "c_mmap_helper" c_mmap_helper :: Word32 -> Word32 -> Fd -> IO (Ptr a)
 
 

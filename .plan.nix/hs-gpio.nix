@@ -65,6 +65,9 @@ in { system, compiler, flags, pkgs, hsPkgs, pkgconfPkgs, ... }:
             (hsPkgs."formatting" or (buildDepError "formatting"))
             (hsPkgs."vty" or (buildDepError "vty"))
             (hsPkgs."async" or (buildDepError "async"))
+            (hsPkgs."vector" or (buildDepError "vector"))
+            (hsPkgs."directory" or (buildDepError "directory"))
+            (hsPkgs."mtl" or (buildDepError "mtl"))
             ];
           buildable = true;
           };
