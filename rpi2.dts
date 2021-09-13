@@ -2,6 +2,11 @@
 
 // #define IRQ_TYPE_LEVEL_HIGH      4
 
+#define BCM2835_CLOCK_V3D        21
+#define BCM2835_CLOCK_ISP        22
+#define BCM2835_CLOCK_H264       23
+#define BCM2835_CLOCK_PERI_IMAGE 29
+
 /memreserve/ 0x00000000 0x00001000;
 
 / {
@@ -16,8 +21,22 @@
     mmc0 = "/soc/mmc@7e202000";
   };
   chosen {
+    stdout-path = &ttyAMA0;
   };
   system {
+    compatible = "simple-bus";
+    #address-cells = <1>;
+    #size-cells = <1>;
+    ranges = <>;
+    framebuffer0: framebuffer@8000000 {
+      compatible = "simple-framebuffer";
+      reg = <0x8000000 160000>;
+      width = <200>;
+      height = <200>;
+      stride = <800>;
+      format = "a8b8g8r8";
+      //status = "disabled";
+    };
   };
   memory {
     device_type = "memory";
@@ -30,7 +49,7 @@
     ranges = <0x7e000000 0x3f000000 0x1000000 /* map the MMIO space to 0x3f000000 in arm, 16mb long */
               0x40000000 0x40000000 0x1000>; /* identity map the local_intc, 0x1000 bytes long */
     dma-ranges = <0xc0000000 0x00 0x3f000000>; /* map arm physical 0 to the uncached alias, 1008mb long */
-    serial@7e201000 {
+    ttyAMA0: serial@7e201000 {
       compatible = "brcm,bcm2835-pl011", "arm,pl011", "arm,primecell";
       reg = <0x7e201000 0x200>;
       interrupts = <2 25>;        // bank 2 irq 25, aka gpu irq 57
@@ -101,6 +120,16 @@
       #interrupt-cells = <0x02>;
       interrupt-parent = <&local_intc>;
       interrupts = <8 4>;
+    };
+    // allows linux to reboot by setting up the watchdog and not feeding it
+    pm: watchdog@7e100000 {
+      compatible = "brcm,bcm2835-pm", "brcm,bcm2835-pm-wdt";
+      #power-domain-cells = <1>;
+      #reset-cells = <1>;
+      reg = <0x7e100000 0x114>, <0x7e00a000 0x24>;
+      clocks = <&clocks BCM2835_CLOCK_V3D>, <&clocks BCM2835_CLOCK_PERI_IMAGE>, <&clocks BCM2835_CLOCK_H264>, <&clocks BCM2835_CLOCK_ISP>;
+      clock-names = "v3d", "peri_image", "h264", "isp";
+      system-power-controller;
     };
     clocks: cprman@7e101000 {
       compatible = "brcm,bcm2835-cprman";
