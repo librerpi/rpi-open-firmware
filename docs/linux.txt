@@ -1,0 +1,75 @@
+DEBUG_BCM2835/DEBUG_BCM2836 sets the CONFIG_DEBUG_UART_VIRT and CONFIG_DEBUG_UART_PHYS, to the right one for that model
+
+CONFIG_DEBUG_UART_VIRT / CONFIG_DEBUG_UART_PHYS can be manually set to any MMIO addr you want
+
+CONFIG_SERIAL_AMBA_PL011 is required for ttyAMA0
+
+CONFIG_DEBUG_UART_VIRT=0xf0201000 CONFIG_DEBUG_UART_PHYS=0x3f201000 is one example of a valid config
+
+ret = fdt_open_into(v_fdt, v_fdt, 16 * 1024 * 1024);
+patching the DTB to be 16mb in size, causes linux to crash during DTB parsing, so it can never print anything
+expanding it to only 1mb in size is fine however
+
+
+sched_clock: 56 bits at 0 Hz, resolution 0ns, wraps every 0ns
+Division by zero in kernel.
+pi2 and pi3 need the freq of the arm generic timer setup like:
+__asm__ __volatile__ ("mcr p15, 0, %0, c14, c0, 0": :"r"(19200000));
+https://github.com/raspberrypi/tools/blob/509f504e8f130ead31b85603016d94d5c854c10c/armstubs/armstub7.SL130-L135 is where i found that answer
+
+
+(refer to BCM2835-ARM-Peripherals.pdf and https://github.com/hermanhermitage/videocoreiv/wiki/VideoCore-IV-Programmers-Manual#interrupts )
+the hardware has a main array of 64 interrupt signals, divided into 2 banks
+it also has an array of 8 arm peripheral interrupts
+
+the 8 arm peripheral interrupts, 2 irq range flags (0-31, 32-63), and some select irq (7, 9, 10, 18, 19, 53, 54, 55, 56, 57, 62) are all exposed in a "basic pending" register
+there are then 2 registers, with 1 bit each, to show the status of 0-31, and 32-63
+
+linux maps the 8 arm-peripheral interrupts onto the 16-23 range
+then it maps hw irq 0-63, onto the 24-87 range
+
+irq 88 is involved in bcm2836_map() and arm local peripherals
+
+that whole set of 64+8 is then duplicated, in FIQ mode
+  arm peripherals again at 89-96
+  hw 0-31 at 97-128
+  hw 32-63 at 129-160
+
+CONFIG_FRAMEBUFFER_CONSOLE renders the console text on a framebuffer
+
+CONFIG_FB_SIMPLE enables adding a simple-framebuffer to the DTB
+CONFIG_DRM_SIMPLEDRM doesnt work for unknown reasons
+
+
+problem:
+Run /nix/store/9c3jx4prcwabhps473p44vl2c4x9rxhm-nixos-system-nixos-20.09pre-git/init as init process
+potentially unexpected fatal signal 4.
+c2d ~ # kill -l
+ 1) SIGHUP       2) SIGINT       3) SIGQUIT      4) SIGILL       5) SIGTRAP
+
+cause:
+  the FPU wasnt enabled in the bootloader, and printf tried to use it
+solution:
+  __asm__ __volatile__ ("mcr p15, 0, %0, c1, c1, 2": :"r"(0x63ff));
+  (on LK, its also trapped, use arm_fpu_set_enable(true); to re-enable)
+
+problem:
+  Warning: unable to open an initial console.
+  (only visible with earlyprintk)
+cause:
+  /dev/console doesnt exist
+solution:
+  CONFIG_DEVTMPFS
+
+problem:
+  systemd[1]: Failed to mount tmpfs at /dev/shm: Invalid argument
+solution:
+  CONFIG_TMPFS
+
+problem:
+  systemd[1]: Failed to mount cgroup at /sys/fs/cgroup/systemd: No such file or directory
+solution:
+  CONFIG_CGROUPS
+
+CONFIG_DRM_VC4 pi0-pi3 2d/3d drivers
+CONFIG_DRM_V3D pi4 2d/3d drivers

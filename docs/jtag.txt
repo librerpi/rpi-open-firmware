@@ -41,3 +41,18 @@ step 3:
 [clever@system76:~/apps/rpi-open-firmware/arm64]$ ../aarch64-gdb/bin/aarch64-unknown-linux-gnu-gdb -x ../gdb.txt ../arm/arm64.elf
 [nix-shell:~/apps/rpi/rpi-open-firmware/arm64]$ ddd --debugger aarch64-unknown-linux-gnu-gdb result/arm64.elf &
 
+
+# native aarch64 gdb running on a pi4
+[root@nixos:~]# gdb ./vmlinux
+(gdb) set style enabled off
+(gdb) target remote :3333
+0x00000024 in ?? ()
+(gdb) break start_kernel
+(gdb) set $pc=0x28
+# due to a `b .` in the bootloader, it is hung at 0x24, set pc to un-hang it, set a hard breakpoint (gdb_breakpoint_override hard in openocd file) at a virtual addr in linux, then cont
+(gdb) cont
+Breakpoint 1, 0xc05009ac in start_kernel ()
+
+
+
+todo: target extended-remote :3333

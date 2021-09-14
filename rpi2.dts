@@ -2,6 +2,8 @@
 
 // #define IRQ_TYPE_LEVEL_HIGH      4
 
+#define BCM2835_CLOCK_UART       19
+#define BCM2835_CLOCK_VPU        20
 #define BCM2835_CLOCK_V3D        21
 #define BCM2835_CLOCK_ISP        22
 #define BCM2835_CLOCK_H264       23
@@ -19,6 +21,7 @@
   aliases {
     ethernet0 = &ethernet;
     mmc0 = "/soc/mmc@7e202000";
+    framebuffer0 = &framebuffer0;
   };
   chosen {
     stdout-path = &ttyAMA0;
@@ -35,7 +38,7 @@
       height = <200>;
       stride = <800>;
       format = "a8b8g8r8";
-      //status = "disabled";
+      status = "disabled"; // disabled by default, the bootloader will fill in the right numbers, and enable
     };
   };
   memory {
@@ -53,15 +56,14 @@
       compatible = "brcm,bcm2835-pl011", "arm,pl011", "arm,primecell";
       reg = <0x7e201000 0x200>;
       interrupts = <2 25>;        // bank 2 irq 25, aka gpu irq 57
-      clocks = <&clocks 19
-                &clocks 20>;
+      clocks = <&clocks BCM2835_CLOCK_UART
+                &clocks BCM2835_CLOCK_VPU>;
       clock-names = "uartclk", "apb_pclk";
       arm,primecell-periphid = <0x241011>;
       cts-event-workaround;
       //pinctrl-names = "default";
       //pinctrl-0 = <0x08 0x09>;
       status = "okay";
-      phandle = <0x22>;
     };
     serial@7e215040 {
       compatible = "brcm,bcm2835-aux-uart";
@@ -69,9 +71,8 @@
       //interrupts = <0x01 0x1d>;
       //clocks = <0x12 0x00>;
       status = "okay";
-      pinctrl-names = "default";
-      pinctrl-0 = <0x13>;
-      phandle = <0x23>;
+      //pinctrl-names = "default";
+      //pinctrl-0 = <0x13>; FIXME, should refer to a pinset in the gpio block
     };
     dma: dma@7e007000 {
       compatible = "brcm,bcm2835-dma";
@@ -155,7 +156,7 @@
       #interrupt-cells = <0x02>;
       pinctrl-names = "default";
       sdhost: sdhost_gpio48 {
-        brcm,pins = <0x30 0x31 0x32 0x33 0x34 0x35>;
+        brcm,pins = <48 49 50 51 52 53>;
         brcm,function = <0x04>;
       };
     };
@@ -163,7 +164,7 @@
       compatible = "brcm,bcm2835-sdhost";
       reg = <0x7e202000 0x100>;
       interrupts = <2 24>;        // bank 2 irq 24, aka gpu irq 56
-      clocks = <&clocks 20>;      // BCM2835_CLOCK_VPU
+      clocks = <&clocks BCM2835_CLOCK_VPU>;
       dmas = <&dma (13|(1<<29))>; //0x2000000d>;
       dma-names = "rx-tx";
       status = "okay";
