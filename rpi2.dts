@@ -2,12 +2,16 @@
 
 // #define IRQ_TYPE_LEVEL_HIGH      4
 
+#define BCM2835_PLLB_ARM          7
 #define BCM2835_CLOCK_UART       19
 #define BCM2835_CLOCK_VPU        20
 #define BCM2835_CLOCK_V3D        21
 #define BCM2835_CLOCK_ISP        22
 #define BCM2835_CLOCK_H264       23
 #define BCM2835_CLOCK_PERI_IMAGE 29
+#define BCM2835_CLOCK_CAM1       46
+
+#define RPI_POWER_DOMAIN_UNICAM1 13
 
 /memreserve/ 0x00000000 0x00001000;
 
@@ -37,7 +41,7 @@
       width = <200>;
       height = <200>;
       stride = <800>;
-      format = "a8b8g8r8";
+      format = "a8r8g8b8";
       status = "disabled"; // disabled by default, the bootloader will fill in the right numbers, and enable
     };
   };
@@ -145,7 +149,7 @@
               //<&dsi0 0>, <&dsi0 1>, <&dsi0 2>,
               //<&dsi1 0>, <&dsi1 1>, <&dsi1 2>;
     };
-    gpio@7e200000 {
+    gpio: gpio@7e200000 {
       compatible = "brcm,bcm2835-gpio";
       reg = <0x7e200000 0xb4>;
       interrupts = <&intc 0x11>,
@@ -155,6 +159,40 @@
       interrupt-controller;
       #interrupt-cells = <0x02>;
       pinctrl-names = "default";
+
+      i2c0_bus0_pins: i2c0_gpio0 {
+        brcm,pins = <0 1>;
+        brcm,function = <0x04>;
+      };
+      i2c0_bus28_pins: i2c0_gpio28 {
+        // on a pi2, this leads to the camera sensor
+        // the camera is only going to respond if gpio41 is HIGH
+        brcm,pins = <28 29>;
+        brcm,function = <0x04>;
+      };
+      i2c0_cam: i2c0_gpio44 {
+        // note, do not use on pi2
+        brcm,pins = <44 45>;
+        brcm,function = <0x05>;
+      };
+      i2c0_bus46_pins: i2c0_bus46 {
+        brcm,pins = <46 47>;
+        brcm,function = <0x04>;
+      };
+
+      i2c1_bus2: i2c1_gpio2 {
+        brcm,pins = <2 3>;
+        brcm,function = <0x04>;
+      };
+      i2c1_cam: i2c1_gpio44 {
+        brcm,pins = <44 45>;
+        brcm,function = <0x06>;
+      };
+      i2c1_smps: i2c1_smps {
+        brcm,pins = <46 47>;
+        brcm,function = <0x05>;
+      };
+
       sdhost: sdhost_gpio48 {
         brcm,pins = <48 49 50 51 52 53>;
         brcm,function = <0x04>;
@@ -174,6 +212,106 @@
       brcm,overclock-50 = <0x00>;
       brcm,pio-limit = <0x01>;
       //brcm,debug = <1>;
+    };
+    i2c0: i2c@7e205000 {
+      compatible = "brcm,bcm2835-i2c";
+      reg = <0x7e205000 0x200>;
+      interrupts = <2 21>;
+      clocks = <&clocks BCM2835_CLOCK_VPU>;
+      #address-cells = <1>;
+      #size-cells = <0>;
+      //pinctrl-names = "default";
+      //pinctrl-0 = <&i2c0_bus0>;
+      clock-frequency = <100000>;
+    };
+    csi1: csi@7e801000 {
+      compatible = "brcm,bcm2835-unicam";
+      reg = <0x7e801000 0x800>, <0x7e802004 0x4>;
+      interrupts = <2 7>;
+      clocks = <&clocks BCM2835_CLOCK_CAM1>, <&clocks BCM2835_CLOCK_VPU>;
+      clock-names = "lp", "vpu";
+      #address-cells = <1>;
+      #size-cells = <0>;
+      #clock-cells = <1>;
+      //power-domains = <&power RPI_POWER_DOMAIN_UNICAM1>;
+      brcm,num-data-lanes = <2>;
+      status = "disabled";
+      port {
+        csi1_ep: endpoint {
+          remote-endpoint = <&ov5647_0>;
+          data-lanes = <1 2>;
+        };
+      };
+    };
+    i2c1: i2c@7e804000 {
+      compatible = "brcm,bcm2835-i2c";
+      reg = <0x7e804000 0x1000>;
+      interrupts = <2 21>;
+      clocks = <&clocks BCM2835_CLOCK_VPU>;
+      #address-cells = <1>;
+      #size-cells = <0>;
+      //pinctrl-names = "default";
+      //pinctrl-0 = <&i2c1>;
+      clock-frequency = <100000>; // 100khz
+    };
+    i2c@7e805000 { // i2c2
+      compatible = "brcm,bcm2835-i2c";
+      reg = <0x7e805000 0x1000>;
+      interrupts = <2 21>;
+      clocks = <&clocks BCM2835_CLOCK_VPU>;
+      #address-cells = <1>;
+      #size-cells = <0>;
+      clock-frequency = <100000>; // 100khz
+    };
+    i2cmux0 {
+      compatible = "i2c-mux-pinctrl";
+      #address-cells = <1>;
+      #size-cells = <0>;
+      i2c-parent = <&i2c0>;
+      pinctrl-names = "bus0", "bus28";
+      pinctrl-0 = <&i2c0_bus0_pins>;
+      pinctrl-1 = <&i2c0_bus28_pins>;
+
+      i2c0_bus0: i2c@0 {
+        reg = <0>;
+        #address-cells = <1>;
+        #size-cells = <0>;
+      };
+      i2c0_bus28: i2c@1 {
+        reg = <1>;
+        #address-cells = <1>;
+        #size-cells = <0>;
+        ov5647: ov5647@36 {
+          compatible = "ovti,ov5647";
+          reg = <0x36>;
+          pwdn-gpios = <&gpio 41 1>, <&gpio 32 1>;
+          clocks = <&ov5647_clk>;
+          rotation = <0>;
+          orientation = <2>;
+          status = "disabled";
+          port {
+            ov5647_0: endpoint {
+              remote-endpoint = <&csi1_ep>;
+              clock-lanes = <0>;
+              data-lanes = <1 2>;
+              clock-noncontinuous;
+              link-frequencies = /bits/ 64 <297000000>;
+            };
+          };
+        };
+      };
+    };
+
+    i2cmux1 {
+      compatible = "i2c-mux-pinctrl";
+      #address-cells = <1>;
+      #size-cells = <0>;
+      i2c-parent = <&i2c1>;
+      pinctrl-names = "bus2", "cam1", "smps1";
+      pinctrl-0 = <&i2c1_bus2>;
+      pinctrl-1 = <&i2c1_cam>;
+      pinctrl-2 = <&i2c1_smps>;
+      status = "disabled"; // not much need for the 2nd mux
     };
     local_intc: local_intc@40000000 {
       compatible = "brcm,bcm2836-l1-intc";
@@ -224,6 +362,11 @@
       clock-output-names = "otg";
       clock-frequency = <480000000>;
     };
+    ov5647_clk: camera-clk {
+      compatible = "fixed-clock";
+      #clock-cells = <0>;
+      clock-frequency = <25000000>;
+    };
   };
   usbphy: phy {
     compatible = "usb-nop-xceiv";
@@ -251,6 +394,12 @@
       compatible = "arm,cortex-a7";
       reg = <0xf00>;
       clock-frequency = <800000000>; // TODO, set from loader.cc?
+      operating-points = <
+        /* khz    uV */
+        100000    1100000
+        200000    1100000
+      >;
+      clocks = <&clocks BCM2835_PLLB_ARM>;
     };
   };
 };
