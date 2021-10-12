@@ -39,6 +39,9 @@ CONFIG_FRAMEBUFFER_CONSOLE renders the console text on a framebuffer
 
 CONFIG_FB_SIMPLE enables adding a simple-framebuffer to the DTB
 CONFIG_DRM_SIMPLEDRM doesnt work for unknown reasons
+CONFIG_I2C_MUX_PINCTRL   allows muxing the i2c controllers
+CONFIG_VIDEO_BCM2835_UNICAM  the CSI driver for the rpi
+CONFIG_VIDEO_OV5647          the original rpi camera sensor
 
 
 problem:
@@ -73,3 +76,10 @@ solution:
 
 CONFIG_DRM_VC4 pi0-pi3 2d/3d drivers
 CONFIG_DRM_V3D pi4 2d/3d drivers
+
+problem:
+  [   34.341449] usb 1-1: device descriptor read/64, error -110
+cause:
+  the usb PHY is not configured correctly
+solution:
+  https://github.com/librerpi/rpi-open-firmware/blob/61a62a148b07c981962fc177fdb7ebdd68e914bd/firmware/drivers/BCM2708UsbPhy.cc#L74-L106

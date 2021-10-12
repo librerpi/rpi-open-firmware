@@ -14,13 +14,18 @@
   the lower 24 bits of the serial# also become the last 3 bytes of the ethernet mac`
 29: negated backup serial#
 30: hw revision
-31:
+31: batch number
 32: has a bit to signal mfg test failure?
   start4.elf will run otp_write(28, 4, 4) if program_mfgtest_fail=1 has been set
   i think otp_write() takes a base otp reg, an otp offset (max of 16), and a value, so the above would program OTP32?
 33: a US pi400 has a 4 here, it may be "board_rev_ext"
+44: read by a recent recovery.bin
 45: burned MPG2 decode key
 46: burned WVC1 decode key
+
+bcm2711 secureboot only:
+47/48/49/50/51/52/53/54 the raw sha256(8 OTP slots, 256 bits) of the pubkey.bin
+55                      the count of bits in the pubkey hash, so you cant fudge the hash?
 
 64/64, ethernet mac
 

@@ -56,3 +56,9 @@ Breakpoint 1, 0xc05009ac in start_kernel ()
 
 
 todo: target extended-remote :3333
+
+
+(gdb) monitor mdw phys 0x3f801000
+0x3f801000: 00001210
+
+dumps by phys addr, ignoring mmu

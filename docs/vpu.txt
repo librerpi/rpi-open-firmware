@@ -7,6 +7,12 @@ H(row,col)+rX refers to 16 cells, starting at row+x col+y
 
 row/col must be immediates
 
+when doing byte-wise access, H(row,col), the col must be 16 aligned (0/16/32/48)
+when doing halfword access, HX(row,col), the col must be 32 aligned (0/32)
+when doing word access, HY(row,col), the col must be 0
+when in column mode (V, VX, VY), the same rules apply, but to the row# instead
+when using H_(row,col)+rX, you can break those rules
+
 0,0 to 7,63 are initialized to 0 by the boot rom setting up the L2 cache
 it was doing a `v32mov H32(0++,0), 0 REP8`, then storing that 512 byte chunk to the L2
 
@@ -15,3 +21,23 @@ vector contents corrupted when RUN is held low
 
 v16add Vd,Va,Vb
 take 2 vectors of 16 ints, sign-extend asif they where 16bit?, add, save to Vd
+
+
+# mov with 32bit immediate
+00 e8 78 56 34 12       mov r0,0x12345678
+01 e8 78 56 34 12       mov r1,0x12345678
+10 e8 78 56 34 12       mov r16,0x12345678
+14 e8 78 56 34 12       mov r20,0x12345678
+
+# vector load
+16 f8 38 c0 80 03 80 f8 04 00 v32ld HY(0++,0),(r1+=r2) REP64
+10 f8 38 c0 80 03 80 f8 04 00 v32ld HY(0++,0),(r1+=r2)
+10 f8 38 c0 80 03 c0 fb 04 00 v32ld HY(0++,0),(r1)
+10 f0 38 c0 80 03             v32ld HY(0,0),(r0)
+10 f0 38 c0 81 03             v32ld HY(0,0),(r1)
+10 f0 38 c0 8f 03             v32ld HY(0,0),(r15)
+10 f0 38 20 8f 03             v32ld H(0,16),(r15)
+10 f0 38 a0 8f 03             v32ld HX(0,32),(r15)
+0e f8 38 00 80 03 80 f8 04 00 v16ld H(0++,0),(r1+=r2) REP64
+0e f8 38 80 80 03 80 f8 04 00 v16ld HX(0++,0),(r1+=r2) REP64
+0e f8 38 c0 80 03 80 f8 04 00 v16ld HY(0++,0),(r1+=r2) REP64

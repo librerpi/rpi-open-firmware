@@ -1,11 +1,15 @@
 .text.firmware_rev is a 16 byte section detailing what the start4.elf supports
 
-byte 0 bit 0 must be set for it to boot on cpuid 0x4000162
+byte 0 bit 0 must be set for it to boot on cpuid 0x4000162, bcm2711C0?
 byte 0 bit 0&1 must be set, if some_flag1 bit 1 is present, both bits required to boot in usb-dev on a pi400
 byte 0 bit 2   must be set, if some_flag2 is non-zero
 byte 0 bit 3   must be set, if flag1 and flag2 are both non-zero
-byte 0 0x10 bit 5 must be set for it to boot with usb mass-storage
-byte 0 0x20       must be set for it to boot with broadcom xhci mass storage
+byte 0 BIT4(0x10)     USB-MSD, must be set for it to boot with usb mass-storage
+byte 0 BIT5(0x20)     BCM-USB-MSD, must be set for it to boot with broadcom xhci mass storage
+byte 0 BIT7(0x80)     netboot related
+byte 0 BIT8(0x100)    NVME boot supported
+byte 0 BIT9(0x200)    checked in beta-2021-07-06, secureboot/ramdisk related?
+byte 0 BIT10(0x400)   checked in beta-2021-07-06, secureboot/ramdisk related?
 
 .text.bootloader_state is a 16 byte section
 001f7550  42 53 54 41 00 00 00 00  00 00 00 00 00 00 00 00  |BSTA............|

@@ -1,6 +1,6 @@
 there are only 2 differences between the rpi1 and rpi2 rom's i have dumped
 
-1: a 100 got changed to a 228 in an unknown function
+1: a 100 got changed to a 228 in a NAND flash delay routine
 2: an unsafe memcmp for the signature, got replaced with a constant-time memcmp
     by pi3-era, that memcmp got inlined into the relevant function, and pi4 is still the same
 
