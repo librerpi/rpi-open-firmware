@@ -32,6 +32,22 @@ PV2 X     X     X
 PV3       X
 PV4 X     X     X
 
+
+
+from linux/drivers/gpu/drm/vc4/vc4_crtc.c
+
+vc4(pi0-pi3)
+PV0, fifo depth 64,  1 pixel per clock, 0=DSI0/1=DPI,  HVS0           output 0
+PV1, fifo depth 64,  1 pixel per clock, 0=DSI1/1=SMI,            HVS2 output 2
+PV2, fifo depth 64,  1 pixel per clock, 1=HDMI0/2=VEC,      HVS1      output 1
+vc6(2711)
+PV0, fifo depth 64,  1 pixel per clock, 0=DSI0/1=DPI,  HVS0           output 0
+PV1, fifo depth 64,  1 pixel per clock, 0=DSI1/1=SMI,  HVS0/HVS1/HVS2 output 3
+PV2, fifo depth 256, 2 pixel per clock, 0=HDMI0,       HVS0/HVS1/HVS2 output 4
+PV3, fifo depth 64,  1 pixel per clock, 0=VEC,              HVS1      output 1
+PV4, fifo depth 64,  2 pixel per clock, 0=HDMI1,       HVS0/HVS1/HVS2 output 5
+
+
 https://www.raspberrypi.org/forums/viewtopic.php?p=1758588#p1758588
 > You've missed out the transposer from that list which is a special PV that writes back to memory with optional transpose (up to 1920 pixels in either direction IIRC). That can only be routed off HVS channel 2.
 > The firmware reserves channel 2 exclusively for the transposer, hence max 2 displays.
@@ -166,6 +182,23 @@ PV2 raw dump:
 total scanline length: 858
 total scanlines: 262
 total clocks per frame: 224796
+
+rpi4, ntsc under kms control
+PV3 raw dump:
+0x7ec12000 09 70 17 00 33 00 00 00  ae 01 00 00 40 00 3c 00  |.p..3.......@.<.|
+0x7ec12010 d0 02 0e 00 03 00 10 00  f0 00 03 00 03 00 10 00  |................|
+0x7ec12020 f0 00 04 00 80 00 00 00  00 00 00 00 44 06 00 00  |............D...|
+0x7ec12030 00 00 00 00 20 00 00 00  01 00 00 00 00 00 02 00  |.... ...........|
+0x7ec12040 02 00 03 00 00 03 05 00  00 00 00 00 c8 0f 00 00  |................|
+0x7ec12050 00 00 00 00 00 00 00 00  00 00 00 00 20 00 00 00  |............ ...|
+0x7ec12060 00 00 00 00 08 08 08 05  07 00 00 00 d0 02 00 00  |................|
+0x7ec12070 60 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |`...............|
++---------------------------------------+
+| front|      |      |           3/   4 |
+|      | sync |      |           3/   3 |
+|      |      | back |          16/  16 |
+|   14 |   64 |   60 |  720 x  240/ 240 |
++---------------------------------------+
 
 rpi3, state 0x80000 [PAL 4:3], 720x576 @ 50.00Hz, interlaced
 PV2 raw dump:

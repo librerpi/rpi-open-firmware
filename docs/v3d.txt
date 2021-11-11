@@ -5,3 +5,10 @@ https://www.raspberrypi.org/forums/viewtopic.php?p=1817706#p1817706
 > The YUYV family of YUV4:2:2 formats are generally not supported by anything other than the ISP.
 > Mesa hides the conversions from you, so whilst it may say that it can import format X, it may not be an efficient import :-/
 
+
+https://www.raspberrypi.org/forums/viewtopic.php?f=38&t=320638
+> Pi4 will take YUV in through the TFU (Texture Formatter Unit) to create a texture. I think Pi3 has a shader which will do the same thing.
+> Yes the TFU is hardware. The Pi4 3D block needs all textures in UIF format, so even RGB source images go through it.
+
+
+v3d can render to both linear and tiled (t-format or uif) formats

@@ -1,0 +1,16 @@
+MMIOBASE + 0x2000 == IC0
+MMIOBASE + 0x2800 == IC1
+
+ICn + 0x10 is the irq masking registers
+each register is 32bits wide, and references 8 irq
+ICn+0x10 is for irq 0-7
+ICn+0x14 is for irq 8-15
+ICn+0x18 is for irq 9-23
+ICn+0x1c is for irq 24-31
+ICn+0x20 is for irq 32-39
+ICn+0x24 is for irq 40-47
+ICn+0x28 is for irq 48-55
+ICn+0x2c is for irq 56-63
+
+for each register, it contains an array of 8 x 4bit fields
+setting all 4 bits to 0xF will enable an irq

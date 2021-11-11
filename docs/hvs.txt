@@ -21,3 +21,58 @@ https://www.raspberrypi.org/forums/viewtopic.php?p=1808040#p1808040
 > The OLED colour matrix block has changed with Pi4/HVS5, so the existing code doesn't work. Whereas previously there was one CTM that could be assigned to an HVS channel, there is now an OLED CTM per HVS channel. That means a moderate amount of fiddling within the KMS driver.
 
 it deals with color space conversion
+
+
+#if 0 // interlacing was off, re-test this
+the Y position of a layer is in pixels, and when interlaced, will allow field level resolution (even y lands on even field? odd y lands on odd field?)
+
+when using TPZ (down) scaling, the destination height, is measured in scanlines on a single field
+so if you claim the image is 100x100, it will occupy 200 pixels worth of space, 100 even scanlines, interleaved with 100 odd scanlines
+#endif
+
+
+
+constants when not specified:
+driving NTSC at 720x480i, downscaling a 493x620 image to 100x100, with a background fill
+hvs_channels[1].dispbase = BASE_BASE(0xf10)  | BASE_TOP(0x4b00);
+
+VPU now at 108mhz, PLLC_CORE0 at 108mhz, PLLC at 432mhz
+3 sprites + bg on the same region causes glitching
+
+VPU now at 216mhz, PLLC_CORE0 at 216mhz, PLLC at 864mhz
+10 sprites moving randomly, + bg, random glitches, hard to tell how many overlap
+
+VPU now at 324mhz, PLLC_CORE0 at 324mhz, PLLC at 1296mhz
+16 sprites moving randomly, + bg, random glitches, hard to tell how many overlap
+
+
+vc4 hvs muxing
+
+SCALER_DISPCTRL_DSP3_MUX, 2=??, 3=TXP
+
+2711 hvs muxing
+output 2 HVS2, SCALER_DISPECTRL_DSP2_MUX=0
+output 2 HVS_, SCALER_DISPECTRL_DSP2_MUX=1
+
+where _ is in the 0/1/2 range
+output 3 HVS_, SCALER_DISPCTRL_DSP3_MUX=_, 3==disabled
+output 4 HVS_, SCALER_DISPEOLN_DSP4_MUX=_, 3==disabled
+output 5 HVS_, SCALER_DISPDITHER_DSP5_MUX=_, 3==disabled
+
+
+bcm2711 hdmi kms example data
+root@pi400:/sys/kernel/debug/dri/1# cat hvs_dlists 
+HVS chan 0:
+dlist: 45: 0x4800d807
+dlist: 46: 0x00000000
+dlist: 47: 0x4000fff0
+dlist: 48: 0x04000500
+dlist: 49: 0x01aa0000
+dlist: 50: 0xdfa00000
+dlist: 51: 0xdfc14800
+dlist: 52: 0x00001400
+dlist: 53: 0x80000000
+HVS chan 1 disabled
+HVS chan 2 disabled
+
+dlist: 48: 0x04000500, 0x500 x 0x400 (1280x1024) source image

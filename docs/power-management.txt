@@ -88,3 +88,9 @@ arm_clock pllb    divisor   core_v
 800mhz    3.2ghz  /4        1.35
 900mhz    1.8ghz  /2        1.35
 1ghz      2ghz    /2        1.35
+
+
+
+on the pi2, low-voltage is handled by ??? and directly drives the power led, which is also on a gpio pin
+reading that pin gives the level of the sense circuit
+driving that pin will fake a low-voltage event, and blind you to the truth

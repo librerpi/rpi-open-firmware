@@ -18,3 +18,7 @@ CM4 uses MxL7704
 
 https://www.raspberrypi.org/forums/viewtopic.php?p=1849000#p1849000
 pi4 PMIC schematic info
+
+
+> Da9121 is the cm4/pi400 VCore pmic . Might be handy to know for openfirmware for these
+

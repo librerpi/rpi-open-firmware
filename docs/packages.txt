@@ -1,0 +1,5 @@
+https://raspberrypi.stackexchange.com/questions/840/why-is-the-cpu-sometimes-referred-to-as-bcm2708-sometimes-bcm2835
+
+BCM2708 is the raw silicon you can find inside a pi0/pi1/roku2
+BCM2763 is that silicon, wire-bonded to 256mb of dram, all in one package
+BCM2835 is that same silicon, in its own double-sided package, for use in package-on-package configurations

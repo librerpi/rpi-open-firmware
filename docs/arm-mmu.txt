@@ -45,3 +45,7 @@ bits (32-N):20 of the virt addr, act as an index into TTBR0
 bits 31:20 of the virt addr act as ain index into TTBR1
 a mux then decides which to actually use, based on N and the split
 TTBR1 must always point to a 16kb table that is 16kb aligned, but the lower split is shadowed by TTBR0 and can be treated as free ram
+
+2021-03-18 16:44:03 < Bitweasil> clever, if you were wondering, the Rpi2 does support the long descriptor/LPAE table types.
+2021-03-18 16:44:50 < clever> Bitweasil: ah, nice
+

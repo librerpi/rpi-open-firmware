@@ -4,3 +4,38 @@ info on the h264 block being the same between all models
 
 https://www.raspberrypi.org/forums/viewtopic.php?f=43&t=293883
 h264 capabilities
+
+https://www.raspberrypi.org/forums/viewtopic.php?p=1848945#p1848945
+more limitions
+
+https://www.raspberrypi.org/forums/viewtopic.php?p=1745371#p1745371
+> Basic specs in the docs - https://www.raspberrypi.org/documentation/hardware/raspberrypi/bcm2711/README.md
+> No, there is no B frame support.
+> Intra Period can be specified. The GOP is inherently IPPPPP....PPP as B frames aren't supported. Default length is 60 frames.
+
+https://www.raspberrypi.org/forums/viewtopic.php?f=91&t=298607
+> The hardware spec is for 1080p30, level 4.0.
+> It can decode many 1080p60 streams, but you need to handle it efficiently.
+> FFmpeg with h264_mmal will be doing a conversion on the VPU (part of the GPU), and then doing a memcpy from GPU memory to ARM memory. All those memory operations cost performance.
+> The V4L2 wrapper around the H264 decoder (h264_v4l2m2m) avoids the copy from GPU to ARM memory to gain some performance back.
+
+https://www.raspberrypi.org/forums/viewtopic.php?f=67&t=271849
+> There is one caveat over this being zero copy - the VPU (VideoCore processor) is actually doing a format conversion internally.
+> The codec hardware produces a slightly weirdly packed format (known as SAND), and needs refcounting of frames for use as reference frames, so currently the codec decodes into internal buffers, and then format converts (optimised memcpy) into I420/NV12/NV21 for the V4L2 or MMAL buffers.
+> I will be looking at trying to remove that memcpy, but the internal APIs don't make life easy.
+
+https://www.raspberrypi.org/forums/viewtopic.php?p=1883796#p1883796
+> The write path from the H264 block is only issuing 16byte wide writes, when the most efficient would be 128byte. So the writeback of the reference frame is very inefficient (factor of 16). The H264 encode therefore accounts for
+> Read by ISP 720*540 YUYV (16bpp)
+> Write by ISP 720*540 YUV420 (12bpp)
+> Read new frame and reference frame by H264 720*540 YUV420 (12bpp)
+> Write reference frame 16 times(!) 720*540 YUV420 (12bpp)
+
+https://www.raspberrypi.org/forums/viewtopic.php?p=1854255#p1854255
+> - The front end of the encoder uses the ISP block to convert whatever format you care to throw at it into the internal YUV420 based format that the H264 blocks use, so another read of YUV422 and write of YUV420.
+
+https://www.raspberrypi.org/forums/viewtopic.php?p=1854716#p1854716
+> It's done in the ISP as part of the video_encode component.
+> The H264 blocks need the frames in a weird column format(*), and also a second 2x2 subsampled version of the image to do a coarse motion search on. The ISP can produce both these images efficiently, and there isn't an easy way to configure the outside world to produce and pass in this pair of images simultaneously.
+> (*) If you divide your image into 128 column wide strips with both the luma and respective U/V (NV12) interleaved chroma, and then glue these strips together end on end, that's about right. The subsampled image is either planar or a similar column format but 32 pixels wide. Cleverer people than me designed it for optimised SDRAM access patterns.
+

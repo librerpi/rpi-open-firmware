@@ -124,3 +124,10 @@ CM_PERII
 
 > CM_PERIICTL (and CM_PERIACTL, CM_SYSCTL and CM_VPUCTL if you have the debug bit set in the power manager, which we don't bother exposing) are individual gates off of the non-stop vpu clock.
 (from linux source)
+
+
+https://github.com/raspberrypi/firmware/issues/1537
+> Yes, we define PLLB (which the arm typically uses with a divide by 2) as maxing a max frequency of 5GHz.
+
+pi4 PLLB has a max rating of 5ghz
+the firmware runs the arm at PLLB/2

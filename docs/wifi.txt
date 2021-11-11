@@ -10,8 +10,20 @@ https://www.raspberrypi.org/forums/viewtopic.php?f=98&t=292691
 
 
 https://www.raspberrypi.org/forums/viewtopic.php?p=1586034#p1586034
+https://www.raspberrypi.org/forums/viewtopic.php?p=1586431#p1586431
 > You need to patch the WiFi firmware to enable monitor mode.
 > https://github.com/seemoo-lab/nexmon
 
 https://www.raspberrypi.org/forums/viewtopic.php?p=1547885#p1547885
 > https://sandilands.info/sgordon/capturing-wifi-in-monitor-mode-with-iw
+
+https://www.raspberrypi.org/forums/viewtopic.php?p=1806938#p1806938
+> Re: CYW43455 (3B+, 4B, CM4) WiFi feedback thread
+> The clm_blob file defines the channels that are available in each region, the rules associated with them, and how much power should be used for each one. It should be independent of firmware version, but you are advised to use the latest clm_blob.
+
+https://github.com/seemoo-lab/nexmon
+2021-10-06 00:09:37 < muaddib[m]> Regardless I think the offensive security forums would be better suited for that as the creators of nexmon also contribute to Kali.
+https://www.bastibl.net/gnuradio-on-android/
+https://static1.squarespace.com/static/543ae9afe4b0c3b808d72acd/t/55df1835e4b02d66e574c07a/1440684085213/3-rondeau_tom-android_intro-2015-08-27.pdf
+https://arxiv.org/pdf/1601.07077.pdf
+https://store.nethunter.com/en/packages/de.tu_darmstadt.seemoo.nexmon/

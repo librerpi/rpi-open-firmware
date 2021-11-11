@@ -1,0 +1,115 @@
+https://forums.raspberrypi.com/viewtopic.php?p=1934303#p1934303
+> bcm2835-unicam treats the configured buffer as a circular buffer, so if the sensor is generating more lines than configured, then the top lines of the buffer will be overwritten by the bottom lines.
+> There are debug registers in the peripheral which can help as they (slightly unreliably) report the detected resolution. v4l2-ctl --log-status will dump these.
+
+the unicam is in at least 2 power domains
+
+an unknown domain controls the digital side, and if disabled, reading the MMIO causes a Dummy exception on the VPU
+the PM_CAM{0,1} domain controls the analog phy, if disabled, then everything except actual csi data rx will work
+
+refer to vc4-regs-unicam.h in linux for details
+
+
+UNICAM_IBSA0/UNICAM_IBEA0 start/end address for "padding" images
+UNICAM_DBSA0/UNICAM_DBEA0 start/end address for non-padding images
+
+UNICAM_IBLS programmed stride, must be a multiple of 32
+UNICAM_IHSTA/UNICAM_IVSTA detected resolution
+
+UNICAM_CTRL, offset 0
+  bit   0,      UNICAM_CPE,   master enable?
+  bit   1,      UNICAM_MEM
+  bit   2,      UNICAM_CPR,   peripheral reset
+  bit   3,      UNICAM_CPM    sets if the data will be CSI2 or CCP2
+  bit   4,      UNICAM_SOE    1=="stop output engine"
+  bit   5,      UNICAM_DCM    sets if it is strobe or data??, depends on if its csi2 or ccp2
+  bit   6,      UNICAM_SLS
+  bits [11:8],  UNICAM_PFT    packet framer timeout
+  bits [20:12], UNICAM_OET    packet framer timeout
+
+UNICAM_STA, offset 0x4
+  interrupt status bits
+  bit   0       UNICAM_SYN
+  bit   1       UNICAM_CS
+  bit   2       UNICAM_SBE
+  bit   3       UNICAM_PBE
+  bit   4       UNICAM_HOE
+  bit   5       UNICAM_PLE
+  bit   6       UNICAM_SSC
+  bit   7       UNICAM_CRCE
+  bit   8       UNICAM_OES
+  bit   9       UNICAM_IFO
+  bit   10      UNICAM_OFO
+  bit   11      UNICAM_BFO
+  bit   12      UNICAM_DL
+  bit   13      UNICAM_PS
+  bit   14      UNICAM_IS
+  bit   15      UNICAM_PI0    "packet capture status" ?
+  bit   16      UNICAM_PI1
+  bit   17      UNICAM_FSI_S
+  bit   18      UNICAM_FEI_S
+  bit   19      UNICAM_LCI_S
+  bit   20      UNICAM_BUF0_RDY
+  bit   21      UNICAM_BUF0_NO
+  bit   22      UNICAM_BUF1_RDY
+  bit   23      UNICAM_BUF1_NO
+  bit   24      UNICAM_DI
+
+UNICAM_ANA, offset 0x8
+  analog phy stuff
+  bit   0       UNICAM_APD
+  bit   1       UNICAM_BPD
+  bit   2       UNICAM_AR       1==reset
+  bit   3       UNICAM_DDL      1==disable?
+  bits  [7:4]   UNICAM_CTATADJ
+  bits  [11:8]  UNICAM_PTATADJ
+
+UNICAM_PRI, offset 0xc
+  AXI bus access QoS setup
+  bit   0       UNICAM_PE
+  bits  2:1     UNICAM_PT
+  bits  7:4     UNICAM_NP
+  bits  11:8    UNICAM_PP
+  bits  15:12   UNICAM_BS
+  bits  17:16   UNICAM_BL
+
+UNICAM_CLK, offset 0x10
+  clock lane config, including terminations
+  bit   0       UNICAM_CLE
+  bit   1       UNICAM_CLPD
+  bit   2       UNICAM_CLLPE
+  bit   3       UNICAM_CLHSE
+  bit   4       UNICAM_CLTRE
+  bits  [8:5]   UNICAM_CLAC
+  bit   29      UNICAM_CLSTE
+
+UNICAM_DAT0, offset 0x18
+UNICAM_DAT1, offset 0x1c
+UNICAM_DAT2, offset 0x20
+UNICAM_DAT3, offset 0x24
+  configures each data lane
+  only lanes that are in use get configured, unused lanes have config set to 0
+  config also set to 0 when csi is going inactive
+
+UNICAM_CMP0, offset 0x2c
+UNICAM_CMP1, offset 0x30
+  packet compare register
+  triggers UNICAM_PI0 and UNICAM_PI1 interrupts
+  bits  5:0   UNICAM_PCDT
+  bits  7:6   UNICAM_PCVC
+  bit   8     UNICAM_CPH
+  bit   9     UNICAM_GI
+  bit   31    UNICAM_PCE
+
+UNICAM_ISTA, offset 0x104
+  bit   0     UNICAM_FSI  frame start interrupt
+  bit   1     UNICAM_FEI  frame end interrupt
+  bit   2     UNICAM_LCI
+
+UNICAM_IPIPE, offset 0x10c
+  unpacking/packing modes
+  bits [2:0] unpacking mode
+  bits [9:7] packing modes
+
+UNICAM_IBWP, offset 0x11c
+  read only?, dma write pointer, gets auto-incremented as data is received
