@@ -1,4 +1,4 @@
-{ stdenv, tlsf  }:
+{ stdenv, tlsf, lib }:
 let
   baremetal = stdenv.targetPlatform.system == "arm-none" || stdenv.targetPlatform.system == "vc4-none";
   lut = {
@@ -11,8 +11,8 @@ let
   };
 in stdenv.mkDerivation {
   name = "common";
-  src = stdenv.lib.cleanSource ./.;
-  propagatedBuildInputs = stdenv.lib.optional baremetal tlsf;
+  src = lib.cleanSource ./.;
+  propagatedBuildInputs = lib.optional baremetal tlsf;
   enableParallelBuilding = true;
   hardeningDisable = [ "fortify" "stackprotector" ];
   dontStrip = true;
