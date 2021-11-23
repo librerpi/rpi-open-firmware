@@ -289,10 +289,29 @@ in pkgs.lib.fix (self: {
   # time make $makeFlags zImage -j8
   kernelShell = arm7.linux_rpi2.overrideDerivation (drv: {
     nativeBuildInputs = drv.nativeBuildInputs ++ (with x86_64; [ ncurses pkgconfig ]);
+    makeFlags = drv.makeFlags ++ [ "O=build-v7" ];
     shellHook = ''
       addToSearchPath PKG_CONFIG_PATH ${x86_64.ncurses.dev}/lib/pkgconfig
       echo to configure: 'make $makeFlags menuconfig'
       echo to build: 'time make $makeFlags zImage -j8'
+    '';
+  });
+  kernelShellv6 = arm6.linux_rpi1.overrideDerivation (drv: {
+    nativeBuildInputs = drv.nativeBuildInputs ++ (with x86_64; [ ncurses pkgconfig ]);
+    shellHook = ''
+      addToSearchPath PKG_CONFIG_PATH ${x86_64.ncurses.dev}/lib/pkgconfig
+      echo to configure: 'make $makeFlags menuconfig'
+      echo to build: 'time make $makeFlags zImage -j8'
+    '';
+  });
+  # bcmrpi3_defconfig aarch64 pi3 base config
+  kernelShell64 = aarch64.linux_rpi3.overrideDerivation (drv: {
+    nativeBuildInputs = drv.nativeBuildInputs ++ (with x86_64; [ ncurses pkgconfig ]);
+    makeFlags = drv.makeFlags ++ [ "O=build-64" ];
+    shellHook = ''
+      addToSearchPath PKG_CONFIG_PATH ${x86_64.ncurses.dev}/lib/pkgconfig
+      echo to configure: 'make $makeFlags menuconfig'
+      echo to build: 'time make $makeFlags Image -j8'
     '';
   });
   aarch64-shell = x86_64.stdenv.mkDerivation {
@@ -311,7 +330,8 @@ in pkgs.lib.fix (self: {
   });
   nixos = {
     inherit (nixos) system;
-    inherit (nixos.config.system.build) initialRamdisk;
+    inherit (nixos.config.system.build) initialRamdisk kernel;
+    kernelConfig = nixos.config.system.build.kernel.configfile;
   };
   test1 = pkgs.callPackage (pkgs.path + "/nixos/lib/make-system-tarball.nix") {
     contents = [];
