@@ -62,3 +62,11 @@ todo: target extended-remote :3333
 0x3f801000: 00001210
 
 dumps by phys addr, ignoring mmu
+
+
+rpi4 sysfsgpio config:
+2020-02-04 17:59:44 <@clever_> sysfsgpio_jtag_nums 11 25 10 9
+2020-02-04 17:59:44 <@clever_> sysfsgpio_trst_num 7
+2020-02-04 18:00:50 <@clever_> A gpio is required for tck, tms, tdi and tdo. One or both of srst and trst must be also be specified. The required jtag gpios are specified via the sysfsgpio_jtag_nums
+2020-02-04 18:02:15 <@clever_> tck=11, tms=25, tdi=10, tdo=9, trst=7
+
