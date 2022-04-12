@@ -4,9 +4,13 @@ info on the h264 block being the same between all models
 
 https://www.raspberrypi.org/forums/viewtopic.php?f=43&t=293883
 h264 capabilities
+> Level 4.2 increases that macroblocks/frame limit to cover 2048x1080 (8704 macroblocks), but no guarantees that that level can be sustained in real-time.
+
 
 https://www.raspberrypi.org/forums/viewtopic.php?p=1848945#p1848945
 more limitions
+> Even though the rpi 4 is manufactured at a smaller process node and has faster RAM compared to previous models, it doesn't matter: H264 encoding at level 4.2 is impossible.
+
 
 https://www.raspberrypi.org/forums/viewtopic.php?p=1745371#p1745371
 > Basic specs in the docs - https://www.raspberrypi.org/documentation/hardware/raspberrypi/bcm2711/README.md
@@ -38,4 +42,16 @@ https://www.raspberrypi.org/forums/viewtopic.php?p=1854716#p1854716
 > It's done in the ISP as part of the video_encode component.
 > The H264 blocks need the frames in a weird column format(*), and also a second 2x2 subsampled version of the image to do a coarse motion search on. The ISP can produce both these images efficiently, and there isn't an easy way to configure the outside world to produce and pass in this pair of images simultaneously.
 > (*) If you divide your image into 128 column wide strips with both the luma and respective U/V (NV12) interleaved chroma, and then glue these strips together end on end, that's about right. The subsampled image is either planar or a similar column format but 32 pixels wide. Cleverer people than me designed it for optimised SDRAM access patterns.
+
+found more info on the "weird" format:
+https://www.mail-archive.com/linux-kernel@vger.kernel.org/msg1640162.html
+https://github.com/raspberrypi/linux/blob/rpi-5.10.y/include/uapi/drm/drm_fourcc.h#L765-L809
+DRM refers to it as DRM_FORMAT_MOD_BROADCOM_SAND
+HVS refers to it as HVS_PIXEL_FORMAT_H264(and it uses tiling options)
+drm_fourcc.h explains the byte layout well
+
+https://forums.raspberrypi.com/viewtopic.php?p=1977939#p1977939
+> IIRC The hardware is limited to a maximum width of 2032 through any API. Theory was it supported the 2048x1024@30 of level 4.0, but there appears to be an off-by-one in the motion estimation block, so you lose one macroblock in width.
+> Max height is 1920.
+> Levels 5 and 5.1 were only defined for use with transcode, where you might have a 1,920×1,080@120 (level 5.1) clip that you want to process in non-realtime. It does not allow you to exceed the resolution limits.
 
