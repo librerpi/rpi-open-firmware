@@ -23,52 +23,55 @@ https://github.com/raspberrypi/firmware/wiki/Mailbox-property-interface
 0x00030008    get voltage min
 0x00030009    get turbo
 0x0003000a    get max temperature
-0x0003000c    allocate memory
+0x0003000b    RPI_FIRMWARE_GET_STC              get stc, calls rtos_getmicrosecs()
+0x0003000c    RPI_FIRMWARE_ALLOCATE_MEMORY      allocate memory
 0x0003000d    lock memory
 0x0003000e    unlock memory
 0x0003000f    release memory
-0x00030010    execute code
+0x00030010    RPI_FIRMWARE_EXECUTE_CODE           execute code, vpu or v3d
 0x00030014    get dispmanx resource memory handle
 0x00030020    get edid block
-0x00038001    set clock state
-0x00038002    set clock rate
-0x00038003    set voltage
-0x00038009    set turbo
+0x00038001    RPI_FIRMWARE_SET_CLOCK_STATE        set clock state
+0x00038002    RPI_FIRMWARE_SET_CLOCK_RATE
+0x00038003    RPI_FIRMWARE_SET_VOLTAGE                            set voltage
+0x00038009    RPI_FIRMWARE_SET_TURBO                              set turbo
 
 # https://github.com/raspberrypi/linux/pull/3937/files
+0x00030060    voltage related
+0x00030061    board rev ext?
+0x00030062    // found in a start.elf, related to signing in some way
 0x00030064    RPI_FIRMWARE_GET_REBOOT_FLAGS
-0x00038064    RPI_FIRMWARE_SET_REBOOT_FLAGS
 
 
 0x00040001    framebuffer allocate
-0x00040002    framebuffer blank screen
-0x00040003    framebuffer get display w/h
-0x00040004    framebuffer get virtual w/h
-0x00040005    framebuffer get depth
-0x00040006    framebuffer get pixel order
-0x00040007    framebuffer get alpha mode
-0x00040008    framebuffer get pitch
-0x00040009    fb
-0x0004000a    fb
-0x0004000b    fb
+0x00040002    RPI_FIRMWARE_FRAMEBUFFER_BLANK                      framebuffer blank screen
+0x00040003    RPI_FIRMWARE_FRAMEBUFFER_GET_PHYSICAL_WIDTH_HEIGHT  framebuffer get display w/h
+0x00040004    RPI_FIRMWARE_FRAMEBUFFER_GET_VIRTUAL_WIDTH_HEIGHT   framebuffer get virtual w/h
+0x00040005    RPI_FIRMWARE_FRAMEBUFFER_GET_DEPTH                  framebuffer get depth
+0x00040006    RPI_FIRMWARE_FRAMEBUFFER_GET_PIXEL_ORDER            framebuffer get pixel order
+0x00040007    RPI_FIRMWARE_FRAMEBUFFER_GET_ALPHA_MODE             framebuffer get alpha mode
+0x00040008    RPI_FIRMWARE_FRAMEBUFFER_GET_PITCH                  framebuffer get pitch
+0x00040009    RPI_FIRMWARE_FRAMEBUFFER_GET_VIRTUAL_OFFSET
+0x0004000a    RPI_FIRMWARE_FRAMEBUFFER_GET_OVERSCAN
+0x0004000b    RPI_FIRMWARE_FRAMEBUFFER_GET_PALETTE
 0x00044003    framebuffer test display w/h
 0x00044004    framebuffer test virtual w/h
 0x00044005    framebuffer test depth
-0x00044006    framebuffer test pixel order
+0x00044006    RPI_FIRMWARE_FRAMEBUFFER_TEST_PIXEL_ORDER           framebuffer test pixel order
 0x00044007    fb
 0x00044009    fb
 0x0004400a    fb
-0x0004400b    fb
+0x0004400b    RPI_FIRMWARE_FRAMEBUFFER_TEST_PALETTE
 0x00048001    framebuffer release
 0x00048003    framebuffer set display w/h
 0x00048004    framebuffer set virtual w/h
 0x00048005    framebuffer set depth
-0x00048006    fb
-0x00048007    fb
+0x00048006    RPI_FIRMWARE_FRAMEBUFFER_SET_PIXEL_ORDER
+0x00048007    RPI_FIRMWARE_FRAMEBUFFER_SET_ALPHA_MODE
 0x00048009    fb
 0x0004800a    fb
 0x0004800b    fb
-0x00050001    get command line
+0x00050001    RPI_FIRMWARE_GET_COMMAND_LINE                       get command line
 0x00060001    get dma channels
 
 u-boot/arch/arm/mach-bcm283x/include/mach/mbox.h
@@ -80,7 +83,6 @@ http://u-boot.10912.n7.nabble.com/PATCH-v3-0-2-usb-xhci-Load-Raspberry-Pi-4-VL80
 linux/include/soc/bcm2835/raspberrypi-firmware.h
 0x00000002    get firmware variant
 0x00000003    get firmware hash
-0x0003000b    set stc
 0x00030011    execute qpu
 0x00030012    set enable qpu
 0x00030021    get customer otp
@@ -94,46 +96,51 @@ linux/include/soc/bcm2835/raspberrypi-firmware.h
 0x00030048    notify reboot
 0x00030049    get poe hat val
 0x00030050    set poe hat val
-0x00038021    set customer otp
+0x00038021    RPI_FIRMWARE_SET_CUSTOMER_OTP     set customer otp
 0x00038022    OTP related (found in start4.elf)
-0x00038030    set domain state
-0x00038041    get gpio state
-0x00038042    set sdhost clock
-0x00038043    set gpio config
-0x00038045    set periph reg
-0x0004000c    framebuffer get layer
-0x0004000d    framebuffer get transform
-0x0004000e    framebuffer get vsync
-0x00040013    framebuffer get num displays
-0x00040014    get display settings
-0x00040016    framebuffer get display id
-0x00040017    get display timing
-0x00040018    get display cfg
-0x00048010    vchiq init
-0x00048013    framebuffer get display num
+0x00038030    RPI_FIRMWARE_SET_DOMAIN_STATE     set domain state
+0x00038040    found in start.elf, led related
+0x00038041    RPI_FIRMWARE_SET_GPIO_STATE       get gpio state
+0x00038042    RPI_FIRMWARE_SET_SDHOST_CLOCK     set sdhost clock
+0x00038043    RPI_FIRMWARE_SET_GPIO_CONFIG      set gpio config
+0x00038045    RPI_FIRMWARE_SET_PERIPH_REG       set periph reg
+0x00038059    found in start.elf, may write to OTP
+0x0003805a    found in start.elf
+0x00038063    found in start.elf, may write to OTP for bootmode
+0x00038064    RPI_FIRMWARE_SET_REBOOT_FLAGS
+0x0004000c    RPI_FIRMWARE_FRAMEBUFFER_GET_LAYER      framebuffer get layer
+0x0004000d    RPI_FIRMWARE_FRAMEBUFFER_GET_TRANSFORM  framebuffer get transform
+0x0004000e    RPI_FIRMWARE_FRAMEBUFFER_GET_VSYNC              framebuffer get vsync
+0x0004000f    RPI_FIRMWARE_FRAMEBUFFER_GET_TOUCHBUF
+0x00040010    RPI_FIRMWARE_FRAMEBUFFER_GET_GPIOVIRTBUF
+0x00040013    RPI_FIRMWARE_FRAMEBUFFER_GET_NUM_DISPLAYS       framebuffer get num displays
+0x00040014    RPI_FIRMWARE_FRAMEBUFFER_GET_DISPLAY_SETTINGS   get display settings
+0x00040016    RPI_FIRMWARE_FRAMEBUFFER_GET_DISPLAY_ID         framebuffer get display id
+0x00040017    RPI_FIRMWARE_GET_DISPLAY_TIMING                 get display timing
+0x00040018    RPI_FIRMWARE_GET_DISPLAY_CFG                    get display cfg
+0x00048010    RPI_FIRMWARE_VCHIQ_INIT                         vchiq init
+0x00048013    RPI_FIRMWARE_FRAMEBUFFER_SET_DISPLAY_NUM        framebuffer get display num
+0x00048015    RPI_FIRMWARE_SET_PLANE
+0x00048017    RPI_FIRMWARE_SET_TIMING
+0x00048019    RPI_FIRMWARE_SET_DISPLAY_POWER
+0x0004801f    RPI_FIRMWARE_FRAMEBUFFER_SET_TOUCHBUF
+0x00048020    RPI_FIRMWARE_FRAMEBUFFER_SET_GPIOVIRTBUF
 
 undocumented:
-0x0004000f
-0x00040010
 0x00040011
-0x00040020
-0x00040021
+0x00040020    vec related
+0x00040021    // found in a start.elf, involves test_mode
 0x00044002
 0x00044008
 0x0004400c
 0x0004400d
 0x0004400e
-0x0004800c
 0x00048008
+0x0004800c
 0x0004800d
 0x0004800e
 0x0004800f
-0x00048015
-0x00048017
-0x00048019
-0x0004801f
-0x00048020
-0x00030013    vpu job??
+0x00030013    vpu job??, runs a function on the 2nd core?
 0x00030018    calls some qpu things??
 0x00030022
 0x00030040
@@ -146,5 +153,3 @@ undocumented:
 0x00030056    turns 3v3_aud on/off in the pmic
 0x00030057    something involving global_reset pin
 0x00030059
-0x00030060    voltage related
-0x00030061    board rev ext?
