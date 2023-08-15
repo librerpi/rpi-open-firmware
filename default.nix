@@ -3,7 +3,9 @@
 
 let
   sources = import ./nix/sources.nix;
-  haskellNix = import sources."haskell.nix" {};
+  haskellNix = import sources."haskell.nix" {
+    system = "x86_64-linux";
+  };
   pkgs = import sources.nixpkgs {
     inherit (haskellNix.nixpkgsArgs) system config;
     overlays = haskellNix.nixpkgsArgs.overlays ++ [ overlay ];
