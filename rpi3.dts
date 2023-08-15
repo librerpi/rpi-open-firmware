@@ -42,6 +42,19 @@
   chosen {
   };
   system {
+    compatible = "simple-bus";
+    #address-cells = <1>;
+    #size-cells = <1>;
+    ranges = <>;
+    framebuffer0: framebuffer@8000000 {
+      compatible = "simple-framebuffer";
+      reg = <0x8000000 160000>;
+      width = <200>;
+      height = <200>;
+      stride = <800>;
+      format = "a8r8g8b8";
+      status = "disabled"; // disabled by default, the bootloader will fill in the right numbers, and enable
+    };
   };
   memory {
     device_type = "memory";
@@ -344,6 +357,8 @@
       bus-width = <0x04>;
     };
     hvs@7e400000 {
+      // not currently functional
+      status = "disabled";
       compatible = "brcm,bcm2835-hvs";
       reg = <0x7e400000 0x6000>;
       interrupts = <2 1>;
