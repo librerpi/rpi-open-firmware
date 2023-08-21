@@ -375,6 +375,7 @@
       compatible = "brcm,bcm2835-pixelvalve2";
       reg = <0x7e807000 0x100>;
       interrupts = <2 10>; /* pixelvalve */
+      status = "disabled";
     };
     power {
       compatible = "raspberrypi,bcm2835-power";
