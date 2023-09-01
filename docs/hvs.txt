@@ -76,3 +76,50 @@ HVS chan 1 disabled
 HVS chan 2 disabled
 
 dlist: 48: 0x04000500, 0x500 x 0x400 (1280x1024) source image
+
+
+
+when using TPZ (primarily downscaling), 2 uint32_t's get written to the display list
+first compute:
+  a 5.16bit fixed-point scale
+  the iphase (8bit)
+  a reciprocal (16bit), docs say to use `(1<<32)/scale` but linux uses `~0 / scale`
+then write (scale << 8) | iphase
+then write the reciprocal
+
+
+https://forums.raspberrypi.com/viewtopic.php?p=1952747#p1952747
+> You could abuse the gamma LUT to remap the output steps as you wish.
+> Pi0-3 have 256 entry look up table for each component. Pi4 uses a piecewise linear function per component so isn't quite as easily mappable.
+
+
+
+the scaling kernel for up-scaling is cached somewhere, and changes to the kernel in the dlist wont take effect
+but if you modify the index pointing to the kernel, it will re-cache it
+
+
+from hardware_vc4.h, the FIFO ram is `16Kpix == 48kBytes` in size
+the up-scaling buffer is `94 * 1024` in size
+
+> Yes, context memory (for display list) is embedded SRAM. It can do one pixel per cycle for palettised formats (compared to 4 pixels per cycle for unscaled, and 2 pixels per cycle scaled).
+
+
+https://forums.raspberrypi.com/viewtopic.php?p=2005186#p2005186
+Palette Word 0
+bits 11-0: palette base address in context memory
+bit 26: palette order 1= Pixels are ordered left-to-right as LSB to MSB, 0 = Pixels are ordered left to right as MSB to LSB
+bits 29-27: initial pixel offset.
+bit 31-30: palette size. 0=1bpp. 1=2bpp. 2=4bpp. 3=8bpp
+
+Palette entries must be RGBA32 as {ALPHA[7:0], RED[7:0], GREEN[7:0], BLUE[7:0] }
+
+> Yes, context memory (for display list) is embedded SRAM. It can do one pixel per cycle for palettised formats (compared to 4 pixels per cycle for unscaled, and 2 pixels per cycle scaled).
+
+
+`vcgencmd scaling_kernel` dumps the current kernel
+`vcgencmd scaling_kernel 0 -2 -6 -8 -10 -8 -3 2 18 50 82 119 155 187 213 227 227 213 187 155 119 82 50 18 2 -3 -8 -10 -8 -6 -2 0 0` can change it
+https://github.com/ali1234/raspi-teletext/issues/33
+https://github.com/raspberrypi/firmware/issues/104#issuecomment-9585095
+> Adding the line scaling_kernel=8 to boot.config to use Nearest Neighbor scaling results in an output that looks much closer to other examples I've seen:
+
+
