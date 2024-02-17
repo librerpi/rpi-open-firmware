@@ -91,3 +91,18 @@ during a read, SD0-SD17 are sampled at the end of STROBE
 if 2 READ's occur back to back, the end of HOLD is the start of SETUP, and SD0-SD17 remain tri-state
 
 in the default mode, SOE will strobe during reads, SWE strobes during writes
+
+
+from a user on irc:
+I looked at the linux driver, the lean2 blog/code and the caribouLite code/design
+things I have not seen documented by other devs:
+1) REQ line (SD16) is used to device-pace both reads and writes from the device
+2) WrREQ (SD17) is an <output> from the PI, not an input
+WrREQ goes high when the PI has data in the SMI write FIFO and the device deasserts REQ (ie, looks like SD17 allows SMI to request that device assert REQ to receive data)
+latency between device asserting REQ and SMI asserting SE is 16ns (with 500MHz SMI clock)
+<clever> i heard from one of the pistorm guys, that i think the raw data register, will stall the axi bus when in dreq mode
+<clever> so you dont have to poll a fifo status reg
+yes, I was trying to get the CPU to be a 'smart DMA controller', feeding the SMI fifo instead of DMA
+But I can only write the SMI data reg with SMI disabled. Attempting to write to SMI_D with the SMI subsystem enabled causes an error and SMI to halt
+SMI reg setup is time consuming, so I was unable to switch between read & write every ~400ns which was a design requirement
+My github name is JohnMBrooks, but I don't use github much. I primarily do low-level dev for videogame consoles (day job), and retro dev for Apple II (hobby)
