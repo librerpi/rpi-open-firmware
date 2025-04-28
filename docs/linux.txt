@@ -83,3 +83,19 @@ cause:
   the usb PHY is not configured correctly
 solution:
   https://github.com/librerpi/rpi-open-firmware/blob/61a62a148b07c981962fc177fdb7ebdd68e914bd/firmware/drivers/BCM2708UsbPhy.cc#L74-L106
+
+
+[clever@amd-nixos:~/apps/rpi/linux]$ nix-shell ../rpi-open-firmware/default.nix -A kernelShell64
+[nix-shell:~/apps/rpi/linux]$ make $makeFlags bcmrpi3_defconfig
+
+
+
+memblock=debug makes the early-boot allocator print debug
+earlycon=uart8250,mmio,0x10000000,1000000 takes a physical address and searches the DTB for a matching uart
+earlycon=pl011,0x10000000
+no_hash_pointers removes the protection on %p pointers
+dyndbg="file bcm2835-mailbox.c +p" enables pr_debug statements in the given file, relies on DYNAMIC_DEBUG_CORE and DYNAMIC_DEBUG
+dynamic_debug.verbose=10 makes the dyndbg core print debug about itself
+but if the dtb parsing is broken, it cant get the cmdline to respect these
+`#define DEBUG` at the top of a file forcibly enables all pr_debug in the file
+ignore_loglevel also helps to print more debug
