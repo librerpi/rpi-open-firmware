@@ -204,7 +204,7 @@ let
     '';
     diskImage = let
       zImage = pkgs.fetchurl {
-        url = "https://ext.earthtools.ca/videos/private/rpi/zImage-2020-05-19";
+        url = "https://ext.earthtools.ca/private/rpi/zImage-2020-05-19";
         sha256 = "09kijy3rrwzf6zgrq3pbww9267b1dr0s9rippz7ygk354lr3g7c8";
       };
       eval = import (self.path + "/nixos") {
