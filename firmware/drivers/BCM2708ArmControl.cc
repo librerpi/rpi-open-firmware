@@ -221,7 +221,7 @@ void BCM2708ArmControl::start(struct OtpInfo *info) {
 
 #if 0
   enable_jtag();
-  ARM_CONTROL0 |= ARM_C0_JTAGGPIO;
+  ARM_CONTROL0 |= ARM_C0_JTAGON | ARM_C0_JTAGGPIO;
 #endif
   bool levels[64];
   enum BCM2708PinmuxSetting functions[64];
