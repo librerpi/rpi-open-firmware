@@ -13,6 +13,7 @@ SRCS = \
 	drivers/libfdt/fdt_wip.c \
 	drivers/libfdt/fdt_rw.c \
 	drivers/libfdt/fdt_strerror.c \
+	drivers/libfdt/fdt_addresses.c \
 	drivers/fatfs/ff.c \
 	drivers/sdhost_impl.cc \
 	drivers/mbr_disk.cc \

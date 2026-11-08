@@ -43,6 +43,16 @@ FATFS g_BootVolumeFs;
 #define KERNEL_LOAD_ADDRESS 0x2000000 // 32mb from start
 #define INITRD_LOAD_ADDRESS 0x4000000 // 64mb from start
 
+/* Raspberry Pi 3 DSI scanout values published by the LK producer. */
+#define LK_FB_POOL_BASE       0x01800000U
+#define LK_FB_POOL_SIZE       0x00300000U
+#define LK_FB_PRIMARY_PHYS    0x01800000U
+#define LK_FB_BACK_PHYS       0x01977000U
+#define LK_FB_WIDTH           800U
+#define LK_FB_HEIGHT          480U
+#define LK_FB_STRIDE          800U
+#define LK_FB_PIXEL_LENGTH    0x00177000U
+
 typedef void __attribute__((noreturn)) (*linux_t)(uint32_t, uint32_t, void*);
 
 struct mem_entry {
@@ -55,6 +65,135 @@ struct ranges {
   uint32_t parent;
   uint32_t size;
 };
+
+static void fdt_require(int result, const char *what) {
+  if (result < 0)
+    panic("framebuffer DTB fixup failed (%s): %d", what, result);
+}
+
+static void reserve_framebuffer_pool(void *fdt) {
+  const uint32_t *reserved = g_FirmwareData.reserved;
+  if (reserved[FW_RESERVED_FB_MAGIC] != FRAMEBUFFER_HANDOFF_MAGIC)
+    return;
+
+  const uint32_t base = reserved[FW_RESERVED_FB_POOL_BASE];
+  const uint32_t size = reserved[FW_RESERVED_FB_POOL_SIZE];
+  const uint32_t primary = reserved[FW_RESERVED_FB_PRIMARY];
+  const uint32_t back = reserved[FW_RESERVED_FB_BACK];
+  const uint32_t active = reserved[FW_RESERVED_FB_ACTIVE];
+  if (base != LK_FB_POOL_BASE || size != LK_FB_POOL_SIZE ||
+      primary != LK_FB_PRIMARY_PHYS || back != LK_FB_BACK_PHYS ||
+      reserved[FW_RESERVED_FB_WIDTH] != LK_FB_WIDTH ||
+      reserved[FW_RESERVED_FB_HEIGHT] != LK_FB_HEIGHT ||
+      reserved[FW_RESERVED_FB_STRIDE] != LK_FB_STRIDE ||
+      reserved[FW_RESERVED_FB_FORMAT] != FRAMEBUFFER_FORMAT_A8R8G8B8 ||
+      (base & 0xfffU) || (size & 0xfffU) || (active & 0xfffU) ||
+      (active != primary && active != back) ||
+      primary < base || back < base || active < base ||
+      primary + LK_FB_PIXEL_LENGTH > base + size ||
+      back + LK_FB_PIXEL_LENGTH > base + size ||
+      active + LK_FB_PIXEL_LENGTH > base + size) {
+    panic("invalid framebuffer handoff: base=0x%08x size=0x%08x", base, size);
+  }
+
+  const int root = fdt_path_offset(fdt, "/");
+  const int address_cells = fdt_address_cells(fdt, root);
+  const int size_cells = fdt_size_cells(fdt, root);
+  if ((address_cells != 1 && address_cells != 2) ||
+      (size_cells != 1 && size_cells != 2)) {
+    panic("unsupported DTB root cell sizes: address=%d size=%d",
+          address_cells, size_cells);
+  }
+
+  int reserved_memory = fdt_path_offset(fdt, "/reserved-memory");
+  if (reserved_memory < 0) {
+    reserved_memory = fdt_add_subnode(fdt, root, "reserved-memory");
+    fdt_require(reserved_memory, "add /reserved-memory");
+    fdt_require(fdt_setprop_u32(fdt, reserved_memory, "#address-cells",
+                                address_cells), "reserved address cells");
+    fdt_require(fdt_setprop_u32(fdt, reserved_memory, "#size-cells",
+                                size_cells), "reserved size cells");
+    fdt_require(fdt_setprop(fdt, reserved_memory, "ranges", NULL, 0),
+                "reserved ranges");
+  } else if (fdt_address_cells(fdt, reserved_memory) != address_cells ||
+             fdt_size_cells(fdt, reserved_memory) != size_cells) {
+    panic("reserved-memory cell sizes do not match root");
+  }
+
+  int pool = fdt_path_offset(fdt,
+                             "/reserved-memory/framebuffer-pool@1800000");
+  if (pool < 0) {
+    pool = fdt_add_subnode(fdt, reserved_memory,
+                           "framebuffer-pool@1800000");
+    fdt_require(pool, "add framebuffer pool");
+  }
+
+  fdt32_t reg[4] = { 0 };
+  const int cells = address_cells + size_cells;
+  if (cells > (int)(sizeof(reg) / sizeof(reg[0])))
+    panic("framebuffer reg property too large");
+  if (address_cells == 1) {
+    reg[0] = cpu_to_fdt32(base);
+  } else {
+    reg[0] = cpu_to_fdt32(0);
+    reg[1] = cpu_to_fdt32(base);
+  }
+  if (size_cells == 1) {
+    reg[address_cells] = cpu_to_fdt32(size);
+  } else {
+    reg[address_cells] = cpu_to_fdt32(0);
+    reg[address_cells + 1] = cpu_to_fdt32(size);
+  }
+  fdt_require(fdt_setprop(fdt, pool, "reg", reg, cells * sizeof(fdt32_t)),
+              "framebuffer pool reg");
+  fdt_require(fdt_setprop(fdt, pool, "no-map", NULL, 0),
+              "framebuffer pool no-map");
+
+  const char *simplefb_name = active == primary ? "framebuffer@1800000" :
+                                                   "framebuffer@1977000";
+  int simplefb = fdt_subnode_offset(fdt, root, simplefb_name);
+  if (simplefb < 0) {
+    simplefb = fdt_add_subnode(fdt, root, simplefb_name);
+    fdt_require(simplefb, "add simple framebuffer");
+  }
+
+  fdt32_t simplefb_reg[4] = { 0 };
+  if (address_cells == 1) {
+    simplefb_reg[0] = cpu_to_fdt32(active);
+  } else {
+    simplefb_reg[0] = cpu_to_fdt32(0);
+    simplefb_reg[1] = cpu_to_fdt32(active);
+  }
+  if (size_cells == 1) {
+    simplefb_reg[address_cells] = cpu_to_fdt32(LK_FB_PIXEL_LENGTH);
+  } else {
+    simplefb_reg[address_cells] = cpu_to_fdt32(0);
+    simplefb_reg[address_cells + 1] = cpu_to_fdt32(LK_FB_PIXEL_LENGTH);
+  }
+  const char simplefb_compatible[] = "simple-framebuffer";
+  const char simplefb_format[] = "a8r8g8b8";
+  const char okay[] = "okay";
+  fdt_require(fdt_setprop(fdt, simplefb, "compatible", simplefb_compatible,
+                          sizeof(simplefb_compatible)),
+              "simple framebuffer compatible");
+  fdt_require(fdt_setprop(fdt, simplefb, "reg", simplefb_reg,
+                          cells * sizeof(fdt32_t)),
+              "simple framebuffer reg");
+  fdt_require(fdt_setprop_u32(fdt, simplefb, "width", LK_FB_WIDTH),
+              "simple framebuffer width");
+  fdt_require(fdt_setprop_u32(fdt, simplefb, "height", LK_FB_HEIGHT),
+              "simple framebuffer height");
+  fdt_require(fdt_setprop_u32(fdt, simplefb, "stride", LK_FB_STRIDE * 4U),
+              "simple framebuffer stride");
+  fdt_require(fdt_setprop(fdt, simplefb, "format", simplefb_format,
+                          sizeof(simplefb_format)),
+              "simple framebuffer format");
+  fdt_require(fdt_setprop(fdt, simplefb, "status", okay, sizeof(okay)),
+              "simple framebuffer status");
+
+  logf("reserved LK framebuffer pool [0x%08x,0x%08x); simplefb at 0x%08x\n",
+       base, base + size, active);
+}
 
 static_assert((MEM_USABLE_START+0x800000) < KERNEL_LOAD_ADDRESS,
               "memory layout would not allow for kernel to be loaded at KERNEL_LOAD_ADDRESS, please check memory_map.h");
@@ -200,7 +339,9 @@ struct LoaderImpl {
       panic("fdt blob invalid, fdt_check_header returned %d", res);
     }
 
-    res = fdt_open_into(v_fdt, v_fdt, sz + 4096);
+    res = fdt_open_into(v_fdt, v_fdt, sz + 8192);
+    if (res < 0)
+      panic("cannot make DTB writable: %d", res);
 
     char serial_number[9];
     hex32(g_FirmwareData.serial, serial_number);
@@ -268,6 +409,8 @@ struct LoaderImpl {
       };
       fdt_setprop(v_fdt, soc, "ranges", (void*)ranges, sizeof(ranges));
     };
+
+    reserve_framebuffer_pool(v_fdt);
 
     logf("(valid) fdt loaded at 0x%p\n", fdt);
 

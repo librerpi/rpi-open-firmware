@@ -19,6 +19,10 @@ compile-arm-chainloader:
 
 static-test:
 	$(ARM_CC) -std=c11 -ffreestanding -fsyntax-only -I. tests/firmware_abi.c
+	$(ARM_CXX) -std=c++11 -ffreestanding -fsyntax-only -DBAREMETAL \
+		-I. -Icommon/include -Icommon -Iarm_chainloader \
+		-Iarm_chainloader/drivers/libfdt -Iarm_chainloader/drivers/fatfs \
+		-Iarm_chainloader/drivers arm_chainloader/loader.cc
 	@test "$$(tr -d '\r' < arm_chainloader/start.s | grep -Ec '^  \.space 40, 0$$')" -eq 1
 	@test "$$(tr -d '\r' < arm_chainloader/start.s | grep -Ec '^  \.long 0 /\* UART clock / reserved\[0\] \*/$$')" -eq 1
 	@echo "static ABI checks passed"
