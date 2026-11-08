@@ -47,7 +47,9 @@ g_FirmwareData:
   .long 0 /* VPU CPUID      */
   .long 0 /* serial#        */
   .long 0 /* revision       */
-  .long 0 /* Reserved */
+  .long 0 /* UART clock / reserved[0] */
+  /* reserved[1..10]: optional handoff fields, kept out of code */
+  .space 40, 0
 
 # based on https://github.com/mrvn/moose/blob/master/kernel/entry.S
 .macro SaveRegisters, offset
