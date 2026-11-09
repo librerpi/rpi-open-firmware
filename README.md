@@ -26,6 +26,10 @@ make test                    # run both targets
 the generated `common`, `tlsf`, and `notc` dependencies. `static-test` remains
 independently usable when Nix is unavailable.
 
+For the optional LK framebuffer and Raspberry Pi 3 Linux handoff, including
+the boot-partition layout and tested limitations, see
+[ARM Linux handoff](docs/arm-linux-handoff.md).
+
 ### Building on macOS
 
 macOS compilation is similar to GNU/Linux, save platform errata described here. Instructions to build the ARM toolchain are [here](https://launchpadlibrarian.net/287100910/How-to-build-toolchain.pdf). Due to symlinking by default, GCC must be installed manually, and, an older version of guile is necessary (homebrew packages `gcc-6` and `guile18`, respectively). Finally, set the environment variable `LIBRARY_PATH` to `/lib:/lib64` when running `buildall.sh. 
