@@ -173,21 +173,20 @@ struct BCM2708SDHost : BlockDevice {
     GP_PUD = 2;
     mfence();
     udelay(500);
-    GP_PUD = 0;
 
     logf("waiting for pinmux clock update ...\n");
 
-    /* are these in bank 1 or 2? ah who gives a fuck ... */
-    // TODO, this changes EVERY SINGLE PIN to pullup, not just the ones we care about
-    GP_PUDCLK1 = GP_PUDCLK1_PUDCLKn32_SET;
-    GP_PUDCLK2 = GP_PUDCLK2_PUDCLKn64_SET;
+    // GPIO 48-53 occupy bits 16-21 of the GPIO 32-63 pull clock register.
+    // Configure only the SD card pins instead of changing unrelated GPIOs.
+    GP_PUDCLK1 = 0x3f << (48 - 32);
     udelay(500);
 
     logf("ok ...\n");
+    GP_PUD = 0;
     GP_PUDCLK1 = 0;
     GP_PUDCLK2 = 0;
 
-    logf("pinmux configured for aux0\n");
+    logf("pinmux configured for sdhost\n");
   }
 
   void reset() {
@@ -647,6 +646,10 @@ printf("\n");
 
     logf("powering down controller ...\n");
     SH_VDD = 0;
+    // Allow the card and controller to complete power-down before Linux
+    // takes ownership. Leaving the identification clock active makes the
+    // subsequent Linux probe intermittent.
+    udelay(1000);
     SH_HCFG = 0;
     SH_HBCT = 0x400;
     SH_HBLC = 0;
@@ -656,6 +659,11 @@ printf("\n");
 
     SH_CMD = 0;
     SH_ARG = 0;
+    SH_CDIV = 0;
+    SH_TOUT = 0;
+    SH_HBCT = 0;
+    SH_HBLC = 0;
+    mfence();
   }
 
   BCM2708SDHost() {
