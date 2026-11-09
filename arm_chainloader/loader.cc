@@ -470,14 +470,14 @@ struct LoaderImpl {
       res = fdt_delprop(v_fdt, cprman, "firmware");
       if (res < 0 && res != -FDT_ERR_NOTFOUND)
         panic("cannot remove CPRMAN firmware dependency: %d", res);
-      int clocks_len = 0;
-      const fdt32_t *clocks = reinterpret_cast<const fdt32_t *>(
-          fdt_getprop(v_fdt, cprman, "clocks", &clocks_len));
-      if (clocks && clocks_len >= (int)sizeof(fdt32_t)) {
-        fdt32_t oscillator = clocks[0];
-        fdt_require(fdt_setprop(v_fdt, cprman, "clocks", &oscillator,
-                                sizeof(oscillator)), "fix CPRMAN clock");
-      }
+      /*
+       * Keep the complete CPRMAN clocks property.  The Linux BCM2835 clock
+       * driver uses the DSI provider phandles to resolve the optional parent
+       * names even when the DSI provider nodes remain disabled, which keeps
+       * Linux from claiming the LK-owned display.  Reducing this property to
+       * the oscillator loses the six valid DSI references and causes dsi0p to
+       * register with a NULL parent.
+       */
     }
 
     int mmcnr = fdt_path_offset(v_fdt, "/soc/mmcnr@7e300000");
