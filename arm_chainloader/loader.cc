@@ -68,7 +68,7 @@ struct ranges {
 
 static void fdt_require(int result, const char *what) {
   if (result < 0)
-    panic("framebuffer DTB fixup failed (%s): %d", what, result);
+    panic("DTB fixup failed (%s): %d", what, result);
 }
 
 static void reserve_framebuffer_pool(void *fdt) {
@@ -223,10 +223,11 @@ struct LoaderImpl {
     find_and_mount();
     auto kernel = load_kernel();
     size_t initrd_size = 0;
-    bool do_load_initrd = true;
     uint8_t *initrd = NULL;
-    if (do_load_initrd) {
-      load_initrd(&initrd_size);
+    if (file_exists("initrd")) {
+      initrd = load_initrd(&initrd_size);
+    } else {
+      logf("initrd: not present; continuing without an initrd\n");
     }
 
     /* read the command-line null-terminated */
@@ -288,6 +289,82 @@ struct LoaderImpl {
 
   bool file_exists(const char* path) {
     return f_stat(path, NULL) == FR_OK;
+  }
+
+  void fixup_uart_clock(void* fdt) {
+    const uint32_t uart_clock_phandle = 0x7fff0001;
+    const uint32_t uart_clock_hz = g_FirmwareData.reserved[FW_RESERVED_UART_CLOCK] ?
+        g_FirmwareData.reserved[FW_RESERVED_UART_CLOCK] : 48000000;
+    int uart = fdt_path_offset(fdt, "/soc/serial@7e201000");
+    if (uart < 0) {
+      logf("PL011 node not found; retaining its original clock provider\n");
+      return;
+    }
+
+    int clock = fdt_add_subnode(fdt, 0, "lk-uart-clock");
+    if (clock < 0)
+      panic("cannot add fixed PL011 clock node: %d", clock);
+    const char compatible[] = "fixed-clock";
+    const char clock_names[] = "uartclk\0apb_pclk\0";
+    const fdt32_t cells = cpu_to_fdt32(0);
+    const fdt32_t rate = cpu_to_fdt32(uart_clock_hz);
+    const fdt32_t phandle = cpu_to_fdt32(uart_clock_phandle);
+    const fdt32_t clocks[] = { phandle, phandle };
+
+    fdt_require(fdt_setprop(fdt, clock, "compatible", compatible,
+                            sizeof(compatible)), "PL011 clock compatible");
+    fdt_require(fdt_setprop(fdt, clock, "#clock-cells", &cells, sizeof(cells)),
+                "PL011 clock cells");
+    fdt_require(fdt_setprop(fdt, clock, "clock-frequency", &rate, sizeof(rate)),
+                "PL011 clock rate");
+    fdt_require(fdt_setprop(fdt, clock, "phandle", &phandle, sizeof(phandle)),
+                "PL011 clock phandle");
+    fdt_require(fdt_setprop(fdt, clock, "linux,phandle", &phandle,
+                            sizeof(phandle)), "PL011 Linux phandle");
+
+    /* Property updates can move later structure entries; refresh the node. */
+    uart = fdt_path_offset(fdt, "/soc/serial@7e201000");
+    if (uart < 0)
+      panic("PL011 node moved or disappeared after clock setup: %d", uart);
+    fdt_require(fdt_setprop(fdt, uart, "clocks", clocks, sizeof(clocks)),
+                "connect PL011 clock");
+    fdt_require(fdt_setprop(fdt, uart, "clock-names", clock_names,
+                            sizeof(clock_names)), "name PL011 clocks");
+    fdt_require(fdt_setprop(fdt, uart, "clock-frequency", &rate, sizeof(rate)),
+                "set PL011 clock-frequency");
+
+    /* LK routes PL011 to the header; retain that routing when Linux probes. */
+    int uart_pins = fdt_path_offset(fdt,
+                                    "/soc/gpio@7e200000/uart0-gpio14");
+    if (uart_pins < 0)
+      panic("PL011 GPIO14/15 pinctrl node not found: %d", uart_pins);
+    uint32_t uart_pins_phandle = fdt_get_phandle(fdt, uart_pins);
+    if (!uart_pins_phandle)
+      panic("PL011 GPIO14/15 pinctrl node has no phandle");
+    const fdt32_t uart_pinctrl = cpu_to_fdt32(uart_pins_phandle);
+    const char pinctrl_names[] = "default";
+    uart = fdt_path_offset(fdt, "/soc/serial@7e201000");
+    if (uart < 0)
+      panic("PL011 node moved or disappeared before pinctrl setup: %d", uart);
+    fdt_require(fdt_setprop(fdt, uart, "pinctrl-names", pinctrl_names,
+                            sizeof(pinctrl_names)), "name PL011 pinctrl");
+    fdt_require(fdt_setprop(fdt, uart, "pinctrl-0", &uart_pinctrl,
+                            sizeof(uart_pinctrl)), "route PL011 to GPIO14/15");
+
+    int aliases = fdt_path_offset(fdt, "/aliases");
+    if (aliases >= 0) {
+      const char uart_path[] = "/soc/serial@7e201000";
+      fdt_require(fdt_setprop(fdt, aliases, "serial0", uart_path,
+                              sizeof(uart_path)), "set serial0 alias");
+    }
+    int bluetooth = fdt_path_offset(fdt,
+                                    "/soc/serial@7e201000/bluetooth");
+    if (bluetooth >= 0) {
+      const char disabled[] = "disabled";
+      fdt_require(fdt_setprop(fdt, bluetooth, "status", disabled,
+                              sizeof(disabled)), "disable PL011 Bluetooth");
+    }
+    logf("PL011 handoff clock fixed at %u Hz\n", uart_clock_hz);
   }
 
   size_t read_file(const char* path, uint8_t*& dest, bool should_alloc = true) {
@@ -363,14 +440,87 @@ struct LoaderImpl {
     }
 
     int system = fdt_path_offset(v_fdt, "/system");
-    if (system < 0) {
-      panic("cant find /system");
-    } else {
+    if (system >= 0) {
       // /system/linux,serial is an 8byte raw serial#
       // /system/linux,revision is a raw 32bit revision, directly from OTP
       uint32_t revision = htonl(g_FirmwareData.revision);
       res = fdt_setprop(v_fdt, system, "linux,revision", &revision, 4);
     }
+
+    /* These device-tree changes describe the LK-initialized display/USB
+     * handoff. Leave unrelated firmware and board configurations alone. */
+    const bool lk_handoff =
+        g_FirmwareData.reserved[FW_RESERVED_FB_MAGIC] == FRAMEBUFFER_HANDOFF_MAGIC;
+    int firmware = fdt_path_offset(v_fdt, "/soc/firmware");
+    if (lk_handoff && firmware >= 0) {
+      const char disabled[] = "disabled";
+      fdt_require(fdt_setprop(v_fdt, firmware, "status", disabled,
+                              sizeof(disabled)), "disable firmware service");
+    }
+
+    int usb = fdt_path_offset(v_fdt, "/soc/usb@7e980000");
+    if (lk_handoff && usb >= 0) {
+      res = fdt_delprop(v_fdt, usb, "power-domains");
+      if (res < 0 && res != -FDT_ERR_NOTFOUND)
+        panic("cannot remove USB power-domain dependency: %d", res);
+    }
+
+    int cprman = fdt_path_offset(v_fdt, "/soc/cprman@7e101000");
+    if (lk_handoff && cprman >= 0) {
+      res = fdt_delprop(v_fdt, cprman, "firmware");
+      if (res < 0 && res != -FDT_ERR_NOTFOUND)
+        panic("cannot remove CPRMAN firmware dependency: %d", res);
+      int clocks_len = 0;
+      const fdt32_t *clocks = reinterpret_cast<const fdt32_t *>(
+          fdt_getprop(v_fdt, cprman, "clocks", &clocks_len));
+      if (clocks && clocks_len >= (int)sizeof(fdt32_t)) {
+        fdt32_t oscillator = clocks[0];
+        fdt_require(fdt_setprop(v_fdt, cprman, "clocks", &oscillator,
+                                sizeof(oscillator)), "fix CPRMAN clock");
+      }
+    }
+
+    int mmcnr = fdt_path_offset(v_fdt, "/soc/mmcnr@7e300000");
+    if (lk_handoff && mmcnr >= 0) {
+      const char disabled[] = "disabled";
+      fdt_require(fdt_setprop(v_fdt, mmcnr, "status", disabled,
+                              sizeof(disabled)), "disable MMCNR");
+    }
+    int sdhost = fdt_path_offset(v_fdt, "/soc/mmc@7e202000");
+    if (lk_handoff && sdhost >= 0) {
+      const char okay[] = "okay";
+      fdt_require(fdt_setprop(v_fdt, sdhost, "status", okay, sizeof(okay)),
+                  "enable SDHOST");
+      fdt_require(fdt_setprop_u32(v_fdt, sdhost, "bus-width", 4),
+                  "set SDHOST bus width");
+      fdt_require(fdt_setprop(v_fdt, sdhost, "brcm,force-pio", NULL, 0),
+                  "force SDHOST PIO");
+      fdt_require(fdt_setprop_u32(v_fdt, sdhost, "brcm,pio-limit",
+                                  0x7fffffff), "set SDHOST PIO limit");
+
+      int pins = fdt_path_offset(v_fdt, "/soc/gpio@7e200000/sdhost-gpio48");
+      if (pins >= 0) {
+        uint32_t phandle = fdt_get_phandle(v_fdt, pins);
+        if (phandle) {
+          const fdt32_t pinctrl = cpu_to_fdt32(phandle);
+          sdhost = fdt_path_offset(v_fdt, "/soc/mmc@7e202000");
+          if (sdhost < 0)
+            panic("SDHOST node disappeared before pinctrl setup: %d", sdhost);
+          fdt_require(fdt_setprop(v_fdt, sdhost, "pinctrl-names", "default",
+                                  sizeof("default")), "name SDHOST pinctrl");
+          fdt_require(fdt_setprop(v_fdt, sdhost, "pinctrl-0", &pinctrl,
+                                  sizeof(pinctrl)), "route SDHOST pins");
+        }
+      }
+    }
+
+    if (lk_handoff)
+      fixup_uart_clock(v_fdt);
+    int timer = fdt_path_offset(v_fdt, "/timer");
+    if (lk_handoff && timer >= 0)
+      fdt_require(fdt_setprop(v_fdt, timer,
+                              "arm,cpu-registers-not-fw-configured", NULL, 0),
+                  "mark ARM timer unconfigured");
 
     int chosen = fdt_path_offset(v_fdt, "/chosen");
     if (chosen < 0) panic("no chosen node in fdt");
@@ -438,6 +588,10 @@ struct LoaderImpl {
       return "rpi2.dtb";
       break;
     case 0x410FD034:
+      if (file_exists("rpi3.dtb"))
+        return "rpi3.dtb";
+      if (file_exists("bcm2710-rpi-3-b.dtb"))
+        return "bcm2710-rpi-3-b.dtb";
       return "rpi3.dtb";
       break;
     // 410FD083 is cortex A72, rpi4
