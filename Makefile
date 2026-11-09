@@ -27,6 +27,9 @@ static-test:
 		-I. -Icommon/include -Icommon -Iarm_chainloader \
 		-Iarm_chainloader/drivers/libfdt -Iarm_chainloader/drivers/fatfs \
 		-Iarm_chainloader/drivers arm_chainloader/drivers/sdhost_impl.cc
+	$(ARM_CC) -c -ffreestanding -march=armv6zk -mfpu=vfp \
+		-mfloat-abi=softfp -I. -Iarm_chainloader -x assembler-with-cpp \
+		arm_chainloader/start.s -o /dev/null
 	@test "$$(tr -d '\r' < arm_chainloader/start.s | grep -Ec '^  \.space 40, 0$$')" -eq 1
 	@test "$$(tr -d '\r' < arm_chainloader/start.s | grep -Ec '^  \.long 0 /\* UART clock / reserved\[0\] \*/$$')" -eq 1
 	@echo "static ABI checks passed"

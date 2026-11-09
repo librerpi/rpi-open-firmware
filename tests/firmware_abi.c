@@ -20,3 +20,11 @@ _Static_assert(FRAMEBUFFER_HANDOFF_MAGIC == 0x3142464cU,
 int main(void) {
   return 0;
 }
+#include "arm_chainloader/cpu_id.h"
+
+_Static_assert((0x410fb767U & ARM_MIDR_PART_MASK) == ARM_MIDR_PART_ARM1176,
+               "BCM2835 must use the single-core path");
+_Static_assert((0x410fc075U & ARM_MIDR_PART_MASK) != ARM_MIDR_PART_ARM1176,
+               "Cortex-A7 must use the SMP path");
+_Static_assert((0x410fd034U & ARM_MIDR_PART_MASK) != ARM_MIDR_PART_ARM1176,
+               "Cortex-A53 must use the SMP path");
