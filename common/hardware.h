@@ -101,8 +101,25 @@ typedef struct {
   uint32_t vpu_cpuid;
   uint32_t serial;
   uint32_t revision;
-  uint32_t reserved[1];
+  /* Keep the original five-word prefix stable for existing clients. */
+  uint32_t reserved[11];
 } firmware_arm_data_t;
+
+/* Shared VPU-to-ARM handoff fields. Index zero predates this ABI extension. */
+#define FW_RESERVED_UART_CLOCK       0
+#define FW_RESERVED_FB_MAGIC         1
+#define FW_RESERVED_FB_POOL_BASE     2
+#define FW_RESERVED_FB_POOL_SIZE     3
+#define FW_RESERVED_FB_PRIMARY       4
+#define FW_RESERVED_FB_BACK          5
+#define FW_RESERVED_FB_ACTIVE        6
+#define FW_RESERVED_FB_WIDTH         7
+#define FW_RESERVED_FB_HEIGHT        8
+#define FW_RESERVED_FB_STRIDE        9
+#define FW_RESERVED_FB_FORMAT        10
+
+#define FRAMEBUFFER_HANDOFF_MAGIC    0x3142464cU /* LFB1 */
+#define FRAMEBUFFER_FORMAT_A8R8G8B8  1U
 
 void print_timestamp(void);
 

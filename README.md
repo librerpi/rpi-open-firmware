@@ -12,6 +12,24 @@ All Broadcom headers are licensed under 3-Clause BSD License while our code is u
 
 As a prerequisite, Julian Brown's [VC4 toolchain](https://github.com/itszor/vc4-toolchain) is necessary as well as the `arm-none-eabi-` toolchain (Debian package `gcc-arm-none-eabi`). You can tweak the VC4 toolchain path in `CROSS_COMPILE` in `Makefile` and the ARM path in `arm_chainloader/Makefile` if necessary. Contributors should not commit their personal paths. After configuration, run `buildall.sh`. The binary is at `build/bootcode.bin`, ready to be copied to an SD card.
 
+### Local validation workflow
+
+Patch-level validation is split into independent targets:
+
+```sh
+make static-test             # ABI and entry-image checks; no Nix or SD card
+make compile-arm-chainloader # Nix-build the ARM chainloader
+make test                    # run both targets
+```
+
+`compile-arm-chainloader` invokes `nix-build -A arm.chainloader`, which supplies
+the generated `common`, `tlsf`, and `notc` dependencies. `static-test` remains
+independently usable when Nix is unavailable.
+
+For the optional LK framebuffer and Raspberry Pi 3 Linux handoff, including
+the boot-partition layout and tested limitations, see
+[ARM Linux handoff](docs/arm-linux-handoff.md).
+
 ### Building on macOS
 
 macOS compilation is similar to GNU/Linux, save platform errata described here. Instructions to build the ARM toolchain are [here](https://launchpadlibrarian.net/287100910/How-to-build-toolchain.pdf). Due to symlinking by default, GCC must be installed manually, and, an older version of guile is necessary (homebrew packages `gcc-6` and `guile18`, respectively). Finally, set the environment variable `LIBRARY_PATH` to `/lib:/lib64` when running `buildall.sh. 

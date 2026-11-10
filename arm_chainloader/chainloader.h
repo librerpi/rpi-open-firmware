@@ -41,6 +41,8 @@ static inline uint32_t arm_get_cpsr() {
   return r;
 }
 
+void arm_mask_interrupts();
+
 static inline uint32_t arm_get_midr() {
   uint32_t r;
   __asm__("mrc p15, 0, %0, c0, c0, 0" : "=r"(r));

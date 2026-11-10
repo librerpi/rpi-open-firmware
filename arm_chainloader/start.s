@@ -24,6 +24,7 @@ the boot process.
 
 #include "memory_map.h"
 #include "arm-defs.h"
+#include "cpu_id.h"
 
 .arch_extension sec
 
@@ -47,7 +48,9 @@ g_FirmwareData:
   .long 0 /* VPU CPUID      */
   .long 0 /* serial#        */
   .long 0 /* revision       */
-  .long 0 /* Reserved */
+  .long 0 /* UART clock / reserved[0] */
+  /* reserved[1..10]: optional handoff fields, kept out of code */
+  .space 40, 0
 
 # based on https://github.com/mrvn/moose/blob/master/kernel/entry.S
 .macro SaveRegisters, offset
@@ -159,6 +162,11 @@ enable_icache:
   mcr p15, 0, r0, c1, c0, 0 // r0 -> SCTLR
   bx lr
 
+.global arm_mask_interrupts
+arm_mask_interrupts:
+  cpsid if
+  bx lr
+
 .global disable_icache
 disable_icache:
   mrc p15, 0, r0, c1, c0, 0 // SCTLR -> r0
@@ -185,14 +193,15 @@ _common_start:
 
   msr cpsr, r0 // revert to previous mode
   /*
-   * read MIDR, see if this is an ARMv6 system, if it is, just
-   * assume single core (BCM2708) and not bother doing SMP stuff.
+   * BCM2835's ARM1176 is single-core and has no MPIDR. The architecture
+   * field is 0xf on both ARM1176 and Cortex-A53, so identify the part.
    */
   mrc p15, 0, r0, c0, c0, 0 // MIDR -> r0
-  lsr r0, #16
-  and r0, #0xF
-  cmp r0, #0x7              // check if MIDR ends in 0x7__
-  beq L_finish_init
+  ldr r1, =ARM_MIDR_PART_MASK
+  and r0, r0, r1
+  ldr r1, =ARM_MIDR_PART_ARM1176
+  cmp r0, r1
+  beq L_primary_start
 
 L_armv7_or_higher:
   /*
@@ -233,7 +242,51 @@ L_finish_init:
   //orr r0, r0, #(1<<12)        // r0 |= 1<<12 i-cache enable
   //mcr p15, 0, r0, c1, c0, 0   // r0 -> SCTLR
 
-bl c_entry
+  /*
+   * Keep Raspberry Pi 3 secondary cores parked until Linux releases them.
+   * The bcm2836-smp driver writes each CPU's entry address to its local
+   * mailbox 3 SET register at 0x4000008c + 0x10 * cpu and signals with SEV.
+   * The corresponding CLR register is used here as the wait interface.
+   */
+  mrc p15, 0, r0, c0, c0, 5
+  and r0, #3
+  cmp r0, #0
+  beq L_primary_start
+
+  mov r4, r0
+  /* Prepare each core for Linux, as on the working RPi3 handoff. */
+  bl arm_lowlevel_setup
+  cpsid if
+  mrc p15, 0, r0, c1, c0, 0
+  bic r0, r0, #(1 << 0)     /* SCTLR.M: MMU off */
+  bic r0, r0, #(1 << 2)     /* SCTLR.C: data cache off */
+  mcr p15, 0, r0, c1, c0, 0
+  mov r0, #0
+  mcr p15, 0, r0, c7, c10, 4 /* DSB */
+  mcr p15, 0, r0, c7, c5, 4  /* ISB */
+  lsl r1, r4, #4
+  ldr r2, =0x400000cc
+  add r2, r2, r1
+  mov r3, #0xffffffff
+  str r3, [r2]
+  mcr p15, 0, r0, c7, c10, 4
+
+L_secondary_wait:
+  wfe
+  ldr r3, [r2]
+  cmp r3, #0
+  beq L_secondary_wait
+
+  /* Consume the release value before entering Linux. */
+  str r3, [r2]
+  mcr p15, 0, r0, c7, c10, 4
+  mov r0, #0
+  mvn r1, #0
+  ldr r2, =0x0f000000
+  bx r3
+
+L_primary_start:
+  bl c_entry
 b .
 
 .global debug_stall

@@ -18,6 +18,7 @@ Second stage bootloader.
 =============================================================================*/
 
 #include "chainloader.h"
+#include "arm-defs.h"
 #include "memory_map.h"
 #include "mmu.h"
 #include "drivers/fatfs/ff.h"
@@ -42,6 +43,20 @@ FATFS g_BootVolumeFs;
 #define DTB_LOAD_ADDRESS    0xF000000 // 240mb from start
 #define KERNEL_LOAD_ADDRESS 0x2000000 // 32mb from start
 #define INITRD_LOAD_ADDRESS 0x4000000 // 64mb from start
+#define KERNEL_MAX_SIZE     (INITRD_LOAD_ADDRESS - KERNEL_LOAD_ADDRESS)
+#define INITRD_MAX_SIZE     (DTB_LOAD_ADDRESS - INITRD_LOAD_ADDRESS)
+#define DTB_MAX_SIZE        (2U * 1024U * 1024U)
+#define CMDLINE_MAX_SIZE    (64U * 1024U)
+
+/* Raspberry Pi 3 DSI scanout values published by the LK producer. */
+#define LK_FB_POOL_BASE       0x07000000U
+#define LK_FB_POOL_SIZE       0x00300000U
+#define LK_FB_PRIMARY_PHYS    0x07000000U
+#define LK_FB_BACK_PHYS       0x07177000U
+#define LK_FB_WIDTH           800U
+#define LK_FB_HEIGHT          480U
+#define LK_FB_STRIDE          800U
+#define LK_FB_PIXEL_LENGTH    0x00177000U
 
 typedef void __attribute__((noreturn)) (*linux_t)(uint32_t, uint32_t, void*);
 
@@ -55,6 +70,185 @@ struct ranges {
   uint32_t parent;
   uint32_t size;
 };
+
+struct boot_interval {
+  uint32_t start;
+  uint32_t end;
+  const char *owner;
+};
+
+static uint32_t checked_end(uint32_t start, size_t size, const char *owner) {
+  if (size > UINT32_MAX - start)
+    panic("%s interval overflows physical address space", owner);
+  return start + (uint32_t)size;
+}
+
+static void validate_layout(size_t kernel_size, size_t initrd_size) {
+  boot_interval intervals[5];
+  size_t count = 0;
+  intervals[count++] = { 0, MEM_USABLE_START, "chainloader" };
+
+  if (g_FirmwareData.reserved[FW_RESERVED_FB_MAGIC] == FRAMEBUFFER_HANDOFF_MAGIC) {
+    const uint32_t start = g_FirmwareData.reserved[FW_RESERVED_FB_POOL_BASE];
+    const uint32_t size = g_FirmwareData.reserved[FW_RESERVED_FB_POOL_SIZE];
+    intervals[count++] = { start, checked_end(start, size, "framebuffer"),
+                           "retained framebuffer" };
+  }
+  intervals[count++] = { KERNEL_LOAD_ADDRESS,
+                         checked_end(KERNEL_LOAD_ADDRESS, kernel_size, "kernel"),
+                         "kernel" };
+  if (initrd_size)
+    intervals[count++] = { INITRD_LOAD_ADDRESS,
+                           checked_end(INITRD_LOAD_ADDRESS, initrd_size, "initrd"),
+                           "initrd" };
+  intervals[count++] = { DTB_LOAD_ADDRESS,
+                         checked_end(DTB_LOAD_ADDRESS, DTB_MAX_SIZE, "DTB"),
+                         "DTB workspace" };
+
+  for (size_t i = 0; i < count; ++i) {
+    if (intervals[i].start >= intervals[i].end)
+      panic("invalid %s interval", intervals[i].owner);
+    for (size_t j = i + 1; j < count; ++j) {
+      if (intervals[i].start < intervals[j].end &&
+          intervals[j].start < intervals[i].end)
+        panic("physical interval overlap: %s [0x%08lx,0x%08lx) and %s [0x%08lx,0x%08lx)",
+              intervals[i].owner, (unsigned long)intervals[i].start,
+              (unsigned long)intervals[i].end, intervals[j].owner,
+              (unsigned long)intervals[j].start, (unsigned long)intervals[j].end);
+    }
+  }
+}
+
+static void fdt_require(int result, const char *what) {
+  if (result < 0)
+    panic("DTB fixup failed (%s): %d", what, result);
+}
+
+static void reserve_framebuffer_pool(void *fdt) {
+  const uint32_t *reserved = g_FirmwareData.reserved;
+  if (reserved[FW_RESERVED_FB_MAGIC] != FRAMEBUFFER_HANDOFF_MAGIC)
+    return;
+
+  const uint32_t base = reserved[FW_RESERVED_FB_POOL_BASE];
+  const uint32_t size = reserved[FW_RESERVED_FB_POOL_SIZE];
+  const uint32_t primary = reserved[FW_RESERVED_FB_PRIMARY];
+  const uint32_t back = reserved[FW_RESERVED_FB_BACK];
+  const uint32_t active = reserved[FW_RESERVED_FB_ACTIVE];
+  if (base != LK_FB_POOL_BASE || size != LK_FB_POOL_SIZE ||
+      primary != LK_FB_PRIMARY_PHYS || back != LK_FB_BACK_PHYS ||
+      reserved[FW_RESERVED_FB_WIDTH] != LK_FB_WIDTH ||
+      reserved[FW_RESERVED_FB_HEIGHT] != LK_FB_HEIGHT ||
+      reserved[FW_RESERVED_FB_STRIDE] != LK_FB_STRIDE ||
+      reserved[FW_RESERVED_FB_FORMAT] != FRAMEBUFFER_FORMAT_A8R8G8B8 ||
+      (base & 0xfffU) || (size & 0xfffU) || (active & 0xfffU) ||
+      (active != primary && active != back) ||
+      primary < base || back < base || active < base ||
+      primary + LK_FB_PIXEL_LENGTH > base + size ||
+      back + LK_FB_PIXEL_LENGTH > base + size ||
+      active + LK_FB_PIXEL_LENGTH > base + size) {
+    panic("invalid framebuffer handoff: base=0x%08x size=0x%08x", base, size);
+  }
+
+  const int root = fdt_path_offset(fdt, "/");
+  const int address_cells = fdt_address_cells(fdt, root);
+  const int size_cells = fdt_size_cells(fdt, root);
+  if ((address_cells != 1 && address_cells != 2) ||
+      (size_cells != 1 && size_cells != 2)) {
+    panic("unsupported DTB root cell sizes: address=%d size=%d",
+          address_cells, size_cells);
+  }
+
+  int reserved_memory = fdt_path_offset(fdt, "/reserved-memory");
+  if (reserved_memory < 0) {
+    reserved_memory = fdt_add_subnode(fdt, root, "reserved-memory");
+    fdt_require(reserved_memory, "add /reserved-memory");
+    fdt_require(fdt_setprop_u32(fdt, reserved_memory, "#address-cells",
+                                address_cells), "reserved address cells");
+    fdt_require(fdt_setprop_u32(fdt, reserved_memory, "#size-cells",
+                                size_cells), "reserved size cells");
+    fdt_require(fdt_setprop(fdt, reserved_memory, "ranges", NULL, 0),
+                "reserved ranges");
+  } else if (fdt_address_cells(fdt, reserved_memory) != address_cells ||
+             fdt_size_cells(fdt, reserved_memory) != size_cells) {
+    panic("reserved-memory cell sizes do not match root");
+  }
+
+  int pool = fdt_path_offset(fdt,
+                             "/reserved-memory/framebuffer-pool@7000000");
+  if (pool < 0) {
+    pool = fdt_add_subnode(fdt, reserved_memory,
+                           "framebuffer-pool@7000000");
+    fdt_require(pool, "add framebuffer pool");
+  }
+
+  fdt32_t reg[4] = { 0 };
+  const int cells = address_cells + size_cells;
+  if (cells > (int)(sizeof(reg) / sizeof(reg[0])))
+    panic("framebuffer reg property too large");
+  if (address_cells == 1) {
+    reg[0] = cpu_to_fdt32(active);
+  } else {
+    reg[0] = cpu_to_fdt32(0);
+    reg[1] = cpu_to_fdt32(active);
+  }
+  if (size_cells == 1) {
+    reg[address_cells] = cpu_to_fdt32(LK_FB_PIXEL_LENGTH);
+  } else {
+    reg[address_cells] = cpu_to_fdt32(0);
+    reg[address_cells + 1] = cpu_to_fdt32(LK_FB_PIXEL_LENGTH);
+  }
+  fdt_require(fdt_setprop(fdt, pool, "reg", reg, cells * sizeof(fdt32_t)),
+              "framebuffer pool reg");
+  /* Keep the active scanout out of Linux's linear map. simplefb uses
+   * ioremap_wc(), which is rejected for ordinary mapped ARM RAM. */
+  fdt_require(fdt_setprop(fdt, pool, "no-map", NULL, 0),
+              "framebuffer pool no-map");
+
+  const char *simplefb_name = active == primary ? "framebuffer@7000000" :
+                                                   "framebuffer@7177000";
+  int simplefb = fdt_subnode_offset(fdt, root, simplefb_name);
+  if (simplefb < 0) {
+    simplefb = fdt_add_subnode(fdt, root, simplefb_name);
+    fdt_require(simplefb, "add simple framebuffer");
+  }
+
+  fdt32_t simplefb_reg[4] = { 0 };
+  if (address_cells == 1) {
+    simplefb_reg[0] = cpu_to_fdt32(active);
+  } else {
+    simplefb_reg[0] = cpu_to_fdt32(0);
+    simplefb_reg[1] = cpu_to_fdt32(active);
+  }
+  if (size_cells == 1) {
+    simplefb_reg[address_cells] = cpu_to_fdt32(LK_FB_PIXEL_LENGTH);
+  } else {
+    simplefb_reg[address_cells] = cpu_to_fdt32(0);
+    simplefb_reg[address_cells + 1] = cpu_to_fdt32(LK_FB_PIXEL_LENGTH);
+  }
+  const char simplefb_compatible[] = "simple-framebuffer";
+  const char simplefb_format[] = "a8r8g8b8";
+  const char okay[] = "okay";
+  fdt_require(fdt_setprop(fdt, simplefb, "compatible", simplefb_compatible,
+                          sizeof(simplefb_compatible)),
+              "simple framebuffer compatible");
+  fdt_require(fdt_setprop(fdt, simplefb, "reg", simplefb_reg,
+                          cells * sizeof(fdt32_t)),
+              "simple framebuffer reg");
+  fdt_require(fdt_setprop_u32(fdt, simplefb, "width", LK_FB_WIDTH),
+              "simple framebuffer width");
+  fdt_require(fdt_setprop_u32(fdt, simplefb, "height", LK_FB_HEIGHT),
+              "simple framebuffer height");
+  fdt_require(fdt_setprop_u32(fdt, simplefb, "stride", LK_FB_STRIDE * 4U),
+              "simple framebuffer stride");
+  fdt_require(fdt_setprop(fdt, simplefb, "format", simplefb_format,
+                          sizeof(simplefb_format)),
+              "simple framebuffer format");
+  fdt_require(fdt_setprop(fdt, simplefb, "status", okay, sizeof(okay)),
+              "simple framebuffer status");
+
+  logf("reserved LK active framebuffer [0x%08x,0x%08x); simplefb at 0x%08x\n",
+       active, active + LK_FB_PIXEL_LENGTH, active);
+}
 
 static_assert((MEM_USABLE_START+0x800000) < KERNEL_LOAD_ADDRESS,
               "memory layout would not allow for kernel to be loaded at KERNEL_LOAD_ADDRESS, please check memory_map.h");
@@ -82,17 +276,21 @@ void hex32(uint32_t input, char *output) {
 struct LoaderImpl {
   LoaderImpl() {
     find_and_mount();
-    auto kernel = load_kernel();
+    size_t kernel_size = 0;
+    auto kernel = load_kernel(&kernel_size);
     size_t initrd_size = 0;
-    bool do_load_initrd = true;
     uint8_t *initrd = NULL;
-    if (do_load_initrd) {
-      load_initrd(&initrd_size);
+    if (file_exists("initrd")) {
+      initrd = load_initrd(&initrd_size);
+    } else {
+      logf("initrd: not present; continuing without an initrd\n");
     }
+
+    validate_layout(kernel_size, initrd_size);
 
     /* read the command-line null-terminated */
     uint8_t *cmdline;
-    size_t cmdlen = read_file("cmdline.txt", cmdline);
+    size_t cmdlen = read_file("cmdline.txt", cmdline, true, CMDLINE_MAX_SIZE);
 
     logf("kernel cmdline: %s\n", cmdline);
 
@@ -120,19 +318,20 @@ struct LoaderImpl {
     logf("Boot partition mounted!\n");
   }
 
-  linux_t load_kernel() {
+  linux_t load_kernel(size_t *size_out) {
     /* read the kernel as a function pointer at fixed address */
     uint8_t* zImage = reinterpret_cast<uint8_t*>(KERNEL_LOAD_ADDRESS);
     linux_t kernel = reinterpret_cast<linux_t>(zImage);
 
-    size_t ksize = read_file("zImage", zImage, false);
+    size_t ksize = read_file("zImage", zImage, false, KERNEL_MAX_SIZE);
+    *size_out = ksize;
     logf("zImage loaded at 0x%X\n", (unsigned int)kernel);
     return kernel;
   }
 
   uint8_t *load_initrd(size_t *size) {
     uint8_t *initrd = reinterpret_cast<uint8_t*>(INITRD_LOAD_ADDRESS);
-    *size = read_file("initrd", initrd, false);
+    *size = read_file("initrd", initrd, false, INITRD_MAX_SIZE);
     return initrd;
   }
 
@@ -143,7 +342,12 @@ struct LoaderImpl {
     logf("stalling until jtag attaches\n");
     debug_stall();
 #endif
-    logf("Jumping to the Linux kernel...\n");
+    arm_mask_interrupts();
+    uint32_t cpsr = arm_get_cpsr();
+    if ((cpsr & ARM32_MODE_MASK) != ARM32_SVC ||
+        (cpsr & ((1U << 7) | (1U << 6))) != ((1U << 7) | (1U << 6)))
+      panic("unsupported final ARM32 state: CPSR=0x%08x", cpsr);
+    logf("Jumping to the Linux kernel from SVC with IRQ/FIQ masked...\n");
     kernel(0, ~0, fdt);
   }
 
@@ -151,7 +355,84 @@ struct LoaderImpl {
     return f_stat(path, NULL) == FR_OK;
   }
 
-  size_t read_file(const char* path, uint8_t*& dest, bool should_alloc = true) {
+  void fixup_uart_clock(void* fdt) {
+    const uint32_t uart_clock_phandle = 0x7fff0001;
+    const uint32_t uart_clock_hz = g_FirmwareData.reserved[FW_RESERVED_UART_CLOCK] ?
+        g_FirmwareData.reserved[FW_RESERVED_UART_CLOCK] : 48000000;
+    int uart = fdt_path_offset(fdt, "/soc/serial@7e201000");
+    if (uart < 0) {
+      logf("PL011 node not found; retaining its original clock provider\n");
+      return;
+    }
+
+    int clock = fdt_add_subnode(fdt, 0, "lk-uart-clock");
+    if (clock < 0)
+      panic("cannot add fixed PL011 clock node: %d", clock);
+    const char compatible[] = "fixed-clock";
+    const char clock_names[] = "uartclk\0apb_pclk\0";
+    const fdt32_t cells = cpu_to_fdt32(0);
+    const fdt32_t rate = cpu_to_fdt32(uart_clock_hz);
+    const fdt32_t phandle = cpu_to_fdt32(uart_clock_phandle);
+    const fdt32_t clocks[] = { phandle, phandle };
+
+    fdt_require(fdt_setprop(fdt, clock, "compatible", compatible,
+                            sizeof(compatible)), "PL011 clock compatible");
+    fdt_require(fdt_setprop(fdt, clock, "#clock-cells", &cells, sizeof(cells)),
+                "PL011 clock cells");
+    fdt_require(fdt_setprop(fdt, clock, "clock-frequency", &rate, sizeof(rate)),
+                "PL011 clock rate");
+    fdt_require(fdt_setprop(fdt, clock, "phandle", &phandle, sizeof(phandle)),
+                "PL011 clock phandle");
+    fdt_require(fdt_setprop(fdt, clock, "linux,phandle", &phandle,
+                            sizeof(phandle)), "PL011 Linux phandle");
+
+    /* Property updates can move later structure entries; refresh the node. */
+    uart = fdt_path_offset(fdt, "/soc/serial@7e201000");
+    if (uart < 0)
+      panic("PL011 node moved or disappeared after clock setup: %d", uart);
+    fdt_require(fdt_setprop(fdt, uart, "clocks", clocks, sizeof(clocks)),
+                "connect PL011 clock");
+    fdt_require(fdt_setprop(fdt, uart, "clock-names", clock_names,
+                            sizeof(clock_names)), "name PL011 clocks");
+    fdt_require(fdt_setprop(fdt, uart, "clock-frequency", &rate, sizeof(rate)),
+                "set PL011 clock-frequency");
+
+    /* LK routes PL011 to the header; retain that routing when Linux probes. */
+    int uart_pins = fdt_path_offset(fdt,
+                                    "/soc/gpio@7e200000/uart0-gpio14");
+    if (uart_pins < 0)
+      panic("PL011 GPIO14/15 pinctrl node not found: %d", uart_pins);
+    uint32_t uart_pins_phandle = fdt_get_phandle(fdt, uart_pins);
+    if (!uart_pins_phandle)
+      panic("PL011 GPIO14/15 pinctrl node has no phandle");
+    const fdt32_t uart_pinctrl = cpu_to_fdt32(uart_pins_phandle);
+    const char pinctrl_names[] = "default";
+    uart = fdt_path_offset(fdt, "/soc/serial@7e201000");
+    if (uart < 0)
+      panic("PL011 node moved or disappeared before pinctrl setup: %d", uart);
+    fdt_require(fdt_setprop(fdt, uart, "pinctrl-names", pinctrl_names,
+                            sizeof(pinctrl_names)), "name PL011 pinctrl");
+    fdt_require(fdt_setprop(fdt, uart, "pinctrl-0", &uart_pinctrl,
+                            sizeof(uart_pinctrl)), "route PL011 to GPIO14/15");
+
+    int aliases = fdt_path_offset(fdt, "/aliases");
+    if (aliases >= 0) {
+      const char uart_path[] = "/soc/serial@7e201000";
+      fdt_require(fdt_setprop(fdt, aliases, "serial0", uart_path,
+                              sizeof(uart_path)), "set serial0 alias");
+    }
+    int bluetooth = fdt_path_offset(fdt,
+                                    "/soc/serial@7e201000/bluetooth");
+    if (bluetooth >= 0) {
+      const char disabled[] = "disabled";
+      fdt_require(fdt_setprop(fdt, bluetooth, "status", disabled,
+                              sizeof(disabled)), "disable PL011 Bluetooth");
+    }
+    logf("PL011 handoff clock fixed at %u Hz\n", uart_clock_hz);
+  }
+
+  size_t read_file(const char* path, uint8_t*& dest, bool should_alloc = true,
+                   size_t max_size = 0) {
     uint32_t start = ST_CLO;
     /* ensure file exists first */
     if(!file_exists(path)) panic("attempted to read %s, but it does not exist", path);
@@ -161,6 +442,9 @@ struct LoaderImpl {
     f_open(&fp, path, FA_READ);
 
     unsigned int len = f_size(&fp);
+    if (max_size && len > max_size)
+      panic("%s is too large: %u bytes (maximum %u)", path, len,
+            (unsigned int)max_size);
 
     if(should_alloc) {
       /*
@@ -174,8 +458,11 @@ struct LoaderImpl {
 
     logf("%s: reading %d bytes to 0x%X ~%dmb...\n", path, len, (unsigned int)dest, ((unsigned int)dest)/1024/1024);
 
-    f_read(&fp, dest, len, &len);
+    unsigned int bytes_read = 0;
+    FRESULT read_result = f_read(&fp, dest, len, &bytes_read);
     f_close(&fp);
+    if (read_result != FR_OK || bytes_read != len)
+      panic("short read for %s: %u of %u bytes", path, bytes_read, len);
 
     uint32_t stop = ST_CLO;
     uint32_t elapsed = stop - start;
@@ -189,7 +476,7 @@ struct LoaderImpl {
   uint8_t* load_fdt(const char* filename, const char* cmdline, uint8_t *initrd_start, size_t initrd_size) {
     /* read device tree blob */
     uint8_t* fdt = reinterpret_cast<uint8_t*>(DTB_LOAD_ADDRESS);
-    size_t sz = read_file(filename, fdt, false);
+    size_t sz = read_file(filename, fdt, false, DTB_MAX_SIZE - 8192);
     logf("FDT loaded at %p, size is %d\n", fdt, sz);
 
     void* v_fdt = reinterpret_cast<void*>(fdt);
@@ -200,7 +487,11 @@ struct LoaderImpl {
       panic("fdt blob invalid, fdt_check_header returned %d", res);
     }
 
-    res = fdt_open_into(v_fdt, v_fdt, sz + 4096);
+    res = fdt_open_into(v_fdt, v_fdt, DTB_MAX_SIZE);
+    if (res < 0)
+      panic("cannot make DTB writable: %d", res);
+    if (fdt_check_header(v_fdt) != 0 || fdt_totalsize(v_fdt) > DTB_MAX_SIZE)
+      panic("DTB invalid or exceeds %u-byte workspace", DTB_MAX_SIZE);
 
     char serial_number[9];
     hex32(g_FirmwareData.serial, serial_number);
@@ -222,14 +513,87 @@ struct LoaderImpl {
     }
 
     int system = fdt_path_offset(v_fdt, "/system");
-    if (system < 0) {
-      panic("cant find /system");
-    } else {
+    if (system >= 0) {
       // /system/linux,serial is an 8byte raw serial#
       // /system/linux,revision is a raw 32bit revision, directly from OTP
       uint32_t revision = htonl(g_FirmwareData.revision);
       res = fdt_setprop(v_fdt, system, "linux,revision", &revision, 4);
     }
+
+    /* These device-tree changes describe the LK-initialized display/USB
+     * handoff. Leave unrelated firmware and board configurations alone. */
+    const bool lk_handoff =
+        g_FirmwareData.reserved[FW_RESERVED_FB_MAGIC] == FRAMEBUFFER_HANDOFF_MAGIC;
+    int firmware = fdt_path_offset(v_fdt, "/soc/firmware");
+    if (lk_handoff && firmware >= 0) {
+      const char disabled[] = "disabled";
+      fdt_require(fdt_setprop(v_fdt, firmware, "status", disabled,
+                              sizeof(disabled)), "disable firmware service");
+    }
+
+    int usb = fdt_path_offset(v_fdt, "/soc/usb@7e980000");
+    if (lk_handoff && usb >= 0) {
+      res = fdt_delprop(v_fdt, usb, "power-domains");
+      if (res < 0 && res != -FDT_ERR_NOTFOUND)
+        panic("cannot remove USB power-domain dependency: %d", res);
+    }
+
+    int cprman = fdt_path_offset(v_fdt, "/soc/cprman@7e101000");
+    if (lk_handoff && cprman >= 0) {
+      res = fdt_delprop(v_fdt, cprman, "firmware");
+      if (res < 0 && res != -FDT_ERR_NOTFOUND)
+        panic("cannot remove CPRMAN firmware dependency: %d", res);
+      /*
+       * Keep the complete CPRMAN clocks property.  The Linux BCM2835 clock
+       * driver uses the DSI provider phandles to resolve the optional parent
+       * names even when the DSI provider nodes remain disabled, which keeps
+       * Linux from claiming the LK-owned display.  Reducing this property to
+       * the oscillator loses the six valid DSI references and causes dsi0p to
+       * register with a NULL parent.
+       */
+    }
+
+    int mmcnr = fdt_path_offset(v_fdt, "/soc/mmcnr@7e300000");
+    if (lk_handoff && mmcnr >= 0) {
+      const char disabled[] = "disabled";
+      fdt_require(fdt_setprop(v_fdt, mmcnr, "status", disabled,
+                              sizeof(disabled)), "disable MMCNR");
+    }
+    int sdhost = fdt_path_offset(v_fdt, "/soc/mmc@7e202000");
+    if (lk_handoff && sdhost >= 0) {
+      const char okay[] = "okay";
+      fdt_require(fdt_setprop(v_fdt, sdhost, "status", okay, sizeof(okay)),
+                  "enable SDHOST");
+      fdt_require(fdt_setprop_u32(v_fdt, sdhost, "bus-width", 4),
+                  "set SDHOST bus width");
+      fdt_require(fdt_setprop(v_fdt, sdhost, "brcm,force-pio", NULL, 0),
+                  "force SDHOST PIO");
+      fdt_require(fdt_setprop_u32(v_fdt, sdhost, "brcm,pio-limit",
+                                  0x7fffffff), "set SDHOST PIO limit");
+
+      int pins = fdt_path_offset(v_fdt, "/soc/gpio@7e200000/sdhost-gpio48");
+      if (pins >= 0) {
+        uint32_t phandle = fdt_get_phandle(v_fdt, pins);
+        if (phandle) {
+          const fdt32_t pinctrl = cpu_to_fdt32(phandle);
+          sdhost = fdt_path_offset(v_fdt, "/soc/mmc@7e202000");
+          if (sdhost < 0)
+            panic("SDHOST node disappeared before pinctrl setup: %d", sdhost);
+          fdt_require(fdt_setprop(v_fdt, sdhost, "pinctrl-names", "default",
+                                  sizeof("default")), "name SDHOST pinctrl");
+          fdt_require(fdt_setprop(v_fdt, sdhost, "pinctrl-0", &pinctrl,
+                                  sizeof(pinctrl)), "route SDHOST pins");
+        }
+      }
+    }
+
+    if (lk_handoff)
+      fixup_uart_clock(v_fdt);
+    int timer = fdt_path_offset(v_fdt, "/timer");
+    if (lk_handoff && timer >= 0)
+      fdt_require(fdt_setprop(v_fdt, timer,
+                              "arm,cpu-registers-not-fw-configured", NULL, 0),
+                  "mark ARM timer unconfigured");
 
     int chosen = fdt_path_offset(v_fdt, "/chosen");
     if (chosen < 0) panic("no chosen node in fdt");
@@ -252,9 +616,20 @@ struct LoaderImpl {
       /* start the memory map at 1M/16 and grow continuous for 256M
        * TODO: does this disrupt I/O? */
 
+      /* Keep the DSI scanout outside Linux's RAM map.  Use 2 MiB
+       * section-aligned boundaries because the ARM kernel may construct
+       * section mappings for these banks.  The physical pool is 3 MiB at
+       * 112 MiB, so omit the surrounding 4 MiB section-aligned window.
+       * Reserving the same interval later through /reserved-memory is too
+       * late for kernels that have already claimed the contiguous range. */
       struct mem_entry memmap[] = {
-        { .address = htonl(1024 * 128), .size = htonl(((256) * 1024 * 1024) - (1024 * 128)) },
-        { .address = htonl((256*3) * 1024 * 1024), .size = htonl(16*1024*1024) }
+        { .address = htonl(2 * 1024 * 1024),
+          .size = htonl(LK_FB_POOL_BASE - (2 * 1024 * 1024)) },
+        { .address = htonl(LK_FB_POOL_BASE + (4 * 1024 * 1024)),
+          .size = htonl((256 * 1024 * 1024) -
+                        (LK_FB_POOL_BASE + (4 * 1024 * 1024))) },
+        { .address = htonl((256 * 3) * 1024 * 1024),
+          .size = htonl(16 * 1024 * 1024) }
       };
       res = fdt_setprop(v_fdt, memory, "reg", (void*) memmap, sizeof(memmap));
     };
@@ -268,6 +643,8 @@ struct LoaderImpl {
       };
       fdt_setprop(v_fdt, soc, "ranges", (void*)ranges, sizeof(ranges));
     };
+
+    reserve_framebuffer_pool(v_fdt);
 
     logf("(valid) fdt loaded at 0x%p\n", fdt);
 
@@ -295,6 +672,10 @@ struct LoaderImpl {
       return "rpi2.dtb";
       break;
     case 0x410FD034:
+      if (file_exists("rpi3.dtb"))
+        return "rpi3.dtb";
+      if (file_exists("bcm2710-rpi-3-b.dtb"))
+        return "bcm2710-rpi-3-b.dtb";
       return "rpi3.dtb";
       break;
     // 410FD083 is cortex A72, rpi4
