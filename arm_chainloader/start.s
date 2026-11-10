@@ -162,6 +162,11 @@ enable_icache:
   mcr p15, 0, r0, c1, c0, 0 // r0 -> SCTLR
   bx lr
 
+.global arm_mask_interrupts
+arm_mask_interrupts:
+  cpsid if
+  bx lr
+
 .global disable_icache
 disable_icache:
   mrc p15, 0, r0, c1, c0, 0 // SCTLR -> r0

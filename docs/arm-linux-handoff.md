@@ -44,10 +44,11 @@ When the word at offset `0x34` contains the `LFB1` magic
 `0x3142464c`, the following words describe the framebuffer pool, the primary,
 back and active physical addresses, width, height, stride in pixels and
 format. The field indices are defined in `common/hardware.h`. The supported
-layout is a 3 MiB pool at `0x01800000`, with 800×480 ARGB8888 buffers at
-`0x01800000` and `0x01977000`. Linux receives a 3200-byte stride. The
+layout is a 3 MiB pool at `0x07000000`, with 800×480 ARGB8888 buffers at
+`0x07000000` and `0x07177000`. Linux receives a 3200-byte stride. The
 chainloader reserves the pool with `no-map` and adds a root-level
-`simple-framebuffer` node for the active buffer.
+`simple-framebuffer` node whose `reg` property describes only the active
+buffer.
 
 Without the magic, the optional framebuffer and LK-specific device-tree
 fixups are skipped. With the magic, the boot firmware must already have

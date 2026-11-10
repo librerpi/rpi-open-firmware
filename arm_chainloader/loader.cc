@@ -18,6 +18,7 @@ Second stage bootloader.
 =============================================================================*/
 
 #include "chainloader.h"
+#include "arm-defs.h"
 #include "memory_map.h"
 #include "mmu.h"
 #include "drivers/fatfs/ff.h"
@@ -42,12 +43,16 @@ FATFS g_BootVolumeFs;
 #define DTB_LOAD_ADDRESS    0xF000000 // 240mb from start
 #define KERNEL_LOAD_ADDRESS 0x2000000 // 32mb from start
 #define INITRD_LOAD_ADDRESS 0x4000000 // 64mb from start
+#define KERNEL_MAX_SIZE     (INITRD_LOAD_ADDRESS - KERNEL_LOAD_ADDRESS)
+#define INITRD_MAX_SIZE     (DTB_LOAD_ADDRESS - INITRD_LOAD_ADDRESS)
+#define DTB_MAX_SIZE        (2U * 1024U * 1024U)
+#define CMDLINE_MAX_SIZE    (64U * 1024U)
 
 /* Raspberry Pi 3 DSI scanout values published by the LK producer. */
-#define LK_FB_POOL_BASE       0x01800000U
+#define LK_FB_POOL_BASE       0x07000000U
 #define LK_FB_POOL_SIZE       0x00300000U
-#define LK_FB_PRIMARY_PHYS    0x01800000U
-#define LK_FB_BACK_PHYS       0x01977000U
+#define LK_FB_PRIMARY_PHYS    0x07000000U
+#define LK_FB_BACK_PHYS       0x07177000U
 #define LK_FB_WIDTH           800U
 #define LK_FB_HEIGHT          480U
 #define LK_FB_STRIDE          800U
@@ -65,6 +70,54 @@ struct ranges {
   uint32_t parent;
   uint32_t size;
 };
+
+struct boot_interval {
+  uint32_t start;
+  uint32_t end;
+  const char *owner;
+};
+
+static uint32_t checked_end(uint32_t start, size_t size, const char *owner) {
+  if (size > UINT32_MAX - start)
+    panic("%s interval overflows physical address space", owner);
+  return start + (uint32_t)size;
+}
+
+static void validate_layout(size_t kernel_size, size_t initrd_size) {
+  boot_interval intervals[5];
+  size_t count = 0;
+  intervals[count++] = { 0, MEM_USABLE_START, "chainloader" };
+
+  if (g_FirmwareData.reserved[FW_RESERVED_FB_MAGIC] == FRAMEBUFFER_HANDOFF_MAGIC) {
+    const uint32_t start = g_FirmwareData.reserved[FW_RESERVED_FB_POOL_BASE];
+    const uint32_t size = g_FirmwareData.reserved[FW_RESERVED_FB_POOL_SIZE];
+    intervals[count++] = { start, checked_end(start, size, "framebuffer"),
+                           "retained framebuffer" };
+  }
+  intervals[count++] = { KERNEL_LOAD_ADDRESS,
+                         checked_end(KERNEL_LOAD_ADDRESS, kernel_size, "kernel"),
+                         "kernel" };
+  if (initrd_size)
+    intervals[count++] = { INITRD_LOAD_ADDRESS,
+                           checked_end(INITRD_LOAD_ADDRESS, initrd_size, "initrd"),
+                           "initrd" };
+  intervals[count++] = { DTB_LOAD_ADDRESS,
+                         checked_end(DTB_LOAD_ADDRESS, DTB_MAX_SIZE, "DTB"),
+                         "DTB workspace" };
+
+  for (size_t i = 0; i < count; ++i) {
+    if (intervals[i].start >= intervals[i].end)
+      panic("invalid %s interval", intervals[i].owner);
+    for (size_t j = i + 1; j < count; ++j) {
+      if (intervals[i].start < intervals[j].end &&
+          intervals[j].start < intervals[i].end)
+        panic("physical interval overlap: %s [0x%08lx,0x%08lx) and %s [0x%08lx,0x%08lx)",
+              intervals[i].owner, (unsigned long)intervals[i].start,
+              (unsigned long)intervals[i].end, intervals[j].owner,
+              (unsigned long)intervals[j].start, (unsigned long)intervals[j].end);
+    }
+  }
+}
 
 static void fdt_require(int result, const char *what) {
   if (result < 0)
@@ -121,10 +174,10 @@ static void reserve_framebuffer_pool(void *fdt) {
   }
 
   int pool = fdt_path_offset(fdt,
-                             "/reserved-memory/framebuffer-pool@1800000");
+                             "/reserved-memory/framebuffer-pool@7000000");
   if (pool < 0) {
     pool = fdt_add_subnode(fdt, reserved_memory,
-                           "framebuffer-pool@1800000");
+                           "framebuffer-pool@7000000");
     fdt_require(pool, "add framebuffer pool");
   }
 
@@ -133,24 +186,26 @@ static void reserve_framebuffer_pool(void *fdt) {
   if (cells > (int)(sizeof(reg) / sizeof(reg[0])))
     panic("framebuffer reg property too large");
   if (address_cells == 1) {
-    reg[0] = cpu_to_fdt32(base);
+    reg[0] = cpu_to_fdt32(active);
   } else {
     reg[0] = cpu_to_fdt32(0);
-    reg[1] = cpu_to_fdt32(base);
+    reg[1] = cpu_to_fdt32(active);
   }
   if (size_cells == 1) {
-    reg[address_cells] = cpu_to_fdt32(size);
+    reg[address_cells] = cpu_to_fdt32(LK_FB_PIXEL_LENGTH);
   } else {
     reg[address_cells] = cpu_to_fdt32(0);
-    reg[address_cells + 1] = cpu_to_fdt32(size);
+    reg[address_cells + 1] = cpu_to_fdt32(LK_FB_PIXEL_LENGTH);
   }
   fdt_require(fdt_setprop(fdt, pool, "reg", reg, cells * sizeof(fdt32_t)),
               "framebuffer pool reg");
+  /* Keep the active scanout out of Linux's linear map. simplefb uses
+   * ioremap_wc(), which is rejected for ordinary mapped ARM RAM. */
   fdt_require(fdt_setprop(fdt, pool, "no-map", NULL, 0),
               "framebuffer pool no-map");
 
-  const char *simplefb_name = active == primary ? "framebuffer@1800000" :
-                                                   "framebuffer@1977000";
+  const char *simplefb_name = active == primary ? "framebuffer@7000000" :
+                                                   "framebuffer@7177000";
   int simplefb = fdt_subnode_offset(fdt, root, simplefb_name);
   if (simplefb < 0) {
     simplefb = fdt_add_subnode(fdt, root, simplefb_name);
@@ -191,8 +246,8 @@ static void reserve_framebuffer_pool(void *fdt) {
   fdt_require(fdt_setprop(fdt, simplefb, "status", okay, sizeof(okay)),
               "simple framebuffer status");
 
-  logf("reserved LK framebuffer pool [0x%08x,0x%08x); simplefb at 0x%08x\n",
-       base, base + size, active);
+  logf("reserved LK active framebuffer [0x%08x,0x%08x); simplefb at 0x%08x\n",
+       active, active + LK_FB_PIXEL_LENGTH, active);
 }
 
 static_assert((MEM_USABLE_START+0x800000) < KERNEL_LOAD_ADDRESS,
@@ -221,7 +276,8 @@ void hex32(uint32_t input, char *output) {
 struct LoaderImpl {
   LoaderImpl() {
     find_and_mount();
-    auto kernel = load_kernel();
+    size_t kernel_size = 0;
+    auto kernel = load_kernel(&kernel_size);
     size_t initrd_size = 0;
     uint8_t *initrd = NULL;
     if (file_exists("initrd")) {
@@ -230,9 +286,11 @@ struct LoaderImpl {
       logf("initrd: not present; continuing without an initrd\n");
     }
 
+    validate_layout(kernel_size, initrd_size);
+
     /* read the command-line null-terminated */
     uint8_t *cmdline;
-    size_t cmdlen = read_file("cmdline.txt", cmdline);
+    size_t cmdlen = read_file("cmdline.txt", cmdline, true, CMDLINE_MAX_SIZE);
 
     logf("kernel cmdline: %s\n", cmdline);
 
@@ -260,19 +318,20 @@ struct LoaderImpl {
     logf("Boot partition mounted!\n");
   }
 
-  linux_t load_kernel() {
+  linux_t load_kernel(size_t *size_out) {
     /* read the kernel as a function pointer at fixed address */
     uint8_t* zImage = reinterpret_cast<uint8_t*>(KERNEL_LOAD_ADDRESS);
     linux_t kernel = reinterpret_cast<linux_t>(zImage);
 
-    size_t ksize = read_file("zImage", zImage, false);
+    size_t ksize = read_file("zImage", zImage, false, KERNEL_MAX_SIZE);
+    *size_out = ksize;
     logf("zImage loaded at 0x%X\n", (unsigned int)kernel);
     return kernel;
   }
 
   uint8_t *load_initrd(size_t *size) {
     uint8_t *initrd = reinterpret_cast<uint8_t*>(INITRD_LOAD_ADDRESS);
-    *size = read_file("initrd", initrd, false);
+    *size = read_file("initrd", initrd, false, INITRD_MAX_SIZE);
     return initrd;
   }
 
@@ -283,7 +342,12 @@ struct LoaderImpl {
     logf("stalling until jtag attaches\n");
     debug_stall();
 #endif
-    logf("Jumping to the Linux kernel...\n");
+    arm_mask_interrupts();
+    uint32_t cpsr = arm_get_cpsr();
+    if ((cpsr & ARM32_MODE_MASK) != ARM32_SVC ||
+        (cpsr & ((1U << 7) | (1U << 6))) != ((1U << 7) | (1U << 6)))
+      panic("unsupported final ARM32 state: CPSR=0x%08x", cpsr);
+    logf("Jumping to the Linux kernel from SVC with IRQ/FIQ masked...\n");
     kernel(0, ~0, fdt);
   }
 
@@ -367,7 +431,8 @@ struct LoaderImpl {
     logf("PL011 handoff clock fixed at %u Hz\n", uart_clock_hz);
   }
 
-  size_t read_file(const char* path, uint8_t*& dest, bool should_alloc = true) {
+  size_t read_file(const char* path, uint8_t*& dest, bool should_alloc = true,
+                   size_t max_size = 0) {
     uint32_t start = ST_CLO;
     /* ensure file exists first */
     if(!file_exists(path)) panic("attempted to read %s, but it does not exist", path);
@@ -377,6 +442,9 @@ struct LoaderImpl {
     f_open(&fp, path, FA_READ);
 
     unsigned int len = f_size(&fp);
+    if (max_size && len > max_size)
+      panic("%s is too large: %u bytes (maximum %u)", path, len,
+            (unsigned int)max_size);
 
     if(should_alloc) {
       /*
@@ -390,8 +458,11 @@ struct LoaderImpl {
 
     logf("%s: reading %d bytes to 0x%X ~%dmb...\n", path, len, (unsigned int)dest, ((unsigned int)dest)/1024/1024);
 
-    f_read(&fp, dest, len, &len);
+    unsigned int bytes_read = 0;
+    FRESULT read_result = f_read(&fp, dest, len, &bytes_read);
     f_close(&fp);
+    if (read_result != FR_OK || bytes_read != len)
+      panic("short read for %s: %u of %u bytes", path, bytes_read, len);
 
     uint32_t stop = ST_CLO;
     uint32_t elapsed = stop - start;
@@ -405,7 +476,7 @@ struct LoaderImpl {
   uint8_t* load_fdt(const char* filename, const char* cmdline, uint8_t *initrd_start, size_t initrd_size) {
     /* read device tree blob */
     uint8_t* fdt = reinterpret_cast<uint8_t*>(DTB_LOAD_ADDRESS);
-    size_t sz = read_file(filename, fdt, false);
+    size_t sz = read_file(filename, fdt, false, DTB_MAX_SIZE - 8192);
     logf("FDT loaded at %p, size is %d\n", fdt, sz);
 
     void* v_fdt = reinterpret_cast<void*>(fdt);
@@ -416,9 +487,11 @@ struct LoaderImpl {
       panic("fdt blob invalid, fdt_check_header returned %d", res);
     }
 
-    res = fdt_open_into(v_fdt, v_fdt, sz + 8192);
+    res = fdt_open_into(v_fdt, v_fdt, DTB_MAX_SIZE);
     if (res < 0)
       panic("cannot make DTB writable: %d", res);
+    if (fdt_check_header(v_fdt) != 0 || fdt_totalsize(v_fdt) > DTB_MAX_SIZE)
+      panic("DTB invalid or exceeds %u-byte workspace", DTB_MAX_SIZE);
 
     char serial_number[9];
     hex32(g_FirmwareData.serial, serial_number);
@@ -543,9 +616,20 @@ struct LoaderImpl {
       /* start the memory map at 1M/16 and grow continuous for 256M
        * TODO: does this disrupt I/O? */
 
+      /* Keep the DSI scanout outside Linux's RAM map.  Use 2 MiB
+       * section-aligned boundaries because the ARM kernel may construct
+       * section mappings for these banks.  The physical pool is 3 MiB at
+       * 112 MiB, so omit the surrounding 4 MiB section-aligned window.
+       * Reserving the same interval later through /reserved-memory is too
+       * late for kernels that have already claimed the contiguous range. */
       struct mem_entry memmap[] = {
-        { .address = htonl(1024 * 128), .size = htonl(((256) * 1024 * 1024) - (1024 * 128)) },
-        { .address = htonl((256*3) * 1024 * 1024), .size = htonl(16*1024*1024) }
+        { .address = htonl(2 * 1024 * 1024),
+          .size = htonl(LK_FB_POOL_BASE - (2 * 1024 * 1024)) },
+        { .address = htonl(LK_FB_POOL_BASE + (4 * 1024 * 1024)),
+          .size = htonl((256 * 1024 * 1024) -
+                        (LK_FB_POOL_BASE + (4 * 1024 * 1024))) },
+        { .address = htonl((256 * 3) * 1024 * 1024),
+          .size = htonl(16 * 1024 * 1024) }
       };
       res = fdt_setprop(v_fdt, memory, "reg", (void*) memmap, sizeof(memmap));
     };
